@@ -67,6 +67,8 @@ if __name__ == "__main__":
             elif upgrade_type != UpgradeType.MINOR and not any(x.lower() in line.lower() for x in SKIP_BUMP_KEYWORDS):
                 upgrade_type = UpgradeType.PATCH
 
+            print({upgrade_type.value})
+
     if upgrade_type == UpgradeType.NONE:
         print("No need for a version bump detected")
         print("::set-output name=changes::false")
