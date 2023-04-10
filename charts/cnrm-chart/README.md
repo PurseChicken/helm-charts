@@ -39,7 +39,7 @@ The methodology for the charts use is that you have an existing Kubernetes clust
 $ helm repo add pursechicken https://pursechicken.github.io/helm-charts
 ```
 
-Use the chart as a dependency to your own chart and specify the values you want to use in your own values file:
+Use the chart as a dependency to your own chart.
 
 ```Chart.yaml
 dependencies:
@@ -47,6 +47,16 @@ dependencies:
   version: "1.0.5"
   repository: "https://pursechicken.github.io/helm-charts"
 ```
+
+Then pull the dependency chart down
+
+```console
+$ helm dep update
+```
+
+Specify the values you want to use in your own values file. Use the included values.yaml file as a reference.
+
+[values.yaml](./values.yaml)
 
 # Caveats
 
