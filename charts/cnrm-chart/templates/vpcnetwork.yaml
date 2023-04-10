@@ -1,0 +1,46 @@
+{{- if .Values.vpcNetwork }}
+{{- $myprojectName := .Values.projectName | default .Release.Name }}
+{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- range .Values.vpcNetwork }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeNetwork
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+    cnrm.cloud.google.com/project-id: {{ $projectName }}
+  name: {{ $projectName }}-{{ .networkName }}
+spec:
+  resourceID: {{ .networkName }}
+  autoCreateSubnetworks: false
+  mtu: 1460
+  routingMode: REGIONAL
+{{- if .subNets }}
+{{- $networkName := .networkName }}
+{{- range .subNets }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeSubnetwork
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+    cnrm.cloud.google.com/project-id: {{ $projectName }}
+  name: {{ $projectName }}-{{ .subnetName }}
+spec:
+  resourceID: {{ .subnetName }}
+  ipCidrRange: {{ .subnetCidr }}
+  region: {{ .vpcRegion }}
+  networkRef:
+    name: {{ $projectName }}-{{ $networkName }}
+  {{- if .secondarySubnets }}
+  secondaryIpRange:
+    {{- range .secondarySubnets }}
+    - rangeName: {{ .name }}
+      ipCidrRange: {{ .ipCidrRange }}
+    {{- end }}
+  {{- end }}
+  stackType: IPV4_ONLY
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

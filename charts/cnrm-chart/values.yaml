@@ -1,0 +1,473 @@
+# # This project name will be used to create the project and is referenced in every other subsection unless a projectID has been defined.
+# # When the project is created, it uses this field for the name as well as the ID. It may error if the project ID has been used anywhere before.
+# # You can omit projectName and projectID and the chart will default to using .Release.Name
+# projectName: "my-unique-global-project"
+
+# # Use a different projectID for the project rather than trying to use projectName above.
+# # This reference will now be used in every other subsection.
+# projectID: "my-unique-global-project"
+
+# # Specify your organization ID so that when the project is created, it can tie it to your organization.
+# # Remove if not using an Organization.
+# organizationId: "1234567890"
+
+# # Tie the project to your billing account.
+# # Remove if you are not using a billing account.
+# billingAccountId: "ABCDE-12345-67890"
+
+# # Put the project in a folder? Specify the folder ID.
+# # This can't be used if you are specifying an organizationID
+# # Remove if you are not using a folder
+# projectFolderId: "8675309"
+
+# # Enable the following API's on your project
+# apis:
+#   # Kubernetes Engine API
+#   - name: container.googleapis.com
+#   # Cloud SQL Admin API
+#   - name: sqladmin.googleapis.com
+#   # Stackdriver API
+#   - name: stackdriver.googleapis.com
+#   # Error Reporting API
+#   - name: clouderrorreporting.googleapis.com
+
+# # Create the following VPC networks in your project
+# vpcNetwork:
+#   # You can specify more than 1 VPC network
+#   - networkName: "my-net"
+#     # What if any subnets should be a part of your network?
+#     subNets:
+#     - subnetName: "my-central-nodes"
+#       subnetCidr: "192.168.64.0/20"
+#       vpcRegion: "us-central1"
+#       # If you need secondary subnets use this block.
+#       secondarySubnets:
+#         # There must be two subnets for "services" and "pods" when specifying a VPC for a k8s cluster.
+#         - name: services
+#           ipCidrRange: 10.16.64.0/20
+#         - name: pods
+#           ipCidrRange: 172.16.64.0/20
+#     - subnetName: "my-east-nodes"
+#       subnetCidr: "192.168.48.0/20"
+#       vpcRegion: "us-east1"
+#       secondarySubnets:
+#         - name: services
+#           ipCidrRange: 10.16.48.0/20
+#         - name: pods
+#           ipCidrRange: 172.16.48.0/20
+
+# # Would you like to create some Kubernetes clusters?
+# k8s:
+#   # Create this cluster
+#   # The cluster is created and the default node pool is deleted upon creation.
+#   # Workload Identity is also enabled with pool name of <project_name>.svc.id.goog
+#   # https://cloud.google.com/config-connector/docs/reference/resource-docs/container/containercluster#spec
+#   - clusterName: "central-cluster"
+#     clusterLocation: "us-central1"
+#     # The following four network declarations must be created using the vpcNetwork section.
+#     networkName: "my-net"
+#     subnetName: "my-central-nodes"
+#     servicesSecondaryRangeName: "services"
+#     clusterSecondaryRangeName: "pods"
+#     # Leave out clusterAutoscaling if you don't want to configure.
+#     clusterAutoscaling:
+#       # toYaml
+#       enabled: false
+#       autoscalingProfile: "BALANCED"
+#     releaseChannel: "REGULAR"
+#     datapathProvider: "ADVANCED_DATAPATH"
+#     enableIntranodeVisibility: false
+#     enableShieldedNodes: true
+#     # You can leave out addonsConfig if you don't want to configure it.
+#     addonsConfig:
+#       # toYaml
+#       configConnectorConfig:
+#         enabled: true
+#       gcePersistentDiskCsiDriverConfig:
+#         enabled: true
+#       horizontalPodAutoscaling:
+#         disabled: false
+#       httpLoadBalancing:
+#         disabled: false
+#     verticalPodAutoscalingEnabled: true
+#     # You can leave out loggingConfig if you don't want to configure it.
+#     loggingConfig:
+#       # toYaml
+#       enableComponents:
+#         - "SYSTEM_COMPONENTS"
+#         - "WORKLOADS"
+#     # this is not available until config connector v1.99.0
+#     gatewayApiConfig:
+#       channel: CHANNEL_STANDARD
+#     # You can leave out monitoringConfig if you don't want to configure it.
+#     monitoringConfig:
+#       # toYaml
+#       enableComponents:
+#         - "SYSTEM_COMPONENTS"
+#     # You can leave out maintenancePolicy if you don't want to configure it.
+#     maintenancePolicy:
+#       # toYaml
+#       dailyMaintenanceWindow:
+#         duration: "4H"
+#         # GMT
+#         startTime: "00:00"
+#     # These node pools will be created in the cluster
+#     # You can specify more than 1 if required.
+#     # https://cloud.google.com/config-connector/docs/reference/resource-docs/container/containernodepool#spec
+#     nodePool:
+#       - name: "central-cluster-pool"
+#         initialNodeCount: 1
+#         minNodeCount: 1
+#         maxNodeCount: 3
+#         nodeLocation: "us-central1"
+#         management:
+#           autoRepair: true
+#           autoUpgrade: true
+#         maxPodsPerNode: 110
+#         nodeConfig:
+#           diskSizeGb: 100
+#           diskType: "pd-ssd"
+#           imageType: "COS_CONTAINERD"
+#           machineType: "n2-standard-2"
+#         # You can leave out metadata if you don't want to configure it.
+#         metadata:
+#           # toYaml
+#           disable-legacy-endpoints: "true"
+#         # You can leave out oauthScopes if you don't want to configure it.
+#         oauthScopes:
+#           # toYaml
+#           - "https://www.googleapis.com/auth/devstorage.read_only"
+#           - "https://www.googleapis.com/auth/logging.write"
+#           - "https://www.googleapis.com/auth/monitoring"
+#           - "https://www.googleapis.com/auth/servicecontrol"
+#           - "https://www.googleapis.com/auth/service.management.readonly"
+#           - "https://www.googleapis.com/auth/trace.append"
+#         shieldedInstanceConfig:
+#           enableSecureBoot: true
+#           enableIntegrityMonitoring: true
+#         # You can leave out upgradeSettings if you don't want to configure it.
+#         upgradeSettings:
+#           # toYaml
+#           maxSurge: 1
+#           maxUnavailable: 0
+#         # A tag is automatically added using "<node_pool_name>-nodes"
+#         # You can leave out tags if you don't want to configure more.
+#         tags:
+#           # toYaml
+#           - "mytag"
+#   - clusterName: "east-cluster"
+#     clusterLocation: "us-east1"
+#     networkName: "my-net"
+#     subnetName: "my-east-nodes"
+#     servicesSecondaryRangeName: "services"
+#     clusterSecondaryRangeName: "pods"
+#     clusterAutoscaling:
+#       # toYaml
+#       enabled: false
+#       autoscalingProfile: "BALANCED"
+#     releaseChannel: "REGULAR"
+#     datapathProvider: "ADVANCED_DATAPATH"
+#     enableIntranodeVisibility: false
+#     enableShieldedNodes: true
+#     addonsConfig:
+#       # toYaml
+#       configConnectorConfig:
+#         enabled: true
+#       gcePersistentDiskCsiDriverConfig:
+#         enabled: true
+#       horizontalPodAutoscaling:
+#         disabled: false
+#       httpLoadBalancing:
+#         disabled: false
+#     verticalPodAutoscalingEnabled: true
+#     loggingConfig:
+#       # toYaml
+#       enableComponents:
+#         - "SYSTEM_COMPONENTS"
+#         - "WORKLOADS"
+#     monitoringConfig:
+#       # toYaml
+#       enableComponents:
+#         - "SYSTEM_COMPONENTS"
+#     # You can leave out costManagementConfig if you don't want to configure it, or set it to False
+#     costManagementConfig: True
+#     nodePool:
+#       - name: "east-cluster-pool"
+#         initialNodeCount: 1
+#         minNodeCount: 1
+#         maxNodeCount: 3
+#         nodeLocation: "us-east1"
+#         management:
+#           autoRepair: true
+#           autoUpgrade: true
+#         maxPodsPerNode: 110
+#         nodeConfig:
+#           diskSizeGb: 100
+#           diskType: "pd-ssd"
+#           imageType: "COS_CONTAINERD"
+#           machineType: "n2-standard-2"
+#         metadata:
+#           # toYaml
+#           disable-legacy-endpoints: "true"
+#         oauthScopes:
+#           # toYaml
+#           - "https://www.googleapis.com/auth/devstorage.read_only"
+#           - "https://www.googleapis.com/auth/logging.write"
+#           - "https://www.googleapis.com/auth/monitoring"
+#           - "https://www.googleapis.com/auth/servicecontrol"
+#           - "https://www.googleapis.com/auth/service.management.readonly"
+#           - "https://www.googleapis.com/auth/trace.append"
+#         shieldedInstanceConfig:
+#           enableSecureBoot: true
+#           enableIntegrityMonitoring: true
+#         upgradeSettings:
+#           # toYaml
+#           maxSurge: 1
+#           maxUnavailable: 0
+
+# # create IAM accounts, attach IAMPolicy or add Policy Members
+# iam:
+#   # Create the following account
+#   - name: cnrm-system
+#     description: "Config Connector Service Account"
+#     # Assign these roles to the account
+#     # If your config connector service account has access to other projects IAM (Project IAM Admin role),
+#     # then you can also use this to add Policy Membership to other projects. Reference that project in "external".
+#     # Kind is statically set to "Project" currently
+#     # external defaults to projects/projectName.
+#     iamPolicyMember:
+#       - name: cnrm-system-editor
+#         member: serviceAccount:cnrm-system@my-unique-global-project.iam.gserviceaccount.com
+#         role: roles/editor
+#         external: projects/my-unique-global-project
+#       - name: cnrm-system-projectiamadmin
+#         member: serviceAccount:cnrm-system@my-unique-global-project.iam.gserviceaccount.com
+#         role: roles/resourcemanager.projectIamAdmin
+#         external: projects/my-unique-global-project
+#       - name: cnrm-system-serviceaccountadmin
+#         member: serviceAccount:cnrm-system@my-unique-global-project.iam.gserviceaccount.com
+#         role: roles/iam.serviceAccountAdmin
+#         external: projects/my-unique-global-project
+#     # Attach this policy to the account
+#     # Only IAMServiceAccount Kind is currently supported by this chart
+#     # external is auto populated using "projects/<project_name>/serviceAccounts/<service_account_name>@<project_name>.iam.gserviceaccount.com"
+#     iamPolicy:
+#       - name: cnrm-system-policy-binding
+#         kind: IAMServiceAccount
+#         bindings:
+#           # toYaml
+#           - role: roles/iam.workloadIdentityUser
+#             members:
+#               - serviceAccount:my-unique-global-project.svc.id.goog[cnrm-system/cnrm-controller-manager]
+#   # Don't create an account, just assign Policy memberships to these accounts
+#   # Same information applies here as whats listed above for iamPolicyMember.
+#   - iamPolicyMember:
+#     - name: mcs-networkviewer
+#       member: serviceAccount:my-unique-global-project.svc.id.goog[gke-mcs/gke-mcs-importer]
+#       role: roles/compute.networkViewer
+#       external: projects/my-unique-global-project
+#     - name: mci-containeradmin
+#       member: serviceAccount:service-1234567890@gcp-sa-multiclusteringress.iam.gserviceaccount.com
+#       role: roles/container.admin
+#       external: projects/my-unique-global-project
+
+# # Create the following compute addresses
+# staticIp:
+#   - name: "my-address"
+#     addressType: "EXTERNAL"
+#     location: global
+#     ipVersion: IPV4
+#   - name: "private-service-connection"
+#     addressType: "INTERNAL"
+#     location: global
+#     ipVersion: IPV4
+#     # Optional
+#     purpose: VPC_PEERING
+#     # Optional
+#     prefixLength: 16
+#     # Optional
+#     networkRef:
+#       name: my-net
+
+# # Create a Service Networking Connection
+# snc:
+#   - name: "private-service-connection"
+#     networkRefName: "my-net"
+#     reservedPeeringRanges:
+#       # range
+#       - name: "private-service-connection"
+#     service: "servicenetworking.googleapis.com"
+
+# # Create DNS Zones or records in the zone
+# dns:
+#   zone:
+#     # a dot(.) is automatically appended to the name entered here so no need to add it manually.
+#     - name: my.fqdn.com
+#       # Can't use dots so must be defined separately. Replace dots(.) with dashes(-) if you like.
+#       metadataName: my-fqdn-com
+#       description: "Testing Zone"
+#       visibility: "public"
+#       dnssecConfigState: "on"
+#   record:
+#     # https://cloud.google.com/config-connector/docs/reference/resource-docs/dns/dnsrecordset#spec
+#     # a dot(.) is automatically appended to the name entered here so no need to add it manually.
+#     - name: "myaddress.my.fqdn.com"
+#       type: A
+#       ttl: 300
+#       dnsZone: "my-fqdn-com"
+#       # if computeAddress is populated, the chart assumes you are creating a computeAddress reference (E.G. a static IP).
+#       # In that case it automatically adds the rrdatasRefs section.
+#       # Only one of computeAddress or rrdatas should be specified. 
+#       computeAddress: "my-address"
+#       # Otherwise, you must specify a list in rrdatas
+#       # rrdatas:
+#       #   # toYaml
+#       #   - "9.9.9.9"
+#     - name: "myaddress2.my.fqdn.com"
+#       type: A
+#       ttl: 300
+#       dnsZone: "my-fqdn-com"
+#       rrdatas:
+#         # toYaml
+#         - "8.8.8.8"
+
+# # GKE Hub aka Fleet configuration
+# gkeHub:
+#   # This name doesn't do anything other than ensure this is a list
+#   - name: ""
+#     # Create a Membership
+#     # https://cloud.google.com/config-connector/docs/reference/resource-docs/gkehub/gkehubmembership
+#     membership:
+#       - name: "central-cluster"
+#         location: "global"
+#         description: "Central Cluster Fleet membership"
+#         # If endpoint is not needed, you may remove it.
+#         endpoint:
+#           # Only gkeCluster is currently supported in the chart
+#           gkeCluster:
+#             name: "central-cluster"
+#       - name: "east-cluster"
+#         location: "global"
+#         description: "East Cluster Fleet membership"
+#         endpoint:
+#           gkeCluster:
+#             name: "east-cluster"
+#     # Enable Features
+#     # https://cloud.google.com/config-connector/docs/reference/resource-docs/gkehub/gkehubfeature
+#     feature:
+#       - name: "central-cluster-mci"
+#         location: "global"
+#         # The resourceID must be "multiclusteringress" if you want to use multi-cluster ingress feature.
+#         # This enables the named cluster as the config cluster
+#         resourceID: multiclusteringress
+#         # If multiClusterIngress is specified, then the chart adds the mci block with the configmembership reference of mciName.
+#         # Remove if not using multiclusteringress in the resourceID
+#         multiClusterIngress:
+#           mciName: "central-cluster"
+#       - name: "multi-cluster-service-discovery"
+#         location: "global"
+#         resourceID: multiclusterservicediscovery
+
+# # Create SSL Policy
+# sslPolicy:
+#   # https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computesslpolicy
+#   - name: tls1-2-modern-policy
+#     description: "An SSL Policy with a MODERN encryption profile, supporting several modern methods of encryption for TLS 1.2 and up."
+#     minTlsVersion: TLS_1_2
+#     profile: MODERN
+
+# # Cloud Monitoring
+# monitoring:
+#   # This name doesn't do anything other than ensure this is a list
+#   - name: ""
+#     # Attach to a Monitoring Project
+#     # https://cloud.google.com/config-connector/docs/reference/resource-docs/monitoring/monitoringmonitoredproject
+#     monitoredProject:
+#       name: my-monitoring-project-name-or-id
+#     # Create Notification Channels
+#     # https://cloud.google.com/config-connector/docs/reference/resource-docs/monitoring/monitoringnotificationchannel
+#     notificationChannel:
+#       - name: "dev-alerts"
+#         type: "email"
+#         # Spec labels depending on type above
+#         labels:
+#           # toYaml
+#           email_address: "dev@my.fqdn.com"
+#         description: "A channel that sends notifications to the development team."
+#         enabled: true
+#     # Create Alert Policy
+#     # https://cloud.google.com/config-connector/docs/reference/resource-docs/monitoring/monitoringalertpolicy
+#     alertPolicy:
+#       - name: "quotas-alert"
+#         displayName: "Notify Development Team when quotas exceeded"
+#         enabled: true
+#         # Optional
+#         notificationChannels:
+#           # range
+#           - name: "dev-alerts"
+#         combiner: "OR"
+#         # Optional
+#         alertStrategy:
+#           # toYaml
+#           autoClose: "604800s"
+#         conditions:
+#           # toYaml
+#           - displayName: "Consumer Quota - Quota exceeded error"
+#             conditionThreshold:
+#               filter: "resource.type = \"consumer_quota\" AND metric.type = \"serviceruntime.googleapis.com/quota/exceeded\""
+#               aggregations:
+#                 - perSeriesAligner: "ALIGN_COUNT_TRUE"
+#                   alignmentPeriod: "60s"
+#                   crossSeriesReducer: "REDUCE_SUM"
+#                   groupByFields:
+#                     - "metric.label.quota_metric"
+#               comparison: "COMPARISON_GT"
+#               thresholdValue: 0
+#               duration: "0s"
+#               trigger:
+#                 count: 1
+
+# # Cloud SQL
+# sql:
+#   # Create a Cloud SQL Instance
+#   - name: "my-instance"
+#     databaseVersion: POSTGRES_14
+#     region: us-west4
+#     tier: db-custom-2-8192
+#     diskSize: 100
+#     availabilityType: REGIONAL
+#     # Optional Flags. Remove databaseFlags if not used.
+#     databaseFlags:
+#       # Range name and value
+#       - name: cloudsql.iam_authentication
+#         value: "on"
+#     # You can define a maintenance window by specifying maintenanceWindow. Omit if not required.
+#     maintenanceWindow:
+#       # Day of the week 1-7 starting with Monday
+#       day: 1
+#       # UTC
+#       hour: 4
+#       updateTrack: stable
+#     # Shall we create users on this instance?
+#     users:
+#       - name: my-unique-global-project-sql-sa
+#         type: CLOUD_IAM_SERVICE_ACCOUNT
+#         resourceID: my-sa@my-unique-global-project.iam.
+#       - name: my-unique-global-project-sql-user-myuser
+#         type: BUILT_IN
+#         resourceID: "myuser"
+#         # Optional since password not needed for different types
+#         password:
+#           # value or valueFrom.
+#           valueFrom:
+#             # toYaml
+#             secretKeyRef:
+#               key:  postgres-myuser-password
+#               name: my-secrets
+#       - name: my-unique-global-project-sql-user-abc123
+#         type: CLOUD_IAM_USER
+#         resourceID: abc123@my.fqdn.com
+#     # What databases should be in this instance?
+#     databases:
+#       - name: clservices
+#       - name: n8n

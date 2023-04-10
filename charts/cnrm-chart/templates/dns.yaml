@@ -1,0 +1,48 @@
+{{- if .Values.dns }}
+{{- $myprojectName := .Values.projectName | default .Release.Name }}
+{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- if .Values.dns.zone }}
+{{- range .Values.dns.zone }}
+---
+apiVersion: dns.cnrm.cloud.google.com/v1beta1
+kind: DNSManagedZone
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+    cnrm.cloud.google.com/project-id: {{ $projectName }}
+  name: {{ .metadataName }}
+spec:
+  description: {{ .description }}
+  dnsName: {{ .name }}.
+  dnssecConfig:
+    state: {{ .dnssecConfigState | quote }}
+  visibility: {{ .visibility }}
+{{- end }}
+{{- end }}
+{{- if .Values.dns.record }}
+{{- range .Values.dns.record }}
+---
+apiVersion: dns.cnrm.cloud.google.com/v1beta1
+kind: DNSRecordSet
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+    cnrm.cloud.google.com/project-id: {{ $projectName }}
+  name: {{ $projectName }}-{{ .name }}
+spec:
+  name: {{ .name }}.
+  type: {{ .type }}
+  ttl: {{ .ttl }}
+  managedZoneRef:
+    name: {{ .dnsZone }}
+  {{- if .computeAddress }}
+  rrdatasRefs:
+    - name: {{ $projectName }}-{{ .computeAddress }}
+      kind: ComputeAddress
+  {{- else if .rrdatas }}
+  rrdatas:
+    {{- toYaml .rrdatas | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,57 @@
+{{- if .Values.iam }}
+{{- $myprojectName := .Values.projectName | default .Release.Name }}
+{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- range .Values.iam }}
+{{- if .name }}
+---
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMServiceAccount
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+    cnrm.cloud.google.com/project-id: {{ $projectName }}
+  name: {{ $projectName }}-{{ .name }}
+spec:
+  description: {{ .description }}
+  resourceID: {{ .name }}
+{{- end }}
+{{- if .iamPolicyMember }}
+{{- range .iamPolicyMember }}
+---
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMPolicyMember
+metadata:
+  name: {{ $projectName }}-{{ .name }}
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+spec:
+  member: {{ .member }}
+  role: {{ .role }}
+  resourceRef:
+    apiVersion: resourcemanager.cnrm.cloud.google.com/v1beta1
+    kind: Project
+    external: {{ default (printf "projects/%s" $projectName) .external | quote }}
+{{- end }}
+{{- end }}
+{{- if .iamPolicy }}
+{{- $saName := .name }}
+{{- range .iamPolicy }}
+---
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMPolicy
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+  name: {{ $projectName }}-{{ .name }}
+spec:
+  resourceRef:
+    kind: {{ .kind }}
+    {{- if eq .kind "IAMServiceAccount" }}
+    external: projects/{{ $projectName }}/serviceAccounts/{{ $saName }}@{{ $projectName }}.iam.gserviceaccount.com
+    {{- end }}
+  bindings:
+    {{- toYaml .bindings | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

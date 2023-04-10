@@ -1,0 +1,52 @@
+{{- if .Values.gkeHub }}
+{{- $myprojectName := .Values.projectName | default .Release.Name }}
+{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- range .Values.gkeHub }}
+{{- if .membership }}
+{{- range .membership }}
+---
+apiVersion: gkehub.cnrm.cloud.google.com/v1beta1
+kind: GKEHubMembership
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+    cnrm.cloud.google.com/project-id: {{ $projectName }}
+  name: {{ $projectName }}-{{ .name }}
+spec:
+  resourceID: {{ .name }}
+  location: {{ .location }}
+  description: {{ .description | quote }}
+  {{- if .endpoint }}
+  endpoint:
+    {{- if .endpoint.gkeCluster }}
+    gkeCluster:
+      resourceRef:
+        name: {{ $projectName }}-{{ .endpoint.gkeCluster.name }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- if .feature }}
+{{- range .feature }}
+---
+apiVersion: gkehub.cnrm.cloud.google.com/v1beta1
+kind: GKEHubFeature
+metadata:
+  name: {{ $projectName }}-{{ .name }}
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+spec:
+  projectRef:
+    name: {{ $projectName }}
+  location: {{ .location }}
+  resourceID: {{ .resourceID }}
+  {{- if .multiClusterIngress }}
+  spec:
+    multiclusteringress:
+      configMembershipRef:
+        name: {{ $projectName }}-{{ .multiClusterIngress.mciName }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

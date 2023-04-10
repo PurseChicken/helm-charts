@@ -1,0 +1,10 @@
+apiVersion: v2
+name: cnrm-chart
+version: 1.0.0
+appVersion: "0.0.1"
+type: application
+keywords:
+  - kubernetes
+  - cnrm
+  - Config Connector
+  - cnrm.cloud.google.com

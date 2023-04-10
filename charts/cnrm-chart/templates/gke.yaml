@@ -1,0 +1,114 @@
+{{- if .Values.k8s }}
+{{- $myprojectName := .Values.projectName | default .Release.Name }}
+{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- range .Values.k8s }}
+---
+apiVersion: container.cnrm.cloud.google.com/v1beta1
+kind: ContainerCluster
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+    cnrm.cloud.google.com/project-id: {{ $projectName }}
+    cnrm.cloud.google.com/remove-default-node-pool: "true"
+  name: {{ $projectName }}-{{ .clusterName }}
+spec:
+  resourceID: {{ .clusterName }}
+  location: {{ .clusterLocation }}
+  initialNodeCount: 1
+  workloadIdentityConfig:
+    workloadPool: {{ $projectName }}.svc.id.goog
+  networkRef:
+    name: {{ $projectName }}-{{ .networkName }}
+  subnetworkRef:
+    name: {{ $projectName }}-{{ .subnetName }}
+  ipAllocationPolicy:
+    servicesSecondaryRangeName: {{ .servicesSecondaryRangeName }}
+    clusterSecondaryRangeName: {{ .clusterSecondaryRangeName }}
+  {{- if .clusterAutoscaling }}
+  clusterAutoscaling:
+    {{- toYaml .clusterAutoscaling | nindent 4 }}
+  {{- end }}
+  releaseChannel:
+    channel: {{ .releaseChannel }}
+  datapathProvider: {{ .datapathProvider }}
+  enableIntranodeVisibility: {{ .enableIntranodeVisibility }}
+  enableShieldedNodes: {{ .enableShieldedNodes }}
+  {{- if .addonsConfig }}
+  addonsConfig:
+    {{- toYaml .addonsConfig | nindent 4 }}
+  {{- end }}
+  verticalPodAutoscaling:
+    enabled: {{ .verticalPodAutoscalingEnabled }}
+  {{- if .loggingConfig }}
+  loggingConfig:
+    {{- toYaml .loggingConfig | nindent 4 }}
+  {{- end }}
+  {{- if .maintenancePolicy }}
+  maintenancePolicy:
+    {{- toYaml .maintenancePolicy | nindent 4 }}
+  {{- end }}
+  {{- if .monitoringConfig }}
+  monitoringConfig:
+    {{- toYaml .monitoringConfig | nindent 4 }}
+  {{- end -}}
+  {{- if .gatewayApiConfig }}
+  gatewayApiConfig:
+    channel: {{ .gatewayApiConfig.channel }}
+  {{- end -}}
+  {{- if .costManagementConfig }}
+  costManagementConfig:
+    enabled: true
+  {{- end }}
+{{- if .nodePool }}
+{{- $clusterName := .clusterName }}
+{{- range .nodePool }}
+---
+apiVersion: container.cnrm.cloud.google.com/v1beta1
+kind: ContainerNodePool
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+    cnrm.cloud.google.com/project-id: {{ $projectName }}
+  name: {{ $projectName }}-{{ .name }}
+spec:
+  resourceID: {{ .name }}
+  autoscaling:
+    minNodeCount: {{ .minNodeCount }}
+    maxNodeCount: {{ .maxNodeCount }}
+  clusterRef:
+    name: {{ $projectName }}-{{ $clusterName }}
+  initialNodeCount: {{ .initialNodeCount }}
+  location: {{ .nodeLocation }}
+  management:
+    autoRepair: {{ .management.autoRepair }}
+    autoUpgrade: {{ .management.autoUpgrade }}
+  maxPodsPerNode: {{ .maxPodsPerNode }}
+  nodeConfig:
+    diskSizeGb: {{ .nodeConfig.diskSizeGb }}
+    diskType: {{ .nodeConfig.diskType }}
+    imageType: {{ .nodeConfig.imageType }}
+    machineType: {{ .nodeConfig.machineType }}
+    {{- if .metadata }}
+    metadata:
+      {{- toYaml .metadata | nindent 6 }}
+    {{- end }}
+    {{- if .oauthScopes }}
+    oauthScopes:
+      {{- toYaml .oauthScopes | nindent 6 }}
+    {{- end }}
+    shieldedInstanceConfig:
+        enableSecureBoot: {{ .shieldedInstanceConfig.enableSecureBoot }}
+        enableIntegrityMonitoring: {{ .shieldedInstanceConfig.enableIntegrityMonitoring }}
+    tags:
+      - "{{ .name }}-nodes"
+    {{- if .tags }}
+      {{- toYaml .tags | nindent 6 }}
+    {{- end }}
+  {{- if .upgradeSettings }}
+  upgradeSettings:
+    {{- toYaml .upgradeSettings | nindent 4 }}
+  {{- end }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

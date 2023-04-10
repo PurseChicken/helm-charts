@@ -1,0 +1,89 @@
+{{- if .Values.sql }}
+{{- $myprojectName := .Values.projectName | default .Release.Name }}
+{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- range .Values.sql }}
+---
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLInstance
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+    cnrm.cloud.google.com/project-id: {{ $projectName }}
+  name: {{ $projectName }}-{{ .name }}
+spec:
+  resourceID: {{ .name }}
+  databaseVersion: {{ .databaseVersion }}
+  region: {{ .region }}
+  settings:
+    tier: {{ .tier }}
+    diskSize: {{ .diskSize }}
+    availabilityType: {{ .availabilityType }}
+    backupConfiguration:
+      enabled: true
+      pointInTimeRecoveryEnabled: true
+    # Not available until config connector 1.100.0
+    # deletionProtectionEnabled: true
+    {{- if .databaseFlags }}
+    databaseFlags:
+      {{- range .databaseFlags }}
+      - name: {{ .name }}
+        value: {{ .value | quote }}    
+      {{- end }}
+    {{- end }}
+    {{- if .maintenanceWindow }}
+    maintenanceWindow:
+      {{- with .maintenanceWindow}}
+      day: {{ .day }}
+      hour: {{ .hour }}
+      updateTrack: {{ .updateTrack | quote }}
+      {{- end }}
+    {{- end }}
+{{- if .users }}
+{{- $instanceName := .name }}
+{{- range .users }}
+---
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLUser
+metadata:
+  name: {{ $projectName }}-{{ .name }}
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+    cnrm.cloud.google.com/project-id: {{ $projectName }}
+spec:
+  instanceRef:
+    name: {{ $projectName }}-{{ $instanceName }}
+  type: {{ .type }}
+  resourceID: {{ .resourceID }}
+  {{- if .password }}
+  password:
+    {{- if .password.value }}
+    value: {{ .password.value | quote }}
+    {{- end }}
+    {{- if .password.valueFrom }}
+    valueFrom:
+      {{- toYaml .password.valueFrom | nindent 6 }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- if .databases }}
+{{- $instanceName := .name }}
+{{- range .databases }}
+---
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLDatabase
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+    cnrm.cloud.google.com/project-id: {{ $projectName }}
+  name: {{ $projectName }}-{{ regexReplaceAll "_" .name "-" }}
+spec:
+  resourceID: {{ .name }}
+  # Not available until configconnector version 1.99.0
+  # deletionPolicy: "ABANDON"
+  instanceRef:
+    name: {{ $projectName }}-{{ $instanceName }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
