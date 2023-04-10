@@ -57,6 +57,8 @@ if __name__ == "__main__":
             if len(line) == 0:
                 continue
 
+            print(line.lower())
+
             if any(x.lower() in line.lower() for x in MAJOR_KEYWORDS):
                 upgrade_type = UpgradeType.MAJOR
                 break
