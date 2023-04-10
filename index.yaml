@@ -3,6 +3,22 @@ entries:
   cnrm-chart:
   - apiVersion: v2
     appVersion: 0.0.1
+    created: "2023-04-10T21:10:13.086179131Z"
+    digest: ec0debbdbdd21d4c69d3fe3c060b6dafd4119f0bb08d193a5db0f59e4aa22c8e
+    keywords:
+    - kubernetes
+    - cnrm
+    - Config Connector
+    - cnrm.cloud.google.com
+    name: cnrm-chart
+    sources:
+    - https://github.com/pursechicken/helm-charts
+    type: application
+    urls:
+    - https://github.com/PurseChicken/helm-charts/releases/download/cnrm-chart-1.0.4/cnrm-chart-1.0.4.tgz
+    version: 1.0.4
+  - apiVersion: v2
+    appVersion: 0.0.1
     created: "2023-04-10T20:47:42.373378755Z"
     digest: 0f4265c29bda653d66d3b9834294cb86dfea299cd3844cbf528f9796daff9893
     keywords:
@@ -33,4 +49,4 @@ entries:
     urls:
     - https://github.com/PurseChicken/helm-charts/releases/download/cnrm-chart-1.0.2/cnrm-chart-1.0.2.tgz
     version: 1.0.2
-generated: "2023-04-10T20:47:42.373391756Z"
+generated: "2023-04-10T21:10:13.086191032Z"
