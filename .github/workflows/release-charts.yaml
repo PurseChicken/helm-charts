@@ -56,9 +56,7 @@ jobs:
           git pull
 
       - name: Install Helm
-        uses: azure/setup-helm@v1
-        with:
-          version: v3.5.1
+        uses: azure/setup-helm@v3
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.5.0
