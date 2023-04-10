@@ -17,7 +17,7 @@ The chart to update has to have a `.bumpversion.cfg` in the top level directory.
 current_version = 16.0.6
 commit = true
 tag = false
-message = Bump keycloak chart version: {current_version} → {new_version}
+message = Bump mychart chart version: {current_version} → {new_version}
 
 [bumpversion:file:Chart.yaml]
 ```
@@ -25,8 +25,8 @@ The `message` attribute must match the regex `/^Bump {chart_name} chart version:
 
 The workflow include looks like this.
 ```yaml
-    - name: Bump Keycloak
+    - name: Bump mychart
       uses: ./.github/actions/bumpVersionAction
       with:
-        chart: keycloak
+        chart: mychart
 ```
