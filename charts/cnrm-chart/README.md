@@ -8,11 +8,11 @@ The chart allows you to deploy the majority of your infrastructure using a Infra
 
 # Information
 
-This chart evolved from what was needed in specific use cases for an Organization. This means that the chart does not represent all resources or resource options that can be deployed using config connector.
+This chart evolved from what was needed in specific use cases for an Organization. This means that the chart does not represent all resources or resource options that can be deployed using config connector. PR's and Issues are welcome!
 
 # Prerequisites
 
-The methodology for the charts use is that you have an existing Kubernetes cluster running Config Connector. This Config Connector instance Service account must have "Project Creator" IAM permissions on the GCP Organization. This will allow you to use that Project\Cluster as your configuration cluster to then deploy all your other projects \ infrastructure from
+The methodology for the charts use is that you have an existing Kubernetes cluster running Config Connector. This Config Connector instance Service account must have "Project Creator" IAM permissions on the GCP Organization. This will allow you to use that Project\Cluster as your configuration cluster to then deploy all your other projects \ infrastructure from.
 
 # Design
 
@@ -33,8 +33,24 @@ The methodology for the charts use is that you have an existing Kubernetes clust
 - Cloud Monitoring
 - Cloud SQL
 
+# Usage
+
+```console
+$ helm repo add pursechicken https://pursechicken.github.io/helm-charts
+```
+
+Use the chart as a dependency to your own chart and specify the values you want to use in your own values file:
+
+```Chart.yaml
+dependencies:
+- name: cnrm-chart
+  version: "1.0.5"
+  repository: "https://pursechicken.github.io/helm-charts"
+```
+
 # Caveats
 
 - Not all Config Connector options and resources are available yet in the chart. They will be added as needed or if possible when requested.
 - The chart assumes that you are deploying projects and resources external to the current project its running in.
 - For safety reasons, a lot of the resources are deployed use the "abandon" deletion-policy annotation. This means that the majority of your resources will need to be manually deleted if you delete them from Config Connector.
+- The chart has only been tested using config connector in an existing k8s cluster in GCP running with a Workload Identity binding to a service account. Its possible this may also work if you are running config connector outside of k8s or in another way. What's likely more important is that the instance account has the proper permissions.

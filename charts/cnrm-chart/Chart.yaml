@@ -3,6 +3,7 @@ name: cnrm-chart
 version: 1.0.4
 appVersion: "0.0.1"
 type: application
+description: Deploy Projects and Infrastructure with Config Connector.
 keywords:
   - kubernetes
   - cnrm
