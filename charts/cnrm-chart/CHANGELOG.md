@@ -16,6 +16,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.0.2] - 2023-04-10
+
+### Added
+
+- Published helm repo using github pages \ releases
+
+### Changed
+
+- N/A
+
+
 ## [v1.0.0] - 2023-03-01
 
 ### Added
