@@ -8,3 +8,5 @@ keywords:
   - cnrm
   - Config Connector
   - cnrm.cloud.google.com
+sources:
+  - https://github.com/pursechicken/helm-charts
