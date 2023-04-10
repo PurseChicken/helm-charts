@@ -5,7 +5,7 @@ from enum import Enum
 
 MAJOR_KEYWORDS = ["breaking", "major"]
 MINOR_KEYWORDS = ["feat", "feature", "minor"]
-SKIP_BUMP_KEYWORDS = ["chore", "Bump version", "SkipBump"]
+SKIP_BUMP_KEYWORDS = ["chore", "Bump version", "skipbump"]
 
 
 class UpgradeType(Enum):
