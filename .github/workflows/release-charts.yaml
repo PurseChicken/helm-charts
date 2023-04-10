@@ -29,7 +29,7 @@ jobs:
       run: |
         if git merge-base --is-ancestor HEAD @{u} ; then
           echo "publish=false" >> $GITHUB_OUTPUT
-          echo "No push necesarry"
+          echo "No push necessary"
         else
           echo "Version bumps happened. Pushing now..."
           git push
