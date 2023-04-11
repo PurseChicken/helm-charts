@@ -44,7 +44,7 @@ Use the chart as a dependency to your own chart.
 ```Chart.yaml
 dependencies:
 - name: cnrm-chart
-  version: "1.0.5"
+  version: "1.0.6"
   repository: "https://pursechicken.github.io/helm-charts"
 ```
 
