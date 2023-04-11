@@ -54,7 +54,7 @@ if __name__ == "__main__":
         commit_messages = str(get_commits_process.stdout, "UTF-8").strip().split("\n")
         print(commit_messages)
         
-        last_message = [commit_messages[0]]
+        last_message = str([commit_messages[0]])
 
         if any(x.lower() in last_message.lower() for x in MAJOR_KEYWORDS):
                 upgrade_type = UpgradeType.MAJOR
