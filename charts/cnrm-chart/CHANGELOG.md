@@ -1,4 +1,4 @@
-# cnrm Helm Chart Changelog
+# cnrm-chart Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -15,6 +15,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed
 - Deprecated
 - Removed -->
+
+## [v1.0.7] - 2023-04-10
+
+### Changed
+
+- Added more comments to values.yaml
 
 ## [v1.0.6] - 2023-04-10
 

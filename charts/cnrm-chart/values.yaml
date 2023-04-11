@@ -21,6 +21,7 @@
 # projectFolderId: "8675309"
 
 # # Enable the following API's on your project
+# # You can find the name of the API\Service under "Additional details" of the API page.
 # apis:
 #   # Kubernetes Engine API
 #   - name: container.googleapis.com

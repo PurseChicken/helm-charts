@@ -44,7 +44,7 @@ Use the chart as a dependency to your own chart.
 ```Chart.yaml
 dependencies:
 - name: cnrm-chart
-  version: "1.0.6"
+  version: "1.0.7"
   repository: "https://pursechicken.github.io/helm-charts"
 ```
 
@@ -54,7 +54,7 @@ Then pull the dependency chart down
 $ helm dep update
 ```
 
-Specify the values you want to use in your own values file. Use the included values.yaml file as a reference.
+Specify the values you want to use in your own values file. Use the included values.yaml file as a reference. Lots of comments are included in the values file.
 
 [values.yaml](./values.yaml)
 
