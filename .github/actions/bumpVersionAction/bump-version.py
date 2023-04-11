@@ -53,21 +53,27 @@ if __name__ == "__main__":
         print("inspected the following commit messages:")
         commit_messages = str(get_commits_process.stdout, "UTF-8").strip().split("\n")
         print(commit_messages)
-        for line in commit_messages:
-            if len(line) == 0:
-                continue
+        
+        last_message = [commit_messages[0]]
 
-            print(line.lower())
-
-            if any(x.lower() in line.lower() for x in MAJOR_KEYWORDS):
+        if any(x.lower() in last_message.lower() for x in MAJOR_KEYWORDS):
                 upgrade_type = UpgradeType.MAJOR
-                break
-            elif any(x.lower() in line.lower() for x in MINOR_KEYWORDS):
-                upgrade_type = UpgradeType.MINOR
-            elif upgrade_type != UpgradeType.MINOR and not any(x.lower() in line.lower() for x in SKIP_BUMP_KEYWORDS):
-                upgrade_type = UpgradeType.PATCH
+        elif any(x.lower() in last_message.lower() for x in MINOR_KEYWORDS):
+            upgrade_type = UpgradeType.MINOR
+        elif upgrade_type != UpgradeType.MINOR and not any(x.lower() in last_message.lower() for x in SKIP_BUMP_KEYWORDS):
+            upgrade_type = UpgradeType.PATCH
 
-            print({upgrade_type.value})
+        # for line in commit_messages:
+        #     if len(line) == 0:
+        #         continue
+
+        #     if any(x.lower() in line.lower() for x in MAJOR_KEYWORDS):
+        #         upgrade_type = UpgradeType.MAJOR
+        #         break
+        #     elif any(x.lower() in line.lower() for x in MINOR_KEYWORDS):
+        #         upgrade_type = UpgradeType.MINOR
+        #     elif upgrade_type != UpgradeType.MINOR and not any(x.lower() in line.lower() for x in SKIP_BUMP_KEYWORDS):
+        #         upgrade_type = UpgradeType.PATCH
 
     if upgrade_type == UpgradeType.NONE:
         print("No need for a version bump detected")
