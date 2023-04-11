@@ -452,7 +452,7 @@
 #     users:
 #       - name: my-unique-global-project-sql-sa
 #         type: CLOUD_IAM_SERVICE_ACCOUNT
-#         resourceID: my-sa@my-unique-global-project.iam.
+#         resourceID: my-sa@my-unique-global-project.iam
 #       - name: my-unique-global-project-sql-user-myuser
 #         type: BUILT_IN
 #         resourceID: "myuser"
@@ -469,5 +469,5 @@
 #         resourceID: abc123@my.fqdn.com
 #     # What databases should be in this instance?
 #     databases:
-#       - name: clservices
-#       - name: n8n
+#       - name: mydb1
+#       - name: mydb99
