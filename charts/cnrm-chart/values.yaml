@@ -428,6 +428,23 @@
 #               trigger:
 #                 count: 1
 
+# # Cloud Logging
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/logging/logginglogbucket#project_log_bucket
+# logging:
+#   - logBucket:
+#     - name: "My-Cool-Bucket"
+#       location: "global"
+#       # omit billing if not configuring. default is project level
+#       # billing:
+#       #   accountId: "ABCDE-12345-67890"
+#       # omit organization if not configuring. default is project level
+#       # organization:
+#       #   orgId: "1234567890"
+#       # Optional
+#       description: "My Bucket"
+#       locked: "false"
+#       retentionDays: 60
+
 # # Cloud SQL
 # sql:
 #   # Create a Cloud SQL Instance

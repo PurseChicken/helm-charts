@@ -1,0 +1,39 @@
+{{- if .Values.logging }}
+{{- $myprojectName := .Values.projectName | default .Release.Name }}
+{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- range .Values.logging }}
+{{- if .logBucket }}
+{{- range .logBucket }}
+---
+apiVersion: logging.cnrm.cloud.google.com/v1beta1
+kind: LoggingLogBucket
+metadata:
+  annotations:
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+  name: {{ $projectName }}-{{ .name }}
+spec:
+  resourceID: {{ .name }}
+  {{- if .billing }}
+  billingAccountRef:
+    external: {{ .billing.accountId }}
+  {{- else if .organization }}
+  organizationRef:
+    external: organizations/{{ .organization.orgId }}
+  {{- else }}
+  projectRef:
+    external: projects/{{ $projectName }}
+  {{- end }}
+  location: {{ .location }}
+  {{- if .description }}
+  description: {{ .description }}
+  {{- end }}
+  {{- if .locked }}
+  locked: {{ .locked }}
+  {{- end }}
+  {{- if .retentionDays }}
+  retentionDays: {{ .retentionDays }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
