@@ -49,7 +49,9 @@ spec:
       ipCidrRange: {{ .ipCidrRange }}
     {{- end }}
   {{- end }}
-  stackType: IPV4_ONLY
+  {{- if and (ne .purpose "INTERNAL_HTTPS_LOAD_BALANCER") (ne .purpose "REGIONAL_MANAGED_PROXY")}}
+  stackType: {{ .stackType | default "IPV4_ONLY"}}
+  {{- end }}
 {{- end -}}
 {{- end -}}
 {{- end -}}

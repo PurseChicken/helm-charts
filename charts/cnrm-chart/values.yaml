@@ -48,6 +48,8 @@
 #           ipCidrRange: 10.16.64.0/20
 #         - name: pods
 #           ipCidrRange: 172.16.64.0/20
+#       # Optional. Defaults to IPV4_ONLY if not specified. Ignored if setting purpose to 'INTERNAL_HTTPS_LOAD_BALANCER' or 'REGIONAL_MANAGED_PROXY'.
+#       stackType: "IPV4_ONLY"
 #     - subnetName: "my-east-nodes"
 #       subnetCidr: "192.168.48.0/20"
 #       vpcRegion: "us-east1"

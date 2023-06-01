@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.0.10] - 2023-06-01
+
+### Changed
+
+- Changed hardcoded stackType to be specified in values (defaults to 'IPV4_ONLY') in ComputeSubnetwork (VPC subnet)
+- stackType is omitted if setting purpose to 'INTERNAL_HTTPS_LOAD_BALANCER' or 'REGIONAL_MANAGED_PROXY'
 ## [v1.0.9] - 2023-06-01
 
 ### Added
