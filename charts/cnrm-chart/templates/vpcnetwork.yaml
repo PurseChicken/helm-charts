@@ -32,6 +32,16 @@ spec:
   region: {{ .vpcRegion }}
   networkRef:
     name: {{ $projectName }}-{{ $networkName }}
+  {{- if .purpose }}
+  purpose: {{ .purpose }}
+  {{- end }}
+  {{- if not .role }}
+  {{- if or (eq .purpose "INTERNAL_HTTPS_LOAD_BALANCER") (eq .purpose "REGIONAL_MANAGED_PROXY")}}
+  role: ACTIVE
+  {{- end }}
+  {{- else }}
+  role: {{ .role }}
+  {{- end }}
   {{- if .secondarySubnets }}
   secondaryIpRange:
     {{- range .secondarySubnets }}

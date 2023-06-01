@@ -56,6 +56,14 @@
 #           ipCidrRange: 10.16.48.0/20
 #         - name: pods
 #           ipCidrRange: 172.16.48.0/20
+#     - subnetName: "my-test-proxy"
+#       subnetCidr: "192.168.80.0/20"
+#       vpcRegion: "us-central1"
+#       # Purpose is optional. If unspecified, the purpose defaults to 'PRIVATE_RFC_1918'.
+#       purpose: "REGIONAL_MANAGED_PROXY"
+#       # Optional, However must be specified if setting purpose to 'INTERNAL_HTTPS_LOAD_BALANCER' or 'REGIONAL_MANAGED_PROXY'.
+#       # Defaults to Active if not specified and purpose matches the above.
+#       role: "ACTIVE"
 
 # # Would you like to create some Kubernetes clusters?
 # k8s:
