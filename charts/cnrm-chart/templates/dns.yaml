@@ -1,4 +1,5 @@
 {{- if .Values.dns }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
 {{- $myprojectName := .Values.projectName | default .Release.Name }}
 {{- $projectName := .Values.projectID | default $myprojectName }}
 {{- if .Values.dns.zone }}
@@ -8,7 +9,11 @@ apiVersion: dns.cnrm.cloud.google.com/v1beta1
 kind: DNSManagedZone
 metadata:
   annotations:
+    {{- if $allowResourceDeletion }}
+    cnrm.cloud.google.com/deletion-policy: "none"
+    {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
+    {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
   name: {{ .metadataName }}
 spec:
@@ -26,7 +31,11 @@ apiVersion: dns.cnrm.cloud.google.com/v1beta1
 kind: DNSRecordSet
 metadata:
   annotations:
+    {{- if $allowResourceDeletion }}
+    cnrm.cloud.google.com/deletion-policy: "none"
+    {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
+    {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
   name: {{ $projectName }}-{{ .name }}
 spec:

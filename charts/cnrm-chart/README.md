@@ -29,9 +29,11 @@ The methodology for the charts use is that you have an existing Kubernetes clust
 - Service Networking Connections
 - Cloud DNS
 - gkeHub (Fleet)
-- SSLPolicy
+- SSL Policies
 - Cloud Monitoring
 - Cloud SQL
+- Logging Buckets
+- Security Policies
 
 # Usage
 
@@ -62,5 +64,5 @@ Specify the values you want to use in your own values file. Use the included val
 
 - Not all Config Connector options and resources are available yet in the chart. They will be added as needed or if possible when requested.
 - The chart assumes that you are deploying projects and resources external to the current project its running in.
-- For safety reasons, a lot of the resources are deployed use the "abandon" deletion-policy annotation. This means that the majority of your resources will need to be manually deleted if you delete them from Config Connector.
+- For safety reasons, a lot of the resources are deployed use the "abandon" deletion-policy annotation. This means that the majority of your resources will need to be manually deleted if you delete them from Config Connector. **There is now an option to configure this.
 - The chart has only been tested using config connector in an existing k8s cluster in GCP running with a Workload Identity binding to a service account. Its possible this may also work if you are running config connector outside of k8s or in another way. What's likely more important is that the instance account has the proper permissions.

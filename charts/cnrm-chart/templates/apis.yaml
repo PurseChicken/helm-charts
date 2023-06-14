@@ -1,4 +1,5 @@
 {{- if .Values.apis }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
 {{- $myprojectName := .Values.projectName | default .Release.Name }}
 {{- $projectName := .Values.projectID | default $myprojectName }}
 {{- range .Values.apis }}
@@ -7,7 +8,11 @@ apiVersion: serviceusage.cnrm.cloud.google.com/v1beta1
 kind: Service
 metadata:
   annotations:
-    cnrm.cloud.google.com/deletion-policy: abandon
+    {{- if $allowResourceDeletion }}
+    cnrm.cloud.google.com/deletion-policy: "none"
+    {{- else }}
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+    {{- end }}
     cnrm.cloud.google.com/disable-dependent-services: "false"
   name: {{ $projectName }}-{{ .name }}
 spec:

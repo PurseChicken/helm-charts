@@ -21,7 +21,6 @@ message = Bump mychart chart version: {current_version} → {new_version}
 
 [bumpversion:file:Chart.yaml]
 ```
-The `message` attribute must match the regex `/^Bump {chart_name} chart version:`. The action evaluates all commit messages since the last commit confirming to this regex.
 
 The workflow include looks like this.
 ```yaml
@@ -29,4 +28,12 @@ The workflow include looks like this.
       uses: ./.github/actions/bumpVersionAction
       with:
         chart: mychart
+```
+
+In order for a version to be bumped, one of the following keywords must be used in the commit message:
+
+```
+MAJOR_KEYWORDS = ["breaking", "major"]
+MINOR_KEYWORDS = ["feat", "feature", "minor"]
+PATCH_KEYWORDS = ["fix", "bump", "patch"]
 ```

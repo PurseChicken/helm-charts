@@ -1,11 +1,11 @@
-{{- if .Values.sslPolicy }}
+{{- if .Values.securityPolicy }}
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
 {{- $myprojectName := .Values.projectName | default .Release.Name }}
 {{- $projectName := .Values.projectID | default $myprojectName }}
-{{- range .Values.sslPolicy }}
+{{- range .Values.securityPolicy }}
 ---
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
-kind: ComputeSSLPolicy
+kind: ComputeSecurityPolicy
 metadata:
   annotations:
     {{- if $allowResourceDeletion }}
@@ -18,7 +18,16 @@ metadata:
 spec:
   resourceID: {{ .name }}
   description: {{ .description }}
-  minTlsVersion: {{ .minTlsVersion }}
-  profile: {{ .profile }}
+  adaptiveProtectionConfig:
+  {{- if .layer7DdosDefenseConfig }}
+    layer7DdosDefenseConfig:
+      enable: true
+  {{- else }}
+    layer7DdosDefenseConfig:
+      enable: false
+  {{- end }}
+  type: {{ .type }}
+  rule:
+    {{- toYaml .rule | nindent 4 }}
 {{- end -}}
 {{- end -}}

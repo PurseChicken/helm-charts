@@ -1,4 +1,5 @@
 {{- if .Values.k8s }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
 {{- $myprojectName := .Values.projectName | default .Release.Name }}
 {{- $projectName := .Values.projectID | default $myprojectName }}
 {{- range .Values.k8s }}
@@ -7,7 +8,11 @@ apiVersion: container.cnrm.cloud.google.com/v1beta1
 kind: ContainerCluster
 metadata:
   annotations:
+    {{- if $allowResourceDeletion }}
+    cnrm.cloud.google.com/deletion-policy: "none"
+    {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
+    {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
     cnrm.cloud.google.com/remove-default-node-pool: "true"
   name: {{ $projectName }}-{{ .clusterName }}
@@ -67,7 +72,11 @@ apiVersion: container.cnrm.cloud.google.com/v1beta1
 kind: ContainerNodePool
 metadata:
   annotations:
+    {{- if $allowResourceDeletion }}
+    cnrm.cloud.google.com/deletion-policy: "none"
+    {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
+    {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
   name: {{ $projectName }}-{{ .name }}
 spec:

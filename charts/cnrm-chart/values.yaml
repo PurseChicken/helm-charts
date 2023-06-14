@@ -1,11 +1,16 @@
 # # This project name will be used to create the project and is referenced in every other subsection unless a projectID has been defined.
 # # When the project is created, it uses this field for the name as well as the ID. It may error if the project ID has been used anywhere before.
 # # You can omit projectName and projectID and the chart will default to using .Release.Name
+# # If the project already exists, and config connector has the appropriate permissions, then the project will become managed by this deployment unless createOrManageProject is false.
 # projectName: "my-unique-global-project"
 
 # # Use a different projectID for the project rather than trying to use projectName above.
 # # This reference will now be used in every other subsection.
 # projectID: "my-unique-global-project"
+
+# # Do you want this deployment to manage or create the project? By default the project is created, or becomes managed by config connector if it exists.
+# # This is useful if you want to use this chart to just managed infrastructure in an existing project, but not take over management of it.
+# createOrManageProject: true
 
 # # Specify your organization ID so that when the project is created, it can tie it to your organization.
 # # Remove if not using an Organization.
@@ -19,6 +24,10 @@
 # # This can't be used if you are specifying an organizationID
 # # Remove if you are not using a folder
 # projectFolderId: "8675309"
+
+# # Allow deletion of resources? By default this is disabled if not specified.
+# # !!CAUTION!! If you enable this and apply it, any config connector resources deleted will actually be deleted in GCP.
+# allowResourceDeletion: false
 
 # # Enable the following API's on your project
 # # You can find the name of the API\Service under "Additional details" of the API page.
@@ -386,6 +395,25 @@
 #     description: "An SSL Policy with a MODERN encryption profile, supporting several modern methods of encryption for TLS 1.2 and up."
 #     minTlsVersion: TLS_1_2
 #     profile: MODERN
+
+# # Create Security Policy
+# securityPolicy:
+#   # https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computesecuritypolicy
+#   - name: my-waf-policy
+#     description: ""
+#     layer7DdosDefenseConfig: true
+#     type: "CLOUD_ARMOR"
+#     rule:
+#       # toYaml
+#       - action: allow
+#         description: Default allow rule.
+#         preview: false
+#         priority: 2147483647
+#         match:
+#           versionedExpr: SRC_IPS_V1
+#           config:
+#             srcIpRanges:
+#               - '*'
 
 # # Cloud Monitoring
 # monitoring:

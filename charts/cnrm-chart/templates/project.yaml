@@ -1,10 +1,16 @@
+{{- if .Values.createOrManageProject }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
 {{- $projectDisplayName := .Values.projectName | default .Release.Name }}
 {{- $projectID := .Values.projectID | default $projectDisplayName }}
 apiVersion: resourcemanager.cnrm.cloud.google.com/v1beta1
 kind: Project
 metadata:
   annotations:
+    {{- if $allowResourceDeletion }}
+    cnrm.cloud.google.com/deletion-policy: "none"
+    {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
+    {{- end }}
     cnrm.cloud.google.com/auto-create-network: "false"
   name: {{ $projectID }}
 spec:
@@ -21,3 +27,4 @@ spec:
   billingAccountRef:
     external: {{ .Values.billingAccountId | quote }}
   {{- end }}
+{{- end }}

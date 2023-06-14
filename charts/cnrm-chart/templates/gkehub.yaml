@@ -1,4 +1,5 @@
 {{- if .Values.gkeHub }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
 {{- $myprojectName := .Values.projectName | default .Release.Name }}
 {{- $projectName := .Values.projectID | default $myprojectName }}
 {{- range .Values.gkeHub }}
@@ -9,7 +10,11 @@ apiVersion: gkehub.cnrm.cloud.google.com/v1beta1
 kind: GKEHubMembership
 metadata:
   annotations:
+    {{- if $allowResourceDeletion }}
+    cnrm.cloud.google.com/deletion-policy: "none"
+    {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
+    {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
   name: {{ $projectName }}-{{ .name }}
 spec:
@@ -32,9 +37,13 @@ spec:
 apiVersion: gkehub.cnrm.cloud.google.com/v1beta1
 kind: GKEHubFeature
 metadata:
-  name: {{ $projectName }}-{{ .name }}
   annotations:
+    {{- if $allowResourceDeletion }}
+    cnrm.cloud.google.com/deletion-policy: "none"
+    {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
+    {{- end }}
+  name: {{ $projectName }}-{{ .name }}
 spec:
   projectRef:
     name: {{ $projectName }}

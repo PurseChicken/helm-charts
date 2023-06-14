@@ -16,6 +16,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.1.0] - 2023-06-14
+
+### Added
+
+- Added the configuration setting to not manage or create the GCP project. (createOrManageProject)
+- Added ability to create Security Policies. (securityPolicy)
+
+### Changed
+
+- Added the ability to configure whether or not you want to keep resources when deleting. (allowResourceDeletion)
+
 ## [v1.0.10] - 2023-06-01
 
 ### Changed
