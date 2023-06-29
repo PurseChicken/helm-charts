@@ -27,10 +27,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Modified MonitoringNotificationChannel to be able to use sensitiveLabels for labels that need values from a secret.
 
-### Updated
-
-- Updated chart-releaser-action to 1.6.0.
-
 ## [v1.1.0] - 2023-06-14
 
 ### Added
