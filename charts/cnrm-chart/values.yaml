@@ -546,7 +546,7 @@
 
 # # Create Secrets using external-secrets operator.
 # # This is likely only useful here if you need to use a secret in a manifest. E.G. A Slack auth_token in a notification channel.
-# # Requires https://external-secrets.io/latest/
+# # Requires https://external-secrets.io/latest/ to be installed.
 # externalSecrets:
 #     # Name must be unique across all infrastructure deployments
 #     # Manually appending with the project name may be a good practice here.
