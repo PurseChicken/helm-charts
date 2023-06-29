@@ -545,7 +545,7 @@
 #       - name: mydb99
 
 # # Create Secrets using external-secrets operator.
-# # This is likely only useful here if you need to use a secret in a manifest. E.G. A Slack auth_token.
+# # This is likely only useful here if you need to use a secret in a manifest. E.G. A Slack auth_token in a notification channel.
 # # Requires https://external-secrets.io/latest/
 # externalSecrets:
 #     # Name must be unique across all infrastructure deployments
