@@ -16,6 +16,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.1.3] - 2023-06-28
+
+### Fixed
+
+- Changelog version match
+
+## [v1.1.2] - 2023-06-28
+
+### Changed
+
+- Reverted chart-releaser back to v1.5.0
+
 ## [v1.1.1] - 2023-06-28
 
 ### Added
@@ -26,6 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Modified MonitoringNotificationChannel to be able to use sensitiveLabels for labels that need values from a secret.
+- chart-releaser to v1.6.0
 
 ## [v1.1.0] - 2023-06-14
 
