@@ -16,6 +16,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.1.1] - 2023-06-28
+
+### Added
+
+- Added the ability to use external-secrets operator to make secrets available in the cluster namespace. See 'externalSecrets' in the values file for comments.
+- Added release-notes-file to chart-releaser config so that release notes show up on builds.
+
+### Changed
+
+- Modified MonitoringNotificationChannel to be able to use sensitiveLabels for labels that need values from a secret.
+
+### Updated
+
+- Updated chart-releaser-action to 1.6.0.
+
 ## [v1.1.0] - 2023-06-14
 
 ### Added

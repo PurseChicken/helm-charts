@@ -434,6 +434,22 @@
 #           email_address: "dev@my.fqdn.com"
 #         description: "A channel that sends notifications to the development team."
 #         enabled: true
+#       - name: "slack-alerts"
+#         type: "slack"
+#         displayName: "My Slacker"
+#         labels:
+#           # toYaml
+#           channel_name: "#my-slack-channel"
+#           team: "MyOrg"
+#         sensitiveLabels:
+#           # toYaml
+#           auth_token:
+#             valueFrom:
+#               secretKeyRef:
+#                 name: my-unique-global-project-slack-secret
+#                 key: auth-token
+#         description: "A channel that sends notifications to Slack"
+#         enabled: true
 #     # Create Alert Policy
 #     # https://cloud.google.com/config-connector/docs/reference/resource-docs/monitoring/monitoringalertpolicy
 #     alertPolicy:
@@ -527,3 +543,36 @@
 #     databases:
 #       - name: mydb1
 #       - name: mydb99
+
+# # Create Secrets using external-secrets operator.
+# # This is likely only useful here if you need to use a secret in a manifest. E.G. A Slack auth_token.
+# # Requires https://external-secrets.io/latest/
+# externalSecrets:
+#     # Name must be unique across all infrastructure deployments
+#     # Manually appending with the project name may be a good practice here.
+#   - secretName: my-unique-global-project-secret
+#     # How often should the secret check for an update from the remote key?
+#     refreshInterval: 15m
+#     # What external-secrets secret-store should be used?
+#     secretStoreName: gcp-store
+#     # What type of secret-store is it?
+#     secretStoreKind: ClusterSecretStore
+#     # What Secret Creation Policy should be applied?
+#     secretCreationPolicy: Owner
+#     # List each key \ remoteKey to be available in this secret
+#     data:
+#       # range
+#         # what do you want the key to be named inside the secret?
+#       - secretKey: acl.json
+#         # what is the name of the existing remote key?
+#         remoteSecretKey: acl-json
+#       - secretKey: mysecret
+#         remoteSecretKey: hello-remote-secret
+#   - secretName: my-unique-global-project-slack-secret
+#     refreshInterval: 15m
+#     secretStoreName: gcp-localstore
+#     secretStoreKind: SecretStore
+#     secretCreationPolicy: Owner
+#     data:
+#       - secretKey: auth-token
+#         remoteSecretKey: slack-auth-token

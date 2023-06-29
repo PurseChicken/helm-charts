@@ -19,8 +19,15 @@ metadata:
   name: {{ $projectName }}-{{ .name }}
 spec:
   type: {{ .type }}
+  {{- if .displayName }}
+  displayName: {{ .displayName | quote }}
+  {{- end }}
   labels:
     {{- toYaml .labels | nindent 4 }}
+  {{- if .sensitiveLabels }}
+  sensitiveLabels:
+    {{- toYaml .sensitiveLabels | nindent 4 }}
+  {{- end }}
   description: {{ .description | quote }}
   enabled: {{ .enabled }}
 {{- end }}
