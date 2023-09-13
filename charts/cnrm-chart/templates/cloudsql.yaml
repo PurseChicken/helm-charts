@@ -35,6 +35,10 @@ spec:
         value: {{ .value | quote }}    
       {{- end }}
     {{- end }}
+    {{- if .ipConfiguration }}
+    ipConfiguration:
+      {{- toYaml .ipConfiguration | nindent 6 }}
+    {{- end }}
     {{- if .maintenanceWindow }}
     maintenanceWindow:
       {{- with .maintenanceWindow}}

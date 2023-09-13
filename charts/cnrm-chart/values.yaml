@@ -502,6 +502,7 @@
 # # Cloud SQL
 # sql:
 #   # Create a Cloud SQL Instance
+#   # https://cloud.google.com/config-connector/docs/reference/resource-docs/sql/sqlinstance#spec
 #   - name: "my-instance"
 #     databaseVersion: POSTGRES_14
 #     region: us-west4
@@ -513,7 +514,11 @@
 #       # Range name and value
 #       - name: cloudsql.iam_authentication
 #         value: "on"
-#     # You can define a maintenance window by specifying maintenanceWindow. Omit if not required.
+#     # Optional: ipConfiguration
+#     ipConfiguration:
+#       # toYaml
+#       requireSsl: true
+#     # Optional: You can define a maintenance window by specifying maintenanceWindow. Omit if not required.
 #     maintenanceWindow:
 #       # Day of the week 1-7 starting with Monday
 #       day: 1
