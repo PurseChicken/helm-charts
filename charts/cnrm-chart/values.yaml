@@ -514,6 +514,10 @@
 #       # Range name and value
 #       - name: cloudsql.iam_authentication
 #         value: "on"
+#     # Optional: Query Insights Configuration
+#     insightsConfig:
+#       # toYaml
+#       queryInsightsEnabled: true
 #     # Optional: ipConfiguration
 #     ipConfiguration:
 #       # toYaml

@@ -35,6 +35,10 @@ spec:
         value: {{ .value | quote }}    
       {{- end }}
     {{- end }}
+    {{- if .insightsConfig }}
+    insightsConfig:
+      {{- toYaml .insightsConfig | nindent 6 }}
+    {{- end }}
     {{- if .ipConfiguration }}
     ipConfiguration:
       {{- toYaml .ipConfiguration | nindent 6 }}

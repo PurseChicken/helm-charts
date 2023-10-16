@@ -16,11 +16,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.1.5] - 2023-10-16
+
+### Added
+
+- Added the Ability to specify Query Insights Configuration
+
+### Updated
+
+- Updated ReadMe to include snippet about External Secrets.
+
 ## [v1.1.4] - 2023-09-13
 
 ### Added
 
 - Added the ability to specify ipConfiguration on a SQL Instance.
+
 ## [v1.1.3] - 2023-06-28
 
 ### Fixed
