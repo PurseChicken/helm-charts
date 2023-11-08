@@ -43,6 +43,10 @@ spec:
     ipConfiguration:
       {{- toYaml .ipConfiguration | nindent 6 }}
     {{- end }}
+    {{- if .locationPreference }}
+    locationPreference:
+      {{- toYaml .locationPreference | nindent 6 }}
+    {{- end }}
     {{- if .maintenanceWindow }}
     maintenanceWindow:
       {{- with .maintenanceWindow}}
@@ -65,7 +69,7 @@ metadata:
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ .name }}
+  name: {{ $projectName }}-{{ $instanceName }}-{{ mustRegexReplaceAll "@.*" .resourceID "" }}
 spec:
   instanceRef:
     name: {{ $projectName }}-{{ $instanceName }}
@@ -97,7 +101,7 @@ metadata:
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ regexReplaceAll "_" .name "-" }}
+  name: {{ $projectName }}-{{ $instanceName }}-{{ mustRegexReplaceAll "_" .name "-" }}
 spec:
   resourceID: {{ .name }}
   # Not available until configconnector version 1.99.0

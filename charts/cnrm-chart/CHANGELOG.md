@@ -16,6 +16,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.2.0] - 2023-11-7
+
+### Added
+
+- Added the ability to specify locationPreference for SQL Instance.
+
+### Changed
+
+- SQL Users metadata name is generated using project name and instance name instead of just project name.
+- SQL Database metadata name is generated using project name and instance name instead of just project name.
+
+### Removed
+
+- SQL Users name key no longer needed.
+
 ## [v1.1.5] - 2023-10-16
 
 ### Added

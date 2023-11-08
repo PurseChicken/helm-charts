@@ -522,6 +522,9 @@
 #     ipConfiguration:
 #       # toYaml
 #       requireSsl: true
+#     # Optional: locationPreference
+#     locationPreference:
+#       zone: us-west4-b
 #     # Optional: You can define a maintenance window by specifying maintenanceWindow. Omit if not required.
 #     maintenanceWindow:
 #       # Day of the week 1-7 starting with Monday
@@ -531,12 +534,10 @@
 #       updateTrack: stable
 #     # Shall we create users on this instance?
 #     users:
-#       - name: my-unique-global-project-sql-sa
+#       - resourceID: my-sa@my-unique-global-project.iam
 #         type: CLOUD_IAM_SERVICE_ACCOUNT
-#         resourceID: my-sa@my-unique-global-project.iam
-#       - name: my-unique-global-project-sql-user-myuser
+#       - resourceID: "myuser"
 #         type: BUILT_IN
-#         resourceID: "myuser"
 #         # Optional since password not needed for different types
 #         password:
 #           # value or valueFrom.
@@ -545,9 +546,8 @@
 #             secretKeyRef:
 #               key:  postgres-myuser-password
 #               name: my-secrets
-#       - name: my-unique-global-project-sql-user-abc123
+#       - resourceID: abc123@my.fqdn.com
 #         type: CLOUD_IAM_USER
-#         resourceID: abc123@my.fqdn.com
 #     # What databases should be in this instance?
 #     databases:
 #       - name: mydb1
