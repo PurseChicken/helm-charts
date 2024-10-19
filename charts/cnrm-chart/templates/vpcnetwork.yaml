@@ -13,6 +13,11 @@ metadata:
     {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
+    {{- if .customAnnotations }}
+    {{- range $key, $value := .customAnnotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
   name: {{ $projectName }}-{{ .networkName }}
 spec:

@@ -13,6 +13,11 @@ metadata:
     {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
+    {{- if .customAnnotations }}
+    {{- range $key, $value := .customAnnotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
   name: {{ $projectName }}-{{ .name }}
 spec:
@@ -26,8 +31,9 @@ spec:
     backupConfiguration:
       enabled: true
       pointInTimeRecoveryEnabled: true
-    # Not available until config connector 1.100.0
-    # deletionProtectionEnabled: true
+    {{- if .deletionProtectionEnabled }}
+    deletionProtectionEnabled: true
+    {{- end }}
     {{- if .databaseFlags }}
     databaseFlags:
       {{- range .databaseFlags }}
@@ -104,11 +110,12 @@ metadata:
   name: {{ $projectName }}-{{ $instanceName }}-{{ mustRegexReplaceAll "_" .name "-" }}
 spec:
   resourceID: {{ .name }}
-  # Not available until configconnector version 1.99.0
-  # deletionPolicy: "ABANDON"
+  {{- if .deletionPolicy }}
+  deletionPolicy: {{ .deletionPolicy | quote }}
+  {{- end }}
   instanceRef:
     name: {{ $projectName }}-{{ $instanceName }}
-{{- end }}
-{{- end }}
-{{- end }}
-{{- end }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

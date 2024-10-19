@@ -12,7 +12,7 @@ This chart evolved from what was needed in specific use cases for an Organizatio
 
 # Prerequisites
 
-The methodology for the charts use is that you have an existing Kubernetes cluster running Config Connector. This Config Connector instance Service account must have "Project Creator" IAM permissions on the GCP Organization. This will allow you to use that Project\Cluster as your configuration cluster to then deploy all your other projects \ infrastructure from.
+The methodology for this charts use is that you have an existing Kubernetes cluster running Config Connector, or have a working instance of Config Connector that can be used to deploy everything from. This source Config Connector instance's Service account must have "Project Creator" IAM permissions on the GCP Organization where all of your Projects and resources will be deployed under. This will allow you to use your source Config Connector instance \ cluster to then deploy GCP projects and resources \ Infrastructure from.
 
 NOTE: This chart includes the option to include secrets using the [external-secrets operator](https://external-secrets.io/latest/). If you want to use this, you must ensure the operator is installed and configured correctly.
 
@@ -25,8 +25,10 @@ NOTE: This chart includes the option to include secrets using the [external-secr
 - Projects
 - API's
 - VPC networks
-- Kubernetes Clusters & Node Pools
-- IAM
+- Kubernetes Clusters
+- Kubernetes Node Pools
+- IAM Service Accounts
+- IAM Policies
 - Compute Addresses
 - Service Networking Connections
 - Cloud DNS
@@ -36,6 +38,7 @@ NOTE: This chart includes the option to include secrets using the [external-secr
 - Cloud SQL
 - Logging Buckets
 - Security Policies
+- Cloud IDS
 
 # Usage
 

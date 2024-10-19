@@ -45,6 +45,9 @@
 # vpcNetwork:
 #   # You can specify more than 1 VPC network
 #   - networkName: "my-net"
+#     # add custom annotations to this resource?
+#     customAnnotations:
+#       abc: "1234567890"
 #     # What if any subnets should be a part of your network?
 #     subNets:
 #     - subnetName: "my-central-nodes"
@@ -83,6 +86,9 @@
 #   # Workload Identity is also enabled with pool name of <project_name>.svc.id.goog
 #   # https://cloud.google.com/config-connector/docs/reference/resource-docs/container/containercluster#spec
 #   - clusterName: "central-cluster"
+#     # add custom annotations to this resource?
+#     customAnnotations:
+#       abc: "1234567890"
 #     clusterLocation: "us-central1"
 #     # The following four network declarations must be created using the vpcNetwork section.
 #     networkName: "my-net"
@@ -136,6 +142,9 @@
 #     # https://cloud.google.com/config-connector/docs/reference/resource-docs/container/containernodepool#spec
 #     nodePool:
 #       - name: "central-cluster-pool"
+#         # add custom annotations to this resource?
+#         customAnnotations:
+#           abc: "1234567890"
 #         initialNodeCount: 1
 #         minNodeCount: 1
 #         maxNodeCount: 3
@@ -249,6 +258,9 @@
 # iam:
 #   # Create the following account
 #   - name: cnrm-system
+#     # add custom annotations to this resource?
+#     customAnnotations:
+#       abc: "1234567890"
 #     description: "Config Connector Service Account"
 #     # Assign these roles to the account
 #     # If your config connector service account has access to other projects IAM (Project IAM Admin role),
@@ -323,8 +335,6 @@
 #   zone:
 #     # a dot(.) is automatically appended to the name entered here so no need to add it manually.
 #     - name: my.fqdn.com
-#       # Can't use dots so must be defined separately. Replace dots(.) with dashes(-) if you like.
-#       metadataName: my-fqdn-com
 #       description: "Testing Zone"
 #       visibility: "public"
 #       dnssecConfigState: "on"
@@ -504,11 +514,16 @@
 #   # Create a Cloud SQL Instance
 #   # https://cloud.google.com/config-connector/docs/reference/resource-docs/sql/sqlinstance#spec
 #   - name: "my-instance"
+#     # add custom annotations to this resource?
+#     customAnnotations:
+#       abc: "1234567890"
 #     databaseVersion: POSTGRES_14
 #     region: us-west4
 #     tier: db-custom-2-8192
 #     diskSize: 100
 #     availabilityType: REGIONAL
+#     # Enable Deletion Protection on the SQL instance?
+#     deletionProtectionEnabled: true
 #     # Optional Flags. Remove databaseFlags if not used.
 #     databaseFlags:
 #       # Range name and value
@@ -551,6 +566,8 @@
 #     # What databases should be in this instance?
 #     databases:
 #       - name: mydb1
+#         # Deletion Policy ABANDON, DELETE
+#         deletionPolicy: "ABANDON"
 #       - name: mydb99
 
 # # Create Secrets using external-secrets operator.
@@ -585,3 +602,21 @@
 #     data:
 #       - secretKey: auth-token
 #         remoteSecretKey: slack-auth-token
+
+# # Cloud IDS
+# ids:
+#   - name: "my-ids-endpoint"
+#     # add custom annotations to this resource?
+#     customAnnotations:
+#       abc: "1234567890"
+#     # Reference VPC which has ServiceNetworkingConnection and VPC_PEERING address
+#     networkRefName: my-net
+#     # Alert level of endpoint INFORMATIONAL, LOW, MEDIUM, HIGH, CRITICAL
+#     severity: INFORMATIONAL
+#     # zone
+#     location: us-central1-a
+#     # Optional: Exclude Threat ID's
+#     threatExceptions:
+#       #toYaml
+#       - THREAT_ID1
+#       - THREAT_ID2

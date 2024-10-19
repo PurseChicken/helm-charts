@@ -27,4 +27,4 @@ spec:
   billingAccountRef:
     external: {{ .Values.billingAccountId | quote }}
   {{- end }}
-{{- end }}
+{{- end -}}

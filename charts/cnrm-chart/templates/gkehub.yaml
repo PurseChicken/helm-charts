@@ -55,7 +55,7 @@ spec:
       configMembershipRef:
         name: {{ $projectName }}-{{ .multiClusterIngress.mciName }}
   {{- end }}
-{{- end }}
-{{- end }}
-{{- end }}
-{{- end }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

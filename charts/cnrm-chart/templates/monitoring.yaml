@@ -80,7 +80,7 @@ metadata:
 spec:
   metricsScope: {{ .name }}
   resourceID: {{ $projectName }}
-{{- end }}
-{{- end }}
-{{- end }}
-{{- end }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

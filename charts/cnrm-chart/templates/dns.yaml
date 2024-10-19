@@ -15,7 +15,7 @@ metadata:
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ .metadataName }}
+  name: {{ mustRegexReplaceAll "\\." .name "-" }}
 spec:
   description: {{ .description }}
   dnsName: {{ .name }}.
@@ -52,6 +52,6 @@ spec:
   rrdatas:
     {{- toYaml .rrdatas | nindent 4 }}
   {{- end }}
-{{- end }}
-{{- end }}
-{{- end }}
+{{- end -}}
+{{- end -}}
+{{- end -}}

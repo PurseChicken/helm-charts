@@ -16,6 +16,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.2.1] - 2024-10-18
+
+### Added
+
+- Ability to enable DeletionProtection for SQLInstance.
+- Ability to set Deletion Policy on SQL Database resources.
+- Automatically generate DNSManagedZone metadata name from name supplied in values.
+- Cloud IDS Endpoint resources can now be specified.
+- Ability to specify custom Annotations on the following resources:
+    - VPC Network
+    - Kubernetes Clusters
+    - Kubernetes Node Pools
+    - IAM Service Accounts
+    - Cloud SQL Instances
+    - Cloud IDS Endpoints
+
+### Fixed
+
+- Missing yaml extension on Compute Security Policy
+- Spacing in ChangeLog
+- "End" Templating
+
+### Removed
+
+- DNSManagedZone metadata name
+
+### Updated
+
+- Added Cloud IDS as supported resource in ReadMe.
+- Improved ReadMe verbiage.
+
 ## [v1.2.0] - 2023-11-7
 
 ### Added
@@ -88,6 +119,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Changed hardcoded stackType to be specified in values (defaults to 'IPV4_ONLY') in ComputeSubnetwork (VPC subnet)
 - stackType is omitted if setting purpose to 'INTERNAL_HTTPS_LOAD_BALANCER' or 'REGIONAL_MANAGED_PROXY'
+
 ## [v1.0.9] - 2023-06-01
 
 ### Added
@@ -99,6 +131,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Added ability to configure cloud logging buckets (Org, Billing and Project levels)
+
 ## [v1.0.7] - 2023-04-10
 
 ### Changed
@@ -134,7 +167,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - N/A
-
 
 ## [v1.0.0] - 2023-03-01
 

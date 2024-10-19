@@ -13,6 +13,11 @@ metadata:
     {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
+    {{- if .customAnnotations }}
+    {{- range $key, $value := .customAnnotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
     cnrm.cloud.google.com/remove-default-node-pool: "true"
   name: {{ $projectName }}-{{ .clusterName }}
@@ -55,11 +60,11 @@ spec:
   {{- if .monitoringConfig }}
   monitoringConfig:
     {{- toYaml .monitoringConfig | nindent 4 }}
-  {{- end -}}
+  {{- end }}
   {{- if .gatewayApiConfig }}
   gatewayApiConfig:
     channel: {{ .gatewayApiConfig.channel }}
-  {{- end -}}
+  {{- end }}
   {{- if .costManagementConfig }}
   costManagementConfig:
     enabled: true
@@ -76,6 +81,11 @@ metadata:
     cnrm.cloud.google.com/deletion-policy: "none"
     {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
+    {{- end }}
+    {{- if .customAnnotations }}
+    {{- range $key, $value := .customAnnotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
     {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
   name: {{ $projectName }}-{{ .name }}

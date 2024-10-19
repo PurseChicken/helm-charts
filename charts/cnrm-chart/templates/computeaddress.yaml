@@ -29,5 +29,5 @@ spec:
   networkRef:
     name: {{ $projectName }}-{{ .networkRef.name }}
   {{- end }}
-{{- end }}
-{{- end }}
+{{- end -}}
+{{- end -}}

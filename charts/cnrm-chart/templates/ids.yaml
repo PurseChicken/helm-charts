@@ -1,11 +1,11 @@
-{{- if .Values.snc }}
+{{- if .Values.ids }}
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
 {{- $myprojectName := .Values.projectName | default .Release.Name }}
 {{- $projectName := .Values.projectID | default $myprojectName }}
-{{- range .Values.snc }}
+{{- range .Values.ids }}
 ---
-apiVersion: servicenetworking.cnrm.cloud.google.com/v1beta1
-kind: ServiceNetworkingConnection
+apiVersion: cloudids.cnrm.cloud.google.com/v1beta1
+kind: CloudIDSEndpoint
 metadata:
   annotations:
     {{- if $allowResourceDeletion }}
@@ -13,15 +13,22 @@ metadata:
     {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
-    cnrm.cloud.google.com/project-id: {{ $projectName }}
+    {{- if .customAnnotations }}
+    {{- range $key, $value := .customAnnotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
   name: {{ $projectName }}-{{ .name }}
 spec:
   networkRef:
     name: {{ $projectName }}-{{ .networkRefName }}
-  reservedPeeringRanges:
-    {{- range .reservedPeeringRanges }}
-    - name: {{ $projectName }}-{{ .name }}
-    {{- end }}
-  service: {{ .service }}
+  severity: {{ .severity }}
+  location: {{ .location }}
+  projectRef:
+    external: {{ $projectName }}
+  {{- if .threatExceptions }}
+  threatExceptions:
+    {{- toYaml .threatExceptions | nindent 4 }}
+  {{- end }}
 {{- end -}}
 {{- end -}}
