@@ -3,6 +3,23 @@ entries:
   cnrm-chart:
   - apiVersion: v2
     appVersion: 0.0.1
+    created: "2025-01-07T01:15:41.57228691Z"
+    description: Deploy Projects and Infrastructure with Config Connector.
+    digest: d8cd65cf8c53e0e13a81fcc0a8b3881e96275078032b0185ef06b2f0c404d3ba
+    keywords:
+    - kubernetes
+    - cnrm
+    - Config Connector
+    - cnrm.cloud.google.com
+    name: cnrm-chart
+    sources:
+    - https://github.com/pursechicken/helm-charts
+    type: application
+    urls:
+    - https://github.com/PurseChicken/helm-charts/releases/download/cnrm-chart-1.2.2/cnrm-chart-1.2.2.tgz
+    version: 1.2.2
+  - apiVersion: v2
+    appVersion: 0.0.1
     created: "2024-10-19T02:35:35.56134723Z"
     description: Deploy Projects and Infrastructure with Config Connector.
     digest: d9e218d31ff471f9d64b5656ea10d126241c489d8f9abc47943ef3a9f2723e95
@@ -222,4 +239,26 @@ entries:
     urls:
     - https://github.com/PurseChicken/helm-charts/releases/download/cnrm-chart-1.0.5/cnrm-chart-1.0.5.tgz
     version: 1.0.5
-generated: "2024-10-19T02:35:35.561446295Z"
+  gateway-api-chart:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2025-01-07T01:15:41.665152755Z"
+    description: Deploy GKE gateway-api manifests as a sub-chart
+    digest: 08bee472d2f5022de21b88a4dfeb5d14040a704197bbf8ba915b46edd057d45e
+    keywords:
+    - kubernetes
+    - gateway-api
+    - api gateway
+    - httproute
+    - serviceexport
+    - serviceimport
+    - multi cluster ingress
+    - gateway.networking.k8s.io
+    name: gateway-api-chart
+    sources:
+    - https://github.com/pursechicken/helm-charts
+    type: application
+    urls:
+    - https://github.com/PurseChicken/helm-charts/releases/download/gateway-api-chart-0.0.0/gateway-api-chart-0.0.0.tgz
+    version: 0.0.0
+generated: "2025-01-07T01:15:41.665285781Z"
