@@ -20,18 +20,37 @@
 #           mode: Terminate
 #           certificateRefs:
 #             - name: my-cert
-#     # Need to Specify a Gateway Policy? Do so here.
+#     # Specify a Gateway Policy !Uses GCPGatewayPolicy!
 #     gatewayPolicy:
 #       # Allow Global Access? If not specified, it defaults to false https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_global_access
 #       allowGlobalAccess: false
 #       # This Policy must already exist to be able to apply to the Gateway in question. https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_ssl_policies
 #       sslPolicy: my-modern-policy
 
-# # Deploy a httpRoute
+# # Deploy a httpRoute and attach to a gateway.
 # httpRoute:
 #   - name: my-route
 #     # What is the name of the Gateway this httpRoute should attach to?
 #     gatewayName: my-gw
+#     # Is the gateway you are referencing in a different namespace than where this httpRoute will be deployed? If so specify here.
+#     gatewayNamespace: my-different-namespace
+#     # Do you want to automatically add a httpRoute to redirect HTTP requests to HTTP?
+#     # This will add a HTTPRoute which will attach to the gateway that will instruct it to redirect to the HTTPS scheme. An HTTP listener must exist on the gateway.
+#     redirectHTTP:
+#       # What is the name of the http listener?
+#       httpListenerName: http
+#     # You can also redirect specific hostnames to other hostnames.
+#     # This creates 1 or more httpRoutes which redirect requests to the listenerName to the redirectHostname.
+#     redirectHost:
+#       # The listenerName must exist on the gatewayName referenced above.
+#       - listenerName: http-www
+#         # What scheme should be used when the redirect occurs?
+#         redirectScheme: https
+#         # What is the hostname you want to redirect to?
+#         redirectHostname: nonwww.host
+#       - listenerName: http-non-www
+#         redirectScheme: https
+#         redirectHostname: www.host.name
 #     rules:
 #       # toYaml see: https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io/v1.HTTPRouteRule
 #       - backendRefs:
@@ -59,7 +78,7 @@
 #       httpHealthCheck:
 #         # toYaml
 #         requestPath: "/healthz"
-#     # Specify a backend Policy
+#     # Specify a backend Policy !Uses GCPBackendPolicy!
 #     backendPolicy:
 #       # Timeout: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_timeout
 #       timeoutSec: 40
@@ -76,7 +95,7 @@
 #       logging:
 #         enabled: true
 #         sampleRate: 500000
-#       # Configure WAF (Cloud Armor) Security Policy?
+#       # Configure WAF (Cloud Armor) Security Policy? !Requires Config Connector!
 #       securityPolicy:
 #         # Enable this Policy? (Can disable but leave all the config in place if needed by setting to false)
 #         enabled: true

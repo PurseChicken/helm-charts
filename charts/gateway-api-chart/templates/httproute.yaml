@@ -10,7 +10,58 @@ metadata:
 spec:
   parentRefs:
     - name: {{ .gatewayName }}
+      {{- if .gatewayNamespace }}
+      namespace: {{ .gatewayNamespace }}
+      {{- end }}
   rules:
     {{- toYaml .rules | nindent 4 }}
+{{- if .redirectHTTP }}
+---
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ .name }}-{{ .redirectHTTP.httpListenerName | default "http" }}-redirect
+  labels:
+    gateway: {{ .gatewayName }}
+spec:
+  parentRefs:
+    - name: {{ .gatewayName }}
+      {{- if .gatewayNamespace }}
+      namespace: {{ .gatewayNamespace }}
+      {{- end }}
+      sectionName: {{ .redirectHTTP.httpListenerName | default "http" }}
+  rules:
+    - filters:
+      - type: RequestRedirect
+        requestRedirect:
+          scheme: https
+{{- end }}
+{{- if .redirectHost }}
+{{- $routeName := .name }}
+{{- $gatewayName := .gatewayName }}
+{{- $gatewayNamespace := .gatewayNamespace }}
+{{- range .redirectHost }}
+---
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ $routeName }}-{{ .listenerName }}-redirect
+  labels:
+    gateway: {{ $gatewayName }}
+spec:
+  parentRefs:
+    - name: {{ $gatewayName }}
+      {{- if $gatewayNamespace }}
+      namespace: {{ $gatewayNamespace }}
+      {{- end }}
+      sectionName: {{ .listenerName }}
+  rules:
+    - filters:
+      - type: RequestRedirect
+        requestRedirect:
+          scheme: {{ .redirectScheme }}
+          hostname: {{ .redirectHostname }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
