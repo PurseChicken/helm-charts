@@ -3,9 +3,9 @@ import subprocess
 import sys
 from enum import Enum
 
-MAJOR_KEYWORDS = ["breaking", "major"]
-MINOR_KEYWORDS = ["feat", "feature", "minor"]
-PATCH_KEYWORDS = ["fix", "bump", "patch"]
+MAJOR_KEYWORDS = ["breaking:", "major:"]
+MINOR_KEYWORDS = ["feat:", "feature:", "minor:"]
+PATCH_KEYWORDS = ["fix:", "bump:", "patch:"]
 
 
 class UpgradeType(Enum):
