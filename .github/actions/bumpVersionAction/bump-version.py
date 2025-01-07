@@ -44,6 +44,8 @@ if __name__ == "__main__":
     print(commit_messages)
 
     last_commit_message = str([commit_messages[0]])
+    print("last commit message:")
+    print(last_commit_message)
 
     if any(x.lower() in last_commit_message.lower() for x in MAJOR_KEYWORDS):
         upgrade_type = UpgradeType.MAJOR
