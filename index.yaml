@@ -242,6 +242,27 @@ entries:
   gateway-api-chart:
   - apiVersion: v2
     appVersion: 0.0.1
+    created: "2025-01-07T23:05:24.498027698Z"
+    description: Deploy GKE gateway-api manifests as a sub-chart
+    digest: 53417d3de3801418cbccf67b284a4e03bf7bacd8496fcb3da552280d0b93e529
+    keywords:
+    - kubernetes
+    - gateway-api
+    - api gateway
+    - httproute
+    - serviceexport
+    - serviceimport
+    - multi cluster ingress
+    - gateway.networking.k8s.io
+    name: gateway-api-chart
+    sources:
+    - https://github.com/pursechicken/helm-charts
+    type: application
+    urls:
+    - https://github.com/PurseChicken/helm-charts/releases/download/gateway-api-chart-1.0.0/gateway-api-chart-1.0.0.tgz
+    version: 1.0.0
+  - apiVersion: v2
+    appVersion: 0.0.1
     created: "2025-01-07T01:15:41.665152755Z"
     description: Deploy GKE gateway-api manifests as a sub-chart
     digest: 08bee472d2f5022de21b88a4dfeb5d14040a704197bbf8ba915b46edd057d45e
@@ -261,4 +282,4 @@ entries:
     urls:
     - https://github.com/PurseChicken/helm-charts/releases/download/gateway-api-chart-0.0.0/gateway-api-chart-0.0.0.tgz
     version: 0.0.0
-generated: "2025-01-07T01:15:41.665285781Z"
+generated: "2025-01-07T23:05:24.498065388Z"
