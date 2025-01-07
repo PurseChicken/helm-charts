@@ -1,0 +1,9 @@
+{{- if .Values.serviceExport }}
+{{- range .Values.serviceExport }}
+---
+kind: ServiceExport
+apiVersion: net.gke.io/v1
+metadata:
+  name: {{ .name }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,17 @@
+apiVersion: v2
+name: gateway-api-chart
+version: 0.0.0
+appVersion: "0.0.1"
+type: application
+description: Deploy GKE gateway-api manifests as a sub-chart
+keywords:
+  - kubernetes
+  - gateway-api
+  - api gateway
+  - httproute
+  - serviceexport
+  - serviceimport
+  - multi cluster ingress
+  - gateway.networking.k8s.io
+sources:
+  - https://github.com/pursechicken/helm-charts

@@ -1,0 +1,50 @@
+{{- if .Values.serviceExport }}
+{{- range .Values.serviceExport }}
+{{- $importName := .name }}
+{{- if .backendPolicy }}
+{{- with .backendPolicy }}
+---
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: {{ $importName }}-backend-policy
+spec:
+  default:
+    {{- if .timeoutSec }}
+    timeoutSec: {{ .timeoutSec }}
+    {{- end }}
+    {{- if .sessionAffinity }}
+    {{- with .sessionAffinity }}
+    sessionAffinity:
+      type: {{ .type }}
+      {{- if eq .type "GENERATED_COOKIE" }}
+      cookieTtlSec: {{ .cookieTtlSec }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- if .connectionDraining }}
+    {{- with .connectionDraining }}
+    connectionDraining:
+      drainingTimeoutSec: {{ .timeoutSec }}
+    {{- end }}
+    {{- end }}
+    {{- if .logging }}
+    {{- with .logging }}
+    logging:
+      enabled: {{ .enabled }}
+      sampleRate: {{ .sampleRate }}
+    {{- end }}
+    {{- end }}
+    {{- if .securityPolicy }}
+    {{- with .securityPolicy.enabled }}
+    securityPolicy: {{ $importName }}-ca-waf
+    {{- end }}
+    {{- end }}
+  targetRef:
+    group: net.gke.io
+    kind: ServiceImport
+    name: {{ $importName }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

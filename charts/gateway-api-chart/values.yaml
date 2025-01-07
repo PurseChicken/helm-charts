@@ -1,0 +1,154 @@
+# # Deploy a Gateway
+# gateway:
+#   - name: my-gw
+#     # If you use cert-manager, you can specify the issuer type and name here
+#     issuer:
+#       type: cluster-issuer
+#       name: my-cluster-issuer
+#     # Specify the gateway class (GKE: https://cloud.google.com/kubernetes-engine/docs/how-to/gatewayclass-capabilities)
+#     gatewayClassName: gke-l7-global-external-managed-mc
+#     listeners:
+#       # toYaml
+#       - name: https
+#         hostname: my.host.name
+#         port: 443
+#         protocol: HTTPS
+#         allowedRoutes:
+#           kinds:
+#             - kind: HTTPRoute
+#         tls:
+#           mode: Terminate
+#           certificateRefs:
+#             - name: my-cert
+#     # Need to Specify a Gateway Policy? Do so here.
+#     gatewayPolicy:
+#       # Allow Global Access? If not specified, it defaults to false https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_global_access
+#       allowGlobalAccess: false
+#       # This Policy must already exist to be able to apply to the Gateway in question. https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_ssl_policies
+#       sslPolicy: my-modern-policy
+
+# # Deploy a httpRoute
+# httpRoute:
+#   - name: my-route
+#     # What is the name of the Gateway this httpRoute should attach to?
+#     gatewayName: my-gw
+#     rules:
+#       # toYaml see: https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io/v1.HTTPRouteRule
+#       - backendRefs:
+#         - group: net.gke.io
+#           kind: ServiceImport
+#           name: my-service
+#           port: 8080
+
+# # Deploy serviceExport for Multi-Cluster-Ingress
+# serviceExport:
+#   # Name should match the service name that you want to "export". For example, your service name might be my-service. Thats what you want to specify here.
+#   - name: my-service
+#     # Configure your own health checks on this endpoint? See: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_health_check
+#     # The name of this healthcheck policy is derived from the name of the service export. (e.g. my-service-healthcheck)
+#     healthCheck:
+#       # Optionally configure the below defaults. If not specified, the default values listed will be used.
+#       checkIntervalSec: 15
+#       timeoutSec: 15
+#       healthyThreshold: 1
+#       unhealthyThreshold: 2
+#       logConfigEnabled: true
+#       # What type of healthcheck should it be?
+#       type: HTTP
+#       # valid keys here are httpHealthCheck, httpsHealthCheck, grpcHealthCheck and http2HealthCheck using healthcheck type HTTP, HTTPS and HTTP2 respectively.
+#       httpHealthCheck:
+#         # toYaml
+#         requestPath: "/healthz"
+#     # Specify a backend Policy
+#     backendPolicy:
+#       # Timeout: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_timeout
+#       timeoutSec: 40
+#       # Session Affinity: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#session_affinity
+#       sessionAffinity:
+#         # CLIENT_IP or GENERATED_COOKIE
+#         type: GENERATED_COOKIE
+#         # If GENERATED_COOKIE Specify TTL
+#         cookieTtlSec: 50
+#       # Connection Draining: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_connection_draining
+#       connectionDraining:
+#         timeoutSec: 60
+#       # Logging: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#http_access_logging
+#       logging:
+#         enabled: true
+#         sampleRate: 500000
+#       # Configure WAF (Cloud Armor) Security Policy?
+#       securityPolicy:
+#         # Enable this Policy? (Can disable but leave all the config in place if needed by setting to false)
+#         enabled: true
+#         # Enable Adaptive Protection on this Security Policy? https://cloud.google.com/armor/docs/adaptive-protection-overview
+#         # enableAdaptiveProtection: true
+#         # By default the action for all the rules is "deny(403)" However if you want to specify your own action you can do so here:
+#         action: "deny(403)"
+#         # Should the rules be in preview mode? Meaning that they log but don't take action? Setting preview to false puts all rules in enforcement mode.
+#         # https://cloud.google.com/armor/docs/security-policy-overview#preview_mode
+#         preview: false
+#         # Must specify the GCP project ID:
+#         project: my-gcp-project
+#         # The below is only documented \ commented for the SQL Injection Rules, however the same sensitivity and optOut and optIn Rule configuration can be applied to all the preconfigured WAF Rules
+#         # If you leave out a section, then those WAF rules will not apply at all.
+#         # Configure SQL Injection Rules: https://cloud.google.com/armor/docs/waf-rules#sql_injection_sqli
+#         sqliConfig:
+#           # Specify a Sensitivity level that you want to apply: https://cloud.google.com/armor/docs/rule-tuning#choose_a_sensitivity_level
+#           sensitivity: 1
+#           # Specify which signatures you want to not apply. https://cloud.google.com/armor/docs/rule-tuning#opt_out_rule_signatures
+#           optOutRules:
+#             - "owasp-crs-v030301-id942440-sqli"
+#           # Specify which signatures you want to optIn to. If you specify optOutRules you cannot specify optInRules. You must also set sensitivity to 0. https://cloud.google.com/armor/docs/rule-tuning#opt_in_rule_signatures
+#           optInRules:
+#             - "owasp-crs-v030301-id942440-sqli"
+#         # Cross Site Scripting Rules: https://cloud.google.com/armor/docs/waf-rules#cross-site_scripting_xss
+#         xssConfig:
+#           # enabled: true here is just a placeholder. If you want to disable the specific rule, you must omit the entire section.
+#           enabled: true
+#         # Local File Inclusion Rules: https://cloud.google.com/armor/docs/waf-rules#local_file_inclusion_lfi
+#         lfiConfig:
+#           enabled: true
+#         # Remote Code Execution Rules: https://cloud.google.com/armor/docs/waf-rules#remote_code_execution_rce
+#         rceConfig:
+#           enabled: true
+#         # Remote File Inclusion Rules: https://cloud.google.com/armor/docs/waf-rules#remote_file_inclusion_rfi
+#         rfiConfig:
+#           enabled: true
+#         # Method Enforcement Rules: https://cloud.google.com/armor/docs/waf-rules#method_enforcement
+#         methodConfig:
+#           enabled: true
+#         # Scanner Detection Rules: https://cloud.google.com/armor/docs/waf-rules#scanner_detection
+#         scannerConfig:
+#           enabled: true
+#         # Protocol Attack Rules: https://cloud.google.com/armor/docs/waf-rules#protocol_attack
+#         protocolConfig:
+#           enabled: true
+#         # PHP Rules: https://cloud.google.com/armor/docs/waf-rules#php
+#         phpConfig:
+#           enabled: true
+#         # Session Fixation Rules: https://cloud.google.com/armor/docs/waf-rules#session_fixation
+#         sessionConfig:
+#           enabled: true
+#         # Java Attack Rules: https://cloud.google.com/armor/docs/waf-rules#java_attack
+#         javaConfig:
+#           enabled: true
+#         # NodeJS Attack Rules: https://cloud.google.com/armor/docs/waf-rules#nodejs_attack
+#         nodejsConfig:
+#           enabled: true
+#         # CVE and Other Vulnerability Rules: https://cloud.google.com/armor/docs/waf-rules#cves_and_other_vulnerabilities
+#         cveConfig:
+#           enabled: true
+#         # JSON-formatted content SQLi vulnerability: https://cloud.google.com/armor/docs/waf-rules#json-formatted_content_sqli_vulnerability
+#         jsonsqliConfig:
+#           enabled: true
+#         # Custom Rules. This can be any rule(s) you want to create yourself:
+#         customRules:
+#           # toYaml
+#           - description: "my-custom-rule"
+#             action: deny(403)
+#             preview: true
+#             priority: 99
+#             match:
+#               expr:
+#                 # Specify the expression. Here are some examples: https://cloud.google.com/armor/docs/rules-language-reference#expression-examples
+#                 expression: "inIpRange(origin.ip, '198.51.100.0/24')"

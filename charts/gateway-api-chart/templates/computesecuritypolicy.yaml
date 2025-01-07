@@ -1,0 +1,247 @@
+{{- if .Values.serviceExport }}
+{{- range .Values.serviceExport }}
+{{- $importName := .name }}
+{{- if .backendPolicy }}
+{{- with .backendPolicy }}
+{{- if .securityPolicy }}
+{{- if .securityPolicy.enabled }}
+{{- with .securityPolicy }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeSecurityPolicy
+metadata:
+  annotations:
+    cnrm.cloud.google.com/project-id: {{ .project }}
+  name: {{ $importName }}-ca-waf
+spec:
+  resourceID: {{ $importName }}-ca-waf
+  adaptiveProtectionConfig:
+    layer7DdosDefenseConfig:
+      enable: {{ .enableAdaptiveProtection | default "true" }}
+  type: "CLOUD_ARMOR"
+  rule:
+    - description: "Default allow rule."
+      action: allow
+      preview: false
+      priority: 2147483647
+      match:
+        versionedExpr: SRC_IPS_V1
+        config:
+          srcIpRanges:
+            - '*'
+    {{- $securityPolicy := . }}
+    {{- if (or (.sqliconfig) (.xssConfig) (.lfiConfig) (.rceConfig) (.rfiConfig)) }}
+    - description: "waf-rules-wave-1"
+      {{- if .action }}
+      action: {{ .action }}
+      {{- else }}
+      action: deny(403)
+      {{- end }}
+      {{- if .preview }}
+      preview: true
+      {{- else }}
+      preview: false
+      {{- end }}
+      priority: 5
+      match:
+        expr:
+          expression: "{{- with .sqliConfig -}}evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity':
+          {{- if .sensitivity }} {{ .sensitivity }}{{- else }} 2{{- end -}}
+          {{- if .optOutRules }}, 'opt_out_rule_ids': [
+          {{- range .optOutRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- else if .optInRules }}, 'opt_in_rule_ids': [
+          {{- range .optInRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- end -}}
+          }){{- if (or ($securityPolicy.xssConfig) ($securityPolicy.lfiConfig) ($securityPolicy.rceConfig) ($securityPolicy.rfiConfig)) }} || {{ end -}}{{ end -}}{{- with .xssConfig -}}evaluatePreconfiguredWaf('xss-v33-stable', {'sensitivity':
+          {{- if .sensitivity }} {{ .sensitivity }}{{- else }} 2{{- end -}}
+          {{- if .optOutRules }}, 'opt_out_rule_ids': [
+          {{- range .optOutRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- else if .optInRules }}, 'opt_in_rule_ids': [
+          {{- range .optInRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- end -}}
+          }){{- if (or ($securityPolicy.lfiConfig) ($securityPolicy.rceConfig) ($securityPolicy.rfiConfig)) }} || {{ end -}}{{ end -}}{{- with .lfiConfig -}}evaluatePreconfiguredWaf('lfi-v33-stable', {'sensitivity':
+          {{- if .sensitivity }} {{ .sensitivity }}{{- else }} 2{{- end -}}
+          {{- if .optOutRules }}, 'opt_out_rule_ids': [
+          {{- range .optOutRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- else if .optInRules }}, 'opt_in_rule_ids': [
+          {{- range .optInRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- end -}}
+          }){{- if (or ($securityPolicy.rceConfig) ($securityPolicy.rfiConfig)) }} || {{ end -}}{{ end -}}{{- with .rceConfig -}}evaluatePreconfiguredWaf('rce-v33-stable', {'sensitivity':
+          {{- if .sensitivity }} {{ .sensitivity }}{{- else }} 2{{- end -}}
+          {{- if .optOutRules }}, 'opt_out_rule_ids': [
+          {{- range .optOutRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- else if .optInRules }}, 'opt_in_rule_ids': [
+          {{- range .optInRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- end -}}
+          }){{- if $securityPolicy.rfiConfig }} || {{ end -}}{{ end -}}{{- with .rfiConfig -}}evaluatePreconfiguredWaf('rfi-v33-stable', {'sensitivity':
+          {{- if .sensitivity }} {{ .sensitivity }}{{- else }} 2{{- end -}}
+          {{- if .optOutRules }}, 'opt_out_rule_ids': [
+          {{- range .optOutRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- else if .optInRules }}, 'opt_in_rule_ids': [
+          {{- range .optInRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- end -}}
+          }){{- end -}}"
+    {{- end }}
+    {{- if (or (.methodConfig) (.scannerConfig) (.protocolConfig) (.phpConfig) (.sessionConfig)) }}
+    - description: "waf-rules-wave-2"
+      {{- if .action }}
+      action: {{ .action }}
+      {{- else }}
+      action: deny(403)
+      {{- end }}
+      {{- if .preview }}
+      preview: true
+      {{- else }}
+      preview: false
+      {{- end }}
+      priority: 10
+      match:
+        expr:
+          expression: "{{- with .methodConfig -}}evaluatePreconfiguredWaf('methodenforcement-v33-stable', {'sensitivity':
+          {{- if .sensitivity }} {{ .sensitivity }}{{- else }} 2{{- end -}}
+          {{- if .optOutRules }}, 'opt_out_rule_ids': [
+          {{- range .optOutRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- else if .optInRules }}, 'opt_in_rule_ids': [
+          {{- range .optInRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- end -}}
+          }){{- if (or ($securityPolicy.scannerConfig) ($securityPolicy.protocolConfig) ($securityPolicy.phpConfig) ($securityPolicy.sessionConfig)) }} || {{ end -}}{{ end -}}{{- with .scannerConfig -}}evaluatePreconfiguredWaf('scannerdetection-v33-stable', {'sensitivity':
+          {{- if .sensitivity }} {{ .sensitivity }}{{- else }} 2{{- end -}}
+          {{- if .optOutRules }}, 'opt_out_rule_ids': [
+          {{- range .optOutRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- else if .optInRules }}, 'opt_in_rule_ids': [
+          {{- range .optInRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- end -}}
+          }){{- if (or ($securityPolicy.protocolConfig) ($securityPolicy.phpConfig) ($securityPolicy.sessionConfig)) }} || {{ end -}}{{ end -}}{{- with .protocolConfig -}}evaluatePreconfiguredWaf('protocolattack-v33-stable', {'sensitivity':
+          {{- if .sensitivity }} {{ .sensitivity }}{{- else }} 2{{- end -}}
+          {{- if .optOutRules }}, 'opt_out_rule_ids': [
+          {{- range .optOutRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- else if .optInRules }}, 'opt_in_rule_ids': [
+          {{- range .optInRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- end -}}
+          }){{- if (or ($securityPolicy.phpConfig) ($securityPolicy.sessionConfig)) }} || {{ end -}}{{ end -}}{{- with .phpConfig -}}evaluatePreconfiguredWaf('php-v33-stable', {'sensitivity':
+          {{- if .sensitivity }} {{ .sensitivity }}{{- else }} 2{{- end -}}
+          {{- if .optOutRules }}, 'opt_out_rule_ids': [
+          {{- range .optOutRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- else if .optInRules }}, 'opt_in_rule_ids': [
+          {{- range .optInRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- end -}}
+          }){{- if $securityPolicy.sessionConfig }} || {{ end -}}{{ end -}}{{- with .sessionConfig -}}evaluatePreconfiguredWaf('sessionfixation-v33-stable', {'sensitivity':
+          {{- if .sensitivity }} {{ .sensitivity }}{{- else }} 2{{- end -}}
+          {{- if .optOutRules }}, 'opt_out_rule_ids': [
+          {{- range .optOutRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- else if .optInRules }}, 'opt_in_rule_ids': [
+          {{- range .optInRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- end -}}
+          }){{- end -}}"
+    {{- end }}
+    {{- if (or (.javaConfig) (.nodejsConfig) (.cveConfig) (.jsonsqliConfig)) }}
+    - description: "waf-rules-wave-3"
+      {{- if .action }}
+      action: {{ .action }}
+      {{- else }}
+      action: deny(403)
+      {{- end }}
+      {{- if .preview }}
+      preview: true
+      {{- else }}
+      preview: false
+      {{- end }}
+      priority: 15
+      match:
+        expr:
+          expression: "{{- with .javaConfig -}}evaluatePreconfiguredWaf('java-v33-stable', {'sensitivity':
+          {{- if .sensitivity }} {{ .sensitivity }}{{- else }} 2{{- end -}}
+          {{- if .optOutRules }}, 'opt_out_rule_ids': [
+          {{- range .optOutRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- else if .optInRules }}, 'opt_in_rule_ids': [
+          {{- range .optInRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- end -}}
+          }){{- if (or ($securityPolicy.nodejsConfig) ($securityPolicy.cveConfig) ($securityPolicy.jsonsqliConfig)) }} || {{ end -}}{{ end -}}{{- with .nodejsConfig -}}evaluatePreconfiguredWaf('nodejs-v33-stable', {'sensitivity':
+          {{- if .sensitivity }} {{ .sensitivity }}{{- else }} 2{{- end -}}
+          {{- if .optOutRules }}, 'opt_out_rule_ids': [
+          {{- range .optOutRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- else if .optInRules }}, 'opt_in_rule_ids': [
+          {{- range .optInRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- end -}}
+          }){{- if (or ($securityPolicy.cveConfig) ($securityPolicy.jsonsqliConfig)) }} || {{ end -}}{{ end -}}{{- with .cveConfig -}}evaluatePreconfiguredWaf('cve-canary', {'sensitivity':
+          {{- if .sensitivity }} {{ .sensitivity }}{{- else }} 2{{- end -}}
+          {{- if .optOutRules }}, 'opt_out_rule_ids': [
+          {{- range .optOutRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- else if .optInRules }}, 'opt_in_rule_ids': [
+          {{- range .optInRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- end -}}
+          }){{- if $securityPolicy.jsonsqliConfig }} || {{ end -}}{{ end -}}{{- with .jsonsqliConfig -}}evaluatePreconfiguredWaf('json-sqli-canary', {'sensitivity':
+          {{- if .sensitivity }} {{ .sensitivity }}{{- else }} 2{{- end -}}
+          {{- if .optOutRules }}, 'opt_out_rule_ids': [
+          {{- range .optOutRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- else if .optInRules }}, 'opt_in_rule_ids': [
+          {{- range .optInRules -}}
+          '{{ . }}',
+          {{- end -}}]
+          {{- end -}}
+          }){{- end -}}"
+    {{- end }}
+    {{- if .customRules }}
+    {{- toYaml .customRules | nindent 4 }}
+    {{- end }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

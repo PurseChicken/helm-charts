@@ -1,0 +1,41 @@
+{{- if .Values.serviceExport }}
+{{- range .Values.serviceExport }}
+{{- $importName := .name }}
+{{- if .healthCheck }}
+{{- with .healthCheck }}
+---
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: {{ $importName }}-healthcheck
+spec:
+  default:
+    checkIntervalSec: {{ .checkIntervalSec | default "15" }}
+    timeoutSec: {{ .timeoutSec | default "15" }}
+    healthyThreshold: {{ .healthyThreshold | default "1" }}
+    unhealthyThreshold: {{ .unhealthyThreshold | default "2" }}
+    logConfig:
+      enabled: {{ .logConfigEnabled | default "true" }}
+    config:
+      type: {{ .type }}
+      {{- if .httpHealthCheck }}
+      httpHealthCheck:
+        {{- toYaml .httpHealthCheck | nindent 8 }}
+      {{- else if .httpsHealthCheck }}
+      httpsHealthCheck:
+        {{- toYaml .httpsHealthCheck | nindent 8 }}
+      {{- else if .grpcHealthCheck }}
+      grpcHealthCheck:
+        {{- toYaml .grpcHealthCheck | nindent 8 }}
+      {{- else if .http2HealthCheck }}
+      http2HealthCheck:
+        {{- toYaml .http2HealthCheck | nindent 8 }}
+      {{- end }}
+  targetRef:
+    group: net.gke.io
+    kind: ServiceImport
+    name: {{ $importName }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

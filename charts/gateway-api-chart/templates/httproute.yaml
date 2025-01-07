@@ -1,0 +1,16 @@
+{{- if .Values.httpRoute }}
+{{- range .Values.httpRoute }}
+---
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ .name }}
+  labels:
+    gateway: {{ .gatewayName }}
+spec:
+  parentRefs:
+    - name: {{ .gatewayName }}
+  rules:
+    {{- toYaml .rules | nindent 4 }}
+{{- end }}
+{{- end }}
