@@ -16,6 +16,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.2.2] - 2025-02-21
+
+### Added
+
+- Ability to set Firewall Enforcement Order on VPC
+- Ability to set description on VPC
+
+### Updated
+
+- No longer hard code some VPC values. Specifically: "autoCreateSubnetworks", "mtu" and "routingMode".
+
 ## [v1.2.1] - 2024-10-18
 
 ### Added

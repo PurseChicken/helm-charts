@@ -2,7 +2,7 @@
 # # When the project is created, it uses this field for the name as well as the ID. It may error if the project ID has been used anywhere before.
 # # You can omit projectName and projectID and the chart will default to using .Release.Name
 # # If the project already exists, and config connector has the appropriate permissions, then the project will become managed by this deployment unless createOrManageProject is false.
-# projectName: "my-unique-global-project"
+projectName: "my-unique-global-project"
 
 # # Use a different projectID for the project rather than trying to use projectName above.
 # # This reference will now be used in every other subsection.
@@ -48,36 +48,47 @@
 #     # add custom annotations to this resource?
 #     customAnnotations:
 #       abc: "1234567890"
+#     # Optional. Auto Create Subnetworks?
+#     # When set to 'true', the network is created in "auto subnet mode" and it will create a subnet for each region automatically across the '10.128.0.0/9' address range
+#     # autoCreateSubnetworks: true
+#     # Optional. Description for the resource
+#     description: "My network"
+#     # Optional. Set MTU default is 1460 bytes
+#     mtu: 8896
+#     # Optional. Set Routing Mode. Default is REGIONAL Possible values: REGIONAL, GLOBAL
+#     # routingMode: GLOBAL
+#     # Optional. Defaults to AFTER_CLASSIC_FIREWALL
+#     # networkFirewallPolicyEnforcementOrder: BEFORE_CLASSIC_FIREWALL
 #     # What if any subnets should be a part of your network?
 #     subNets:
-#     - subnetName: "my-central-nodes"
-#       subnetCidr: "192.168.64.0/20"
-#       vpcRegion: "us-central1"
-#       # If you need secondary subnets use this block.
-#       secondarySubnets:
-#         # There must be two subnets for "services" and "pods" when specifying a VPC for a k8s cluster.
-#         - name: services
-#           ipCidrRange: 10.16.64.0/20
-#         - name: pods
-#           ipCidrRange: 172.16.64.0/20
-#       # Optional. Defaults to IPV4_ONLY if not specified. Ignored if setting purpose to 'INTERNAL_HTTPS_LOAD_BALANCER' or 'REGIONAL_MANAGED_PROXY'.
-#       stackType: "IPV4_ONLY"
-#     - subnetName: "my-east-nodes"
-#       subnetCidr: "192.168.48.0/20"
-#       vpcRegion: "us-east1"
-#       secondarySubnets:
-#         - name: services
-#           ipCidrRange: 10.16.48.0/20
-#         - name: pods
-#           ipCidrRange: 172.16.48.0/20
-#     - subnetName: "my-test-proxy"
-#       subnetCidr: "192.168.80.0/20"
-#       vpcRegion: "us-central1"
-#       # Purpose is optional. If unspecified, the purpose defaults to 'PRIVATE_RFC_1918'.
-#       purpose: "REGIONAL_MANAGED_PROXY"
-#       # Optional, However must be specified if setting purpose to 'INTERNAL_HTTPS_LOAD_BALANCER' or 'REGIONAL_MANAGED_PROXY'.
-#       # Defaults to Active if not specified and purpose matches the above.
-#       role: "ACTIVE"
+#       - subnetName: "my-central-nodes"
+#         subnetCidr: "192.168.64.0/20"
+#         vpcRegion: "us-central1"
+#         # If you need secondary subnets use this block.
+#         secondarySubnets:
+#           # There must be two subnets for "services" and "pods" when specifying a VPC for a k8s cluster.
+#           - name: services
+#             ipCidrRange: 10.16.64.0/20
+#           - name: pods
+#             ipCidrRange: 172.16.64.0/20
+#         # Optional. Defaults to IPV4_ONLY if not specified. Ignored if setting purpose to 'INTERNAL_HTTPS_LOAD_BALANCER' or 'REGIONAL_MANAGED_PROXY'.
+#         stackType: "IPV4_ONLY"
+#       - subnetName: "my-east-nodes"
+#         subnetCidr: "192.168.48.0/20"
+#         vpcRegion: "us-east1"
+#         secondarySubnets:
+#           - name: services
+#             ipCidrRange: 10.16.48.0/20
+#           - name: pods
+#             ipCidrRange: 172.16.48.0/20
+#       - subnetName: "my-test-proxy"
+#         subnetCidr: "192.168.80.0/20"
+#         vpcRegion: "us-central1"
+#         # Purpose is optional. If unspecified, the purpose defaults to 'PRIVATE_RFC_1918'.
+#         purpose: "REGIONAL_MANAGED_PROXY"
+#         # Optional, However must be specified if setting purpose to 'INTERNAL_HTTPS_LOAD_BALANCER' or 'REGIONAL_MANAGED_PROXY'.
+#         # Defaults to Active if not specified and purpose matches the above.
+#         role: "ACTIVE"
 
 # # Would you like to create some Kubernetes clusters?
 # k8s:

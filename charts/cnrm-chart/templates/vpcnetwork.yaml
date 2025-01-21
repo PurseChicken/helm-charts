@@ -22,9 +22,17 @@ metadata:
   name: {{ $projectName }}-{{ .networkName }}
 spec:
   resourceID: {{ .networkName }}
+  {{- if .autoCreateSubnetworks }}
+  autoCreateSubnetworks: true
+  {{- else }}
   autoCreateSubnetworks: false
-  mtu: 1460
-  routingMode: REGIONAL
+  {{- end }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  mtu: {{ .mtu | default 1460 }}
+  routingMode: {{ .routingMode | default "REGIONAL" }}
+  networkFirewallPolicyEnforcementOrder: {{ .networkFirewallPolicyEnforcementOrder | default "AFTER_CLASSIC_FIREWALL" }}
 {{- if .subNets }}
 {{- $networkName := .networkName }}
 {{- range .subNets }}
