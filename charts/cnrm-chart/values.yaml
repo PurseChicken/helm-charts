@@ -2,7 +2,7 @@
 # # When the project is created, it uses this field for the name as well as the ID. It may error if the project ID has been used anywhere before.
 # # You can omit projectName and projectID and the chart will default to using .Release.Name
 # # If the project already exists, and config connector has the appropriate permissions, then the project will become managed by this deployment unless createOrManageProject is false.
-projectName: "my-unique-global-project"
+# projectName: "my-unique-global-project"
 
 # # Use a different projectID for the project rather than trying to use projectName above.
 # # This reference will now be used in every other subsection.
