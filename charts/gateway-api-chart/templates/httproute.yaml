@@ -2,7 +2,7 @@
 {{- range .Values.httpRoute }}
 ---
 kind: HTTPRoute
-apiVersion: gateway.networking.k8s.io/v1beta1
+apiVersion: gateway.networking.k8s.io/v1
 metadata:
   name: {{ .name }}
   labels:
@@ -18,7 +18,7 @@ spec:
 {{- if .redirectHTTP }}
 ---
 kind: HTTPRoute
-apiVersion: gateway.networking.k8s.io/v1beta1
+apiVersion: gateway.networking.k8s.io/v1
 metadata:
   name: {{ .name }}-{{ .redirectHTTP.httpListenerName | default "http" }}-redirect
   labels:
@@ -43,7 +43,7 @@ spec:
 {{- range .redirectHost }}
 ---
 kind: HTTPRoute
-apiVersion: gateway.networking.k8s.io/v1beta1
+apiVersion: gateway.networking.k8s.io/v1
 metadata:
   name: {{ $routeName }}-{{ .listenerName }}-redirect
   labels:

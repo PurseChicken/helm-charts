@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Deprecated
 - Removed -->
 
+## [v1.1.0] - 2025-01-21
+
+### Changed
+
+- Changed to v1 gateway-api resources
+
 ## [v1.0.0] - 2025-01-07
 
 ### Added
