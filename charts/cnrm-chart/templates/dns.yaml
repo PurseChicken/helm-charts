@@ -4,6 +4,8 @@
 {{- $projectName := .Values.projectID | default $myprojectName }}
 {{- if .Values.dns.zone }}
 {{- range .Values.dns.zone }}
+{{- $name1 := mustRegexReplaceAll "\\W|\\B_" .name "-" }}
+{{- $metaName := mustRegexReplaceAll "^_" $name1 "" }}
 ---
 apiVersion: dns.cnrm.cloud.google.com/v1beta1
 kind: DNSManagedZone
@@ -15,7 +17,7 @@ metadata:
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ mustRegexReplaceAll "\\." .name "-" }}
+  name: {{ $metaName }}
 spec:
   description: {{ .description }}
   dnsName: {{ .name }}.
@@ -26,6 +28,8 @@ spec:
 {{- end }}
 {{- if .Values.dns.record }}
 {{- range .Values.dns.record }}
+{{- $name1 := mustRegexReplaceAll "\\W|\\B_" .name "-" }}
+{{- $metaName := mustRegexReplaceAll "^_" $name1 "" }}
 ---
 apiVersion: dns.cnrm.cloud.google.com/v1beta1
 kind: DNSRecordSet
@@ -37,7 +41,7 @@ metadata:
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ .name }}
+  name: {{ $projectName }}-{{ $metaName }}
 spec:
   name: {{ .name }}.
   type: {{ .type }}

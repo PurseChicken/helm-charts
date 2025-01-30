@@ -16,7 +16,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
-## [v1.2.3] - 2025-02-21
+## [v1.2.4] - 2025-01-30
+
+### Added
+
+- Underscore TXT record example in values
+
+### Fixed
+
+- DNS Zone and Record metadata
+- Dates in Changelog
+
+## [v1.2.3] - 2025-01-21
 
 ### Fixed
 
@@ -26,7 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - v1.2.2 due to error with left over project in values
 
-## [v1.2.2] - 2025-02-21 DO NOT USE
+## [v1.2.2] - 2025-01-21 DO NOT USE
 
 ### Added
 

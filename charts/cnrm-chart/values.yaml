@@ -371,6 +371,12 @@
 #       rrdatas:
 #         # toYaml
 #         - "8.8.8.8"
+#     - name: _mytxt.my.fqdn.com
+#       type: TXT
+#       ttl: "300"
+#       dnsZone: "my-fqdn-com"
+#       rrdatas:
+#         - "somethingtotallyrandomgoeshere,1234567890987654321"
 
 # # GKE Hub aka Fleet configuration
 # gkeHub:
