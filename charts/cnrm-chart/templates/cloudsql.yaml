@@ -30,7 +30,11 @@ spec:
     availabilityType: {{ .availabilityType }}
     backupConfiguration:
       enabled: true
+      {{- if hasPrefix "POSTGRES" .databaseVersion }}
       pointInTimeRecoveryEnabled: true
+      {{- else if hasPrefix "MYSQL" .databaseVersion }}
+      binaryLogEnabled: true
+      {{- end }}
     {{- if .deletionProtectionEnabled }}
     deletionProtectionEnabled: true
     {{- end }}

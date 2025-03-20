@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.2.5] - 2025-03-20
+
+### Fixed
+
+- Fixed issue with hard-coded backup setting for SQL Instance depending on if MYSQL or POSTGRES
+
 ## [v1.2.4] - 2025-01-30
 
 ### Added
