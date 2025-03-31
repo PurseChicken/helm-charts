@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.2.6] - 2025-03-31
+
+### Fixed
+
+- Fixed DNS Record issue with _domainkey in metadata name.
+
 ## [v1.2.5] - 2025-03-20
 
 ### Fixed

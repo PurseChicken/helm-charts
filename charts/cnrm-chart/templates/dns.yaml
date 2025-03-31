@@ -29,7 +29,8 @@ spec:
 {{- if .Values.dns.record }}
 {{- range .Values.dns.record }}
 {{- $name1 := mustRegexReplaceAll "\\W|\\B_" .name "-" }}
-{{- $metaName := mustRegexReplaceAll "^_" $name1 "" }}
+{{- $name2 := mustRegexReplaceAll "_domainkey" $name1 "domainkey" }}
+{{- $metaName := mustRegexReplaceAll "^_" $name2 "" }}
 ---
 apiVersion: dns.cnrm.cloud.google.com/v1beta1
 kind: DNSRecordSet
