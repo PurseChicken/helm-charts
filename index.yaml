@@ -3,6 +3,23 @@ entries:
   cnrm-chart:
   - apiVersion: v2
     appVersion: 0.0.1
+    created: "2025-04-16T21:55:49.748239473Z"
+    description: Deploy Projects and Infrastructure with Config Connector.
+    digest: 4f4cdd88b1471bf0c87257fd2505230e155148ef5776c43e30172f47faad9032
+    keywords:
+    - kubernetes
+    - cnrm
+    - Config Connector
+    - cnrm.cloud.google.com
+    name: cnrm-chart
+    sources:
+    - https://github.com/pursechicken/helm-charts
+    type: application
+    urls:
+    - https://github.com/PurseChicken/helm-charts/releases/download/cnrm-chart-1.2.8/cnrm-chart-1.2.8.tgz
+    version: 1.2.8
+  - apiVersion: v2
+    appVersion: 0.0.1
     created: "2025-04-16T21:50:21.613250308Z"
     description: Deploy Projects and Infrastructure with Config Connector.
     digest: d17137bafe0239419482c7bab226f1600c70d1ecd9958ba67c22b36d880af61b
@@ -388,4 +405,4 @@ entries:
     urls:
     - https://github.com/PurseChicken/helm-charts/releases/download/gateway-api-chart-0.0.0/gateway-api-chart-0.0.0.tgz
     version: 0.0.0
-generated: "2025-04-16T21:50:21.613425285Z"
+generated: "2025-04-16T21:55:49.748390695Z"
