@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.2.7] - 2025-04-16
+
+### Changed
+
+- Changed DNS Record metadata to include type to prevent duplicate resources.
+
 ## [v1.2.6] - 2025-03-31
 
 ### Fixed
