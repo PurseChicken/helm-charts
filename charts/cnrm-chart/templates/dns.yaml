@@ -42,7 +42,7 @@ metadata:
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ $metaName }}-{{ .type | toLower }}
+  name: {{ $projectName }}-{{ $metaName }}-{{ .type | lower }}
 spec:
   name: {{ .name }}.
   type: {{ .type }}

@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.2.9] - 2025-04-16
+
+### Fixed
+
+- Proper fix for Lowercase record type in metadata name
+
 ## [v1.2.8] - 2025-04-16
 
 ### Fixed
