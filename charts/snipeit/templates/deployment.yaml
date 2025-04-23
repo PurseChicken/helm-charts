@@ -26,6 +26,7 @@ spec:
       {{- end }}
     {{- end }}
     spec:
+      serviceAccountName: {{ include "snipeit.serviceAccountName" . }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

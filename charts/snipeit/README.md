@@ -103,6 +103,9 @@ and their default values.
 | `deploymentStrategy`                 | Deployment strategy	                                 | `{ "type": "RollingUpdate" }`  |
 | `revisionHistoryLimit`               | The number of old Replicas to keep to allow rollback. | `0`                            |
 | `securityContext`                    | SnipeIT Pod(s)	securityContext                        | `{}`                           |
+| `serviceAccount.create`              | Create kubernetes service account                     | `false`                        |
+| `serviceAccount.name`                | Change the name of the service account                | `snipeit.fullname`             |
+| `serviceAccount.annotations`         | Add any annotations to the created service account    | `{}`                           |
 | `service.type`                       | Type of service to create                             | `ClusterIP`                    |
 | `service.annotations`                | Annotations of service to create                      | `{}`                           |
 | `service.clusterIP`                  | Internal cluster service IP                           | `nil`                          |
@@ -216,12 +219,11 @@ extraContainers:
       - /cloud-sql-proxy
     args:
       - my-project:my-region:my-instance
-      - --port=5432
-      - --auto-iam-authn
+      - --port=3306
       - --health-check
       - "--http-address=0.0.0.0"
     ports:
-      - containerPort: 5432
+      - containerPort: 3306
     startupProbe:
       httpGet:
           path: /startup

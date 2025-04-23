@@ -19,6 +19,14 @@ configData:
   image: ""
   securityContext: {}
 
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Override the name of the service account:
+  name: ""
+  # Annotations to add to the service account
+  annotations: {}
+
 service:
   type: ClusterIP
   annotations: {}

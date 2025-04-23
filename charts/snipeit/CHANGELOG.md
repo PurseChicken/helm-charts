@@ -16,6 +16,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Deprecated
 - Removed -->
 
+## [v4.0.2] - 2025-04-23
+
+### Added
+
+- Ability to create service account and add annotations.
+- Deployment manifest reference to created service account
+- serviceAccountName helper
+- ReadMe configuration for new service account values spec.
+
+### Fixed
+
+- ReadMe cloud-sql-proxy spec
+
 ## [v4.0.1] - 2025-04-22
 
 ### Fixed
