@@ -72,20 +72,23 @@ and their default values.
 | `config.snipeit.debug`               | Whether to enable Debug mode or not                   | `false`                        |
 | `config.snipeit.url`                 | URL of Snipe-IT                                       | `http://snipeit.example.local` |
 | `config.snipeit.key`                 | Application-Key for Snipe-IT                          | `""`                           |
-| `config.snipeit.timezone`            | Snipe-IT Timezone                                     | `Europe/Berlin`                |
+| `config.snipeit.timezone`            | Snipe-IT Timezone                                     | `America/Los_Angeles`          |
 | `config.snipeit.locale`              | Snipe-IT Locale                                       | `en`                           |
 | `config.snipeit.envConfig`           | Configure Environment Values                          | `{}`                           |
 | `config.externalSecrets `            | External Secrets to for db configuration              | `[]`                           |
+| `configData.image`                   | Image of config-data init container                   | `busybox`                      |
+| `configData.securityContext`         | Override securityContext for config-data init         | `{}`                           |
 | `image.repository`                   | Image Repository                                      | `snipe/snipe-it`               |
 | `image.tag`                          | Image Tag                                             | `4.6.16`                       |
 | `image.pullPolicy`                   | Image Pull Policy                                     | `IfNotPresent`                 |
+| `imagePullSecrets`                   | Image Pull Secrets                                    | `[]`                           |
 | `ingress.enabled`                    | Whether or not to enable Ingress                      | `true`                         |
 | `ingress.className`                  | Ingress Class Name                                    | `""`                           |
 | `ingress.annotations`                | Custom Ingress Annotations                            | `{}`                           |
-| `ingress.path`                       | Root Path for the Ingress Ressource                   | `/`                            |
+| `ingress.path`                       | Root Path for the Ingress Resource                    | `/`                            |
 | `ingress.hosts`                      | URL where Snipe-IT will be accessed                   | `example.local`                |
 | `ingress.tls`                        | Configuration for SecretName and TLS-Hosts            | `[]`                           |
-| `mysql.enabled`                      | Whether or not to deploy a MySQL Deployment           | `true`                         |
+| `mysql.enabled`                      | Whether or not to deploy a MySQL Deployment           | `false`                        |
 | `mysql.mysqlUser`                    | MySQL User to create                                  | `snipeit`                      |
 | `mysql.mysqlPassword`                | MySQL Password for the User                           | `""`                           |
 | `mysql.mysqlDatabase`                | Name of MySQL Database to create                      | `db-snipeit`                   |
@@ -99,8 +102,9 @@ and their default values.
 | `replicaCount`                       | Number of Snipe-IT Pods to run                        | `1`                            |
 | `deploymentStrategy`                 | Deployment strategy	                                 | `{ "type": "RollingUpdate" }`  |
 | `revisionHistoryLimit`               | The number of old Replicas to keep to allow rollback. | `0`                            |
+| `securityContext`                    | SnipeIT Pod(s)	securityContext                        | `{}`                           |
 | `service.type`                       | Type of service to create                             | `ClusterIP`                    |
-| `service.annotations`                 | Annotations of service to create                      | `{}`                           |
+| `service.annotations`                | Annotations of service to create                      | `{}`                           |
 | `service.clusterIP`                  | Internal cluster service IP                           | `nil`                          |
 | `service.loadBalancerIP`             | IP address to assign to load balancer (if supported)  | `nil`                          |
 | `service.loadBalancerSourceRanges`   | list of IP CIDRs allowed access to lb (if supported)  | `[]`                           |
@@ -109,6 +113,8 @@ and their default values.
 | `nodeSelector`                       | Node labels for pod assignment                        | `{}`                           |
 | `tolerations`                        | Toleration labels for pod assignment                  | `[]`                           |
 | `affinity`                           | Affinity settings for pod assignment                  | `{}`                           |
+| `extraContainers`                    | Add additional containers to deploy	                 | `[]`                           |
+| `extraAnnotations`                   | Extra Annotations added to the SnipeIT Pod(s)	       | `{}`                           |
 | `extraManifests`                     | Add additional manifests to deploy	                   | `[]`                           |
 | `extraVolumeMounts`                  | Additional volumeMounts to the container              | `[]`                           |
 | `extraVolume`                        | Additional volumes to the pod    	                   | `[]`                           |
@@ -197,6 +203,47 @@ extraManifests:
     spec:
       securityPolicy:
         name: "gcp-cloud-armor-policy-test"
+```
+
+## Extra Containers
+It is possible to add additional containers into a deployment, to extend the chart. One of the reasons is to deploy a sidecar container like CloudSQLProxy
+
+```yaml
+extraContainers:
+  - name: cloud-sql-proxy 
+    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.15.3
+    command:
+      - /cloud-sql-proxy
+    args:
+      - my-project:my-region:my-instance
+      - --port=5432
+      - --auto-iam-authn
+      - --health-check
+      - "--http-address=0.0.0.0"
+    ports:
+      - containerPort: 5432
+    startupProbe:
+      httpGet:
+          path: /startup
+          port: 9090
+      periodSeconds: 1
+      timeoutSeconds: 5
+    livenessProbe:
+      httpGet:
+          path: /liveness
+          port: 9090
+      initialDelaySeconds: 0
+      periodSeconds: 60
+      timeoutSeconds: 30
+      failureThreshold: 5
+    securityContext:
+      runAsNonRoot: true
+      readOnlyRootFilesystem: true
+      allowPrivilegeEscalation: false
+    lifecycle:
+      postStart:
+        exec:
+          command: ["/cloud-sql-proxy", "wait"]
 ```
 
 ## Original Chart Credit

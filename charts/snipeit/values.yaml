@@ -7,11 +7,17 @@ deploymentStrategy:
 ## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/#specifying-a-poddisruptionbudget
 # maxUnavailable: 1
 
+imagePullSecrets: []
+
 image:
   repository: snipe/snipe-it
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
+
+configData:
+  image: ""
+  securityContext: {}
 
 service:
   type: ClusterIP
@@ -123,7 +129,13 @@ nodeSelector: {}
 
 tolerations: []
 
+securityContext: {}
+  # Security Context added to SnipeIT Pod(s)
+
 affinity: {}
+
+extraContainers: []
+  # Add your extra containers here. E.G. A sidecar container like CloudSQLProxy
 
 extraAnnotations: {}
   # Extra Annotations that will be added to the SnipeIT Pod(s)

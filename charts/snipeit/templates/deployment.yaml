@@ -26,15 +26,26 @@ spec:
       {{- end }}
     {{- end }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       initContainers:
         - name: config-data
-          image: busybox
-          command: ["sh", "-c", "find {{ .Values.persistence.sessions.mountPath }} -not -user 1000 -exec chown 1000 {} \\+"]
+          image: "{{ .Values.configData.image | default "busybox" }}"
+          command: ["sh", "-c", "chown -R docker:root {{ .Values.persistence.sessions.mountPath }}"]
+          {{- with .Values.configData.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: data
               mountPath: {{ .Values.persistence.sessions.mountPath }}
               subPath: {{ .Values.persistence.sessions.subPath }}
       containers:
+      {{- if .Values.extraContainers }}
+        {{- toYaml .Values.extraContainers | nindent 8 }}
+      {{- end }}
         - name: {{ include "snipeit.fullname" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -49,15 +60,13 @@ spec:
               value: {{ .Values.config.snipeit.timezone | quote }}
             - name: APP_LOCALE
               value: {{ .Values.config.snipeit.locale | quote }}
-
           envFrom:
             - secretRef:
                 name: {{ include "snipeit.fullname" . }}
-            {{ if .Values.config.externalSecrets }}
+            {{- if .Values.config.externalSecrets }}
             - secretRef:
                 name: {{ .Values.config.externalSecrets }}
-            {{ end }}
-
+            {{- end }}
           ports:
             - name: http
               containerPort: 80
@@ -110,4 +119,8 @@ spec:
     {{- with .Values.tolerations }}
       tolerations:
         {{ toYaml . | indent 8 | trim }}
+    {{- end }}
+    {{- with .Values.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
     {{- end }}
