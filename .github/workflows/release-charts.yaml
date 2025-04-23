@@ -72,7 +72,7 @@ jobs:
 
       - name: Add Helm repo(s)
         run: |
-          helm repo add foo https://storage.googleapis.com/t3n-helm-charts
+          helm repo add t3n-helm-charts https://storage.googleapis.com/t3n-helm-charts
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
