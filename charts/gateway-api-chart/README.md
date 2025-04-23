@@ -33,7 +33,7 @@ Use the chart as a dependency to your own chart:
 ```Chart.yaml
 dependencies:
 - name: gateway-api-chart
-  version: "1.0.0"
+  version: "1.1.0"
   repository: "https://pursechicken.github.io/helm-charts"
 ```
 
