@@ -21,7 +21,7 @@ Or Use the chart as a dependency to your own chart:
 ```Chart.yaml
 dependencies:
 - name: snipeit
-  version: "1.0.0"
+  version: "4.0.1"
   repository: "https://pursechicken.github.io/helm-charts"
 ```
 
