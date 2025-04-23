@@ -29,6 +29,11 @@ jobs:
       with:
         chart: gateway-api-chart
 
+    - name: Bump snipeit
+      uses: ./.github/actions/bumpVersionAction
+      with:
+        chart: snipeit
+
     - name: Push Results
       id: pushResults
       run: |
