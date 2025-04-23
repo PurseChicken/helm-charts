@@ -33,7 +33,7 @@ spec:
       initContainers:
         - name: config-data
           image: "{{ .Values.configData.image | default "busybox" }}"
-          command: ["sh", "-c", "chown -R docker:root {{ .Values.persistence.sessions.mountPath }}"]
+          command: ["sh", "-c", "chown -R 10000:0 {{ .Values.persistence.sessions.mountPath }}"]
           {{- with .Values.configData.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
