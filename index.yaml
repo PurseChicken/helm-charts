@@ -422,4 +422,32 @@ entries:
     urls:
     - https://github.com/PurseChicken/helm-charts/releases/download/gateway-api-chart-0.0.0/gateway-api-chart-0.0.0.tgz
     version: 0.0.0
-generated: "2025-04-16T21:59:46.448048326Z"
+  snipeit:
+  - apiVersion: v2
+    appVersion: v6.0.14
+    created: "2025-04-23T05:02:02.091342435Z"
+    dependencies:
+    - condition: mysql.enabled
+      name: mysql
+      repository: https://storage.googleapis.com/t3n-helm-charts
+      version: ^1.0.0
+    - condition: mysql-backup.enabled
+      name: mysql-backup
+      repository: https://storage.googleapis.com/t3n-helm-charts
+      version: ~1.0.1
+    description: A free open source IT asset/license management system
+    digest: 89ae6bbe2e0bb10aa8a2b9b27a1ce14b1bd381804a9e2e052e4a8b84bdf6aa0f
+    home: https://snipeitapp.com
+    icon: https://snipeitapp.com/img/logos/snipe-it-logo-xs.png
+    keywords:
+    - snipeit
+    - inventory
+    - asset management
+    name: snipeit
+    sources:
+    - https://github.com/PurseChicken/helm-charts
+    - https://github.com/snipe/snipe-it
+    urls:
+    - https://github.com/PurseChicken/helm-charts/releases/download/snipeit-3.4.1/snipeit-3.4.1.tgz
+    version: 3.4.1
+generated: "2025-04-23T05:02:02.091401295Z"
