@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.2.10] - 2025-05-22
+
+### Updated
+
+- Updated External-Secrets manifests to v1 from v1beta1
+
 ## [v1.2.9] - 2025-04-16
 
 ### Fixed
