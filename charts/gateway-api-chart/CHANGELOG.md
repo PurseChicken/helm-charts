@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Deprecated
 - Removed -->
 
+## [v1.1.1] - 2025-08-12
+
+### Fixed
+
+- Fixed healthcheck when type is TCP.
+
 ## [v1.1.0] - 2025-01-21
 
 ### Changed

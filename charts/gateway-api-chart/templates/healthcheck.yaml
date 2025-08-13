@@ -18,7 +18,12 @@ spec:
       enabled: {{ .logConfigEnabled | default "true" }}
     config:
       type: {{ .type }}
-      {{- if .httpHealthCheck }}
+      {{- if .tcpHealthCheck }}
+      tcpHealthCheck:
+        {{- toYaml .tcpHealthCheck | nindent 8 }}
+      {{- else if (or (eq .type "TCP") (eq .type "tcp"))  }}
+      tcpHealthCheck: {}
+      {{- else if .httpHealthCheck }}
       httpHealthCheck:
         {{- toYaml .httpHealthCheck | nindent 8 }}
       {{- else if .httpsHealthCheck }}
