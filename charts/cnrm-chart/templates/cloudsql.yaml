@@ -35,6 +35,11 @@ spec:
       {{- else if hasPrefix "MYSQL" .databaseVersion }}
       binaryLogEnabled: true
       {{- end }}
+      {{- if .backupRetention }}
+      backupRetentionSettings:
+        retainedBackups: {{ .backupRetention.retainedBackups | default 7 }}
+        retentionUnit: {{ .backupRetention.retentionUnit | default "COUNT" }}
+      {{- end }}
     {{- if .deletionProtectionEnabled }}
     deletionProtectionEnabled: true
     {{- end }}

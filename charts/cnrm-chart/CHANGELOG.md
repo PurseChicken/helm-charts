@@ -16,6 +16,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.2.11] - 2025-08-21
+
+## Added
+
+- Added ability to specify SQL Instance backup retention settings
+
+## Updated
+
+- Updated values comments to reference SQL Instance backup retention settings
+
 ## [v1.2.10] - 2025-05-22
 
 ### Updated
