@@ -362,14 +362,12 @@
 #       computeAddress: "my-address"
 #       # Otherwise, you must specify a list in rrdatas
 #       # rrdatas:
-#       #   # toYaml
 #       #   - "9.9.9.9"
 #     - name: "myaddress2.my.fqdn.com"
 #       type: A
 #       ttl: 300
 #       dnsZone: "my-fqdn-com"
 #       rrdatas:
-#         # toYaml
 #         - "8.8.8.8"
 #     - name: _mytxt.my.fqdn.com
 #       type: TXT

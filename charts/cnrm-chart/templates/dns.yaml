@@ -55,7 +55,9 @@ spec:
       kind: ComputeAddress
   {{- else if .rrdatas }}
   rrdatas:
-    {{- toYaml .rrdatas | nindent 4 }}
+    {{- range .rrdatas }}
+      - {{ . | quote }}
+    {{- end }}
   {{- end }}
 {{- end -}}
 {{- end -}}
