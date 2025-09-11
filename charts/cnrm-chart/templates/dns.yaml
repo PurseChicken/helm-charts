@@ -55,8 +55,13 @@ spec:
       kind: ComputeAddress
   {{- else if .rrdatas }}
   rrdatas:
+    {{- $type := .type }}
     {{- range .rrdatas }}
+      {{- if eq $type "TXT" }}
       - "\"{{ . }}\""
+      {{- else }}
+      - {{ . | quote }}
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- end -}}
