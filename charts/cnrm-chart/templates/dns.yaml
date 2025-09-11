@@ -56,7 +56,7 @@ spec:
   {{- else if .rrdatas }}
   rrdatas:
     {{- range .rrdatas }}
-      - {{ . | squote }}
+      - "\"{{ . }}\""
     {{- end }}
   {{- end }}
 {{- end -}}

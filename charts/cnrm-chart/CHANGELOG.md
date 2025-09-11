@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.2.14] - 2025-09-10
+
+### Fixed
+
+- Escape rrdatas quotes per DNSRecord documentation.
+
 ## [v1.2.13] - 2025-09-10
 
 ### Fixed
