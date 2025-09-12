@@ -160,6 +160,21 @@
 #         # JSON-formatted content SQLi vulnerability: https://cloud.google.com/armor/docs/waf-rules#json-formatted_content_sqli_vulnerability
 #         jsonsqliConfig:
 #           enabled: true
+#         # Set a default rate limit ban or throttling
+#         rateLimitConfig:
+#           # rate_based_ban or throttle
+#           # throttle can be changed to rate_based_ban but not rate_based_ban to throttle
+#           action: "rate_based_ban"
+#           preview: true
+#           # how long should the ban be in affect for? Ignored if action set to throttle
+#           banDurationSec: 60
+#           # When the rate limit is exceeded what code should be returned to the client?
+#           # deny-403|deny-404|deny-429|deny-502|redirect
+#           exceedAction: deny(429)
+#           # How many requests should be exceeded during the time interval to ban or throttle?
+#           requests: 100
+#           # Time interval in seconds
+#           interval: 60
 #         # Custom Rules. This can be any rule(s) you want to create yourself:
 #         customRules:
 #           # toYaml

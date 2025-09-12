@@ -12,6 +12,9 @@ keywords:
   - serviceexport
   - serviceimport
   - multi cluster ingress
+  - cloud armor
+  - web application firewall
+  - WAF
   - gateway.networking.k8s.io
 sources:
   - https://github.com/pursechicken/helm-charts

@@ -235,6 +235,35 @@ spec:
           {{- end -}}
           }){{- end -}}"
     {{- end }}
+    {{- if .rateLimitConfig }}
+    {{- with .rateLimitConfig }}
+    - description: "default-rate-limiting"
+      action: {{ .action | quote }}
+      {{- if .preview }}
+      preview: true
+      {{- else }}
+      preview: false
+      {{- end }}
+      priority: 2147483646
+      rateLimitOptions:
+        {{- if eq .action "rate_based_ban" }}
+        banDurationSec: {{ .banDurationSec }}
+        banThreshold:
+          count: {{ .requests }}
+          intervalSec: {{ .interval }}
+        {{- end }}
+        conformAction: allow
+        exceedAction: {{ .exceedAction }}
+        rateLimitThreshold:
+          count: {{ .requests }}
+          intervalSec: {{ .interval }}
+      match:
+        versionedExpr: SRC_IPS_V1
+        config:
+          srcIpRanges:
+          - "*"
+    {{- end }}
+    {{- end }}
     {{- if .customRules }}
     {{- toYaml .customRules | nindent 4 }}
     {{- end }}
