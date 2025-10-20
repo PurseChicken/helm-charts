@@ -532,12 +532,20 @@
 #     # add custom annotations to this resource?
 #     customAnnotations:
 #       abc: "1234567890"
+#     # Optional: Specify Instance Type (useful if setting up a replication Instance)
+#     # instanceType: READ_REPLICA_INSTANCE
 #     databaseVersion: POSTGRES_14
 #     region: us-west4
+#     # Optional. Specify masterInstanceRef. Typically used if setting up a replica on an existing instance
+#     # masterInstanceRef: my-instance
+#     # Optional. replicaConfiguration
+#     # replicaConfiguration:
+#     #   # toYaml
+#     #   connectRetryInterval: 60
 #     tier: db-custom-2-8192
 #     diskSize: 100
 #     availabilityType: REGIONAL
-#     # Backup Retention settings (backups are always on)
+#     # Backup Retention settings (backups are always on unless replica is specified)
 #     backupRetention:
 #       # Number of Retained backups. Defaults to 7 if not specified
 #       retainedBackups: 3

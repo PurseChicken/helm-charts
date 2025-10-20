@@ -21,13 +21,25 @@ metadata:
     cnrm.cloud.google.com/project-id: {{ $projectName }}
   name: {{ $projectName }}-{{ .name }}
 spec:
+  {{- if .instanceType }}
+  instanceType: {{ .instanceType }}
+  {{- end }}
   resourceID: {{ .name }}
   databaseVersion: {{ .databaseVersion }}
   region: {{ .region }}
+  {{- if .masterInstanceRef }}
+  masterInstanceRef: 
+    name: {{ $projectName }}-{{ .masterInstanceRef }}
+  {{- end }}
+  {{- if .replicaConfiguration }}
+  replicaConfiguration:
+    {{- toYaml .replicaConfiguration | nindent 6 }}
+  {{- end }}
   settings:
     tier: {{ .tier }}
     diskSize: {{ .diskSize }}
     availabilityType: {{ .availabilityType }}
+    {{- if not (eq .instanceType "READ_REPLICA_INSTANCE") }}
     backupConfiguration:
       enabled: true
       {{- if hasPrefix "POSTGRES" .databaseVersion }}
@@ -40,6 +52,7 @@ spec:
         retainedBackups: {{ .backupRetention.retainedBackups | default 7 }}
         retentionUnit: {{ .backupRetention.retentionUnit | default "COUNT" }}
       {{- end }}
+    {{- end }}
     {{- if .deletionProtectionEnabled }}
     deletionProtectionEnabled: true
     {{- end }}

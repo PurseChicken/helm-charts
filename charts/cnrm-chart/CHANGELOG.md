@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Deprecated
 - Removed -->
 
+## [v1.2.16] - 2025-10-20
+
+### Added
+
+- Added the ability to specify additional SQLInstance parameters. More specifically, those that allow you to setup a Replica to a master instance.
+
 ## [v1.2.15] - 2025-09-10
 
 ### Fixed
