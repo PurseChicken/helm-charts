@@ -256,6 +256,7 @@ spec:
         {{- if not .enforceOnKeyConfigs }}
         enforceOnKey: {{ .enforceOnKey | default "ALL" }}
         {{- else if .enforceOnKeyConfigs }}
+        enforceOnKey: ""
         enforceOnKeyConfigs:
           {{- range .enforceOnKeyConfigs }}
           - enforceOnKeyType: {{ .keyType }}

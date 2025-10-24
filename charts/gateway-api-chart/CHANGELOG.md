@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Deprecated
 - Removed -->
 
+## [1.1.4] - 2025-10-23
+
+### Fixed
+
+- Fixed issue with using enforceOnKeysConfigs. Must set enforceOnKey to empty value. See: https://github.com/GoogleCloudPlatform/k8s-config-connector/issues/1022
+
 ## [1.1.3] - 2025-10-23
 
 ### Added
