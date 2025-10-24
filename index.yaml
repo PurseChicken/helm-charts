@@ -480,6 +480,30 @@ entries:
   gateway-api-chart:
   - apiVersion: v2
     appVersion: 0.0.1
+    created: "2025-10-24T02:20:01.481735177Z"
+    description: Deploy GKE gateway-api manifests as a sub-chart
+    digest: 057be080062e58a6924db3690f0c98dd33f1f3d54da9f9b2c3b5c4171591cda0
+    keywords:
+    - kubernetes
+    - gateway-api
+    - api gateway
+    - httproute
+    - serviceexport
+    - serviceimport
+    - multi cluster ingress
+    - cloud armor
+    - web application firewall
+    - WAF
+    - gateway.networking.k8s.io
+    name: gateway-api-chart
+    sources:
+    - https://github.com/pursechicken/helm-charts
+    type: application
+    urls:
+    - https://github.com/PurseChicken/helm-charts/releases/download/gateway-api-chart-1.1.4/gateway-api-chart-1.1.4.tgz
+    version: 1.1.4
+  - apiVersion: v2
+    appVersion: 0.0.1
     created: "2025-10-24T01:54:39.072828013Z"
     description: Deploy GKE gateway-api manifests as a sub-chart
     digest: 53b28bd47e5882944ca322098fe4aa604563c182fbc8c52c33d6e79115665c15
@@ -719,4 +743,4 @@ entries:
     urls:
     - https://github.com/PurseChicken/helm-charts/releases/download/snipeit-3.4.1/snipeit-3.4.1.tgz
     version: 3.4.1
-generated: "2025-10-24T01:54:39.072956903Z"
+generated: "2025-10-24T02:20:01.481827519Z"
