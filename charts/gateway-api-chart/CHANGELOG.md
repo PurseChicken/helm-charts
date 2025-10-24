@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Deprecated
 - Removed -->
 
+## [1.1.3] - 2025-10-23
+
+### Added
+
+- Ability to specify enforceOnKeys when rate limiting.
+
 ## [1.1.2] - 2025-09-11
 
 ### Added

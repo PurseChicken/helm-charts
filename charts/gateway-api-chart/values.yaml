@@ -175,6 +175,18 @@
 #           requests: 100
 #           # Time interval in seconds
 #           interval: 60
+#           # Use only one of enforceOnKey or enforceOnKeyConfigs
+#           # Optional. Define which key(s) you want to use for rate limiting. Defaults to ALL
+#           # See: https://cloud.google.com/armor/docs/rate-limiting-overview#identifying_clients_for_rate_limiting
+#           # enforceOnKey: "XFF_IP"
+#           # Optional. Specify enforceOnKeyConfigs list.
+#           # enforceOnKeyConfigs:
+#           #   - keyType: "IP"
+#           #   - keyType: "HTTP_COOKIE"
+#           #     # Required when using keyType HTTP_HEADER or HTTP_COOKIE:
+#           #     keyName: "HTTP_COOKIE_NAME"
+#           # Required when using enforceOnKey HTTP_HEADER or HTTP_COOKIE:
+#           # enforceOnKeyName: "MY_COOKIE"
 #         # Custom Rules. This can be any rule(s) you want to create yourself:
 #         customRules:
 #           # toYaml

@@ -253,6 +253,20 @@ spec:
           intervalSec: {{ .interval }}
         {{- end }}
         conformAction: allow
+        {{- if not .enforceOnKeyConfigs }}
+        enforceOnKey: {{ .enforceOnKey | default "ALL" }}
+        {{- else if .enforceOnKeyConfigs }}
+        enforceOnKeyConfigs:
+          {{- range .enforceOnKeyConfigs }}
+          - enforceOnKeyType: {{ .keyType }}
+            {{- if or (eq .keyType "HTTP_HEADER") (eq .keyType "HTTP_COOKIE") }}
+            enforceOnKeyName: {{ .keyName }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- if and .enforceOnKeyName (or (eq .enforceOnKey "HTTP_HEADER") (eq .enforceOnKey "HTTP_COOKIE")) }}
+        enforceOnKeyName: {{ .enforceOnKeyName }}
+        {{- end }}
         exceedAction: {{ .exceedAction }}
         rateLimitThreshold:
           count: {{ .requests }}
