@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
@@ -15,6 +15,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed
 - Deprecated
 - Removed -->
+
+## [v1.2.17] - 2025-10-27
+
+### Fixed
+
+- Fixed issue with SQLInstance updating at every sync interval due to nuances in backupConfiguration spec. See [Here](https://github.com/GoogleCloudPlatform/k8s-config-connector/issues/5502)
 
 ## [v1.2.16] - 2025-10-20
 
