@@ -539,6 +539,7 @@
 #     # Optional. Specify masterInstanceRef. Typically used if setting up a replica on an existing instance
 #     # masterInstanceRef: my-instance
 #     # Optional. replicaConfiguration
+#     # This is automatically applied with failoverTarget: false if instanceType: READ_REPLICA_INSTANCE and databaseVersion is POSTGRES_XX
 #     # replicaConfiguration:
 #     #   # toYaml
 #     #   connectRetryInterval: 60
@@ -561,7 +562,10 @@
 #     # Optional: Query Insights Configuration
 #     insightsConfig:
 #       # toYaml
+#       # If queryInsightsEnabled: true, you must include queryPlansPerMinute and queryStringLength
 #       queryInsightsEnabled: true
+#       queryPlansPerMinute: 5
+#       queryStringLength: 1024
 #     # Optional: ipConfiguration
 #     ipConfiguration:
 #       # toYaml

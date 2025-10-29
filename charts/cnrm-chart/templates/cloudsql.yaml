@@ -34,6 +34,9 @@ spec:
   {{- if .replicaConfiguration }}
   replicaConfiguration:
     {{- toYaml .replicaConfiguration | nindent 6 }}
+  {{- else if and (eq .instanceType "READ_REPLICA_INSTANCE") (hasPrefix "POSTGRES" .databaseVersion) }}
+  replicaConfiguration:
+    failoverTarget: false
   {{- end }}
   settings:
     tier: {{ .tier }}

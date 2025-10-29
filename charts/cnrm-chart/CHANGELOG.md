@@ -16,6 +16,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Deprecated
 - Removed -->
 
+## [v1.2.18] - 2025-10-29
+
+### Updated
+
+- Values file documentation about queryInsights
+
+### Added
+
+- Added replicaConfiguration.failoverTarget: false when using a Postgres SQLInstance set as READ_REPLICA_INSTANCE See [Here](https://github.com/GoogleCloudPlatform/k8s-config-connector/issues/5502)
+
 ## [v1.2.17] - 2025-10-27
 
 ### Fixed
