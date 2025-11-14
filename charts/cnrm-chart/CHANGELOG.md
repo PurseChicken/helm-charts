@@ -16,6 +16,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Deprecated
 - Removed -->
 
+## [v1.2.19] - 2025-11-13
+
+### Added
+
+- Added new logging spec for LoggingLogMetric. See values file for example under logging.
+
+### Changed
+
+- Changed logging spec from a list of lists to maps of lists
+
 ## [v1.2.18] - 2025-10-29
 
 ### Updated

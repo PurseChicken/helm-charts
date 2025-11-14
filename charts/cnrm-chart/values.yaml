@@ -508,9 +508,9 @@
 #                 count: 1
 
 # # Cloud Logging
-# # https://cloud.google.com/config-connector/docs/reference/resource-docs/logging/logginglogbucket#project_log_bucket
 # logging:
-#   - logBucket:
+#   # https://cloud.google.com/config-connector/docs/reference/resource-docs/logging/logginglogbucket#project_log_bucket
+#   logBucket:
 #     - name: "My-Cool-Bucket"
 #       location: "global"
 #       # omit billing if not configuring. default is project level
@@ -523,6 +523,63 @@
 #       description: "My Bucket"
 #       locked: "false"
 #       retentionDays: 60
+#   # https://docs.cloud.google.com/config-connector/docs/reference/resource-docs/logging/logginglogmetric
+#   logMetric:
+#     - name: my-test-logmetric
+#       description: "TEST - Latency of HTTP requests from httpRequest.latency field."
+#       # Defaults to false if not specifed
+#       # disabled: true
+#       filter: 'resource.type="http_load_balancer" -httpRequest.requestUrl=~"https?://(?<ipaddress>(?:[0-9]{1,3}\.){3}[0-9]{1,3})"'
+#       # Optional: map (key: string, value: string)
+#       labelExtractors:
+#         http_method: "EXTRACT(httpRequest.requestMethod)"
+#         http_path: "EXTRACT(httpRequest.requestUrl)"
+#         http_status: "EXTRACT(httpRequest.status)"
+#         http_useragent: "EXTRACT(httpRequest.ussssserAgent)"
+#       # Optional. The reference to the Log Bucket that owns the Log Metric.
+#       # loggingLogBucketRef:
+#       #   external: "mybucket"
+#       # Optional. The metric descriptor associated with the logs-based metric.
+#       metricDescriptor:
+#         # Optional Displayname
+#         # displayName: "mydispname"
+#         # Optional labels. Must include labels for each label Extractor
+#         labels:
+#           - key: "http_method"
+#             valueType: "STRING"
+#             description: "HTTP Request Method"
+#           - key: "http_path"
+#             valueType: "STRING"
+#             description: "HTTP Request URL Path"
+#           - key: "http_status"
+#             valueType: "STRING"
+#             description: "HTTP Request Status Code"
+#           - key: "http_useragent"
+#             valueType: "STRING"
+#             description: "HTTP Request User Agent"
+#         # Optional. The launch stage of the metric definition.
+#         # Possible values: UNIMPLEMENTED, PRELAUNCH, EARLY_ACCESS, ALPHA, BETA, GA, DEPRECATED
+#         # launchStage: "BETA"
+#         # Optional Metadata
+#         # metadata:
+#         #   ingestDelay: ""
+#         #   samplePeriod: ""
+#         # Optional metricKind.
+#         # Possible values: GAUGE, DELTA, CUMULATIVE
+#         metricKind: "DELTA"
+#         # Optional. The units in which the metric value is reported.
+#         unit: "s"
+#         # Optional. Possible values: STRING, BOOL, INT64, DOUBLE, DISTRIBUTION, MONEY
+#         valueType: "DISTRIBUTION"
+#       # Optional. A `value_extractor` is required when using a distribution logs-based metric to extract the values to record from a log entry.
+#       valueExtractor: "EXTRACT(httpRequest.latency)"
+#       # Optional. The `bucket_options` are required when the logs-based metric is using a DISTRIBUTION value type and it describes the bucket boundaries used to create a histogram of the extracted values.
+#       bucketOptions:
+#         # The below is the default configuration when using a DISTRIBUTION value type.
+#         exponentialBuckets:
+#           numFiniteBuckets: 64
+#           growthFactor: 2.0
+#           scale: 0.01
 
 # # Cloud SQL
 # sql:

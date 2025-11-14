@@ -2,7 +2,106 @@
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
 {{- $myprojectName := .Values.projectName | default .Release.Name }}
 {{- $projectName := .Values.projectID | default $myprojectName }}
-{{- range .Values.logging }}
+{{- with .Values.logging }}
+{{- if .logMetric }}
+{{- range .logMetric }}
+---
+apiVersion: logging.cnrm.cloud.google.com/v1beta1
+kind: LoggingLogMetric
+metadata:
+  annotations:
+    {{- if $allowResourceDeletion }}
+    cnrm.cloud.google.com/deletion-policy: "none"
+    {{- else }}
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+    {{- end }}
+  name: {{ $projectName }}-{{ .name }}
+spec:
+  resourceID: {{ .name }}
+  {{- if .description }}
+  description: {{ .description }}
+  {{- end }}
+  {{- if .disabled }}
+  disabled: true
+  {{- else }}
+  disabled: false
+  {{- end }}
+  filter: {{ .filter | squote }}
+  {{- if .labelExtractors }}
+  labelExtractors:
+    {{- range $key, $value := .labelExtractors }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if .loggingLogBucketRef }}
+  loggingLogBucketRef:
+    {{- with .loggingLogBucketRef }}
+    {{- if .external }}
+    external: {{ .external | quote }}
+    {{- end }}
+    {{- if .kind }}
+    kind: {{ .kind | quote }}
+    {{- end }}
+    {{- if .name }}
+    name: {{ .name | quote }}
+    {{- end }}
+    {{- if .namespace }}
+    namespace: {{ .namespace | quote }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if .metricDescriptor }}
+  metricDescriptor:
+    {{- with .metricDescriptor }}
+    {{- if .displayName }}
+    displayName: {{ .displayName | quote }}
+    {{- end }}
+    {{- if .labels }}
+    labels:
+    {{- range .labels }}
+      - key: {{ .key | quote }}
+        valueType: {{ .valueType | quote }}
+        {{- if .description }}
+        description: {{ .description | quote }}
+        {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- if .launchStage }}
+    launchStage: {{ .launchStage | quote }}
+    {{- end }}
+    {{- if .metadata }}
+    metadata:
+      {{- with .metadata }}
+      {{- if .ingestDelay }}
+      ingestDelay: {{ .ingestDelay | quote }}
+      {{- end }}
+      {{- if .samplePeriod }}
+      samplePeriod: {{ .samplePeriod | quote }}
+      {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- if .metricKind }}
+    metricKind: {{ .metricKind | quote }}
+    {{- end }}
+    {{- if .unit }}
+    unit: {{ .unit | quote }}
+    {{- end }}
+    {{- if .valueType }}
+    valueType: {{ .valueType | quote }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+  projectRef:
+    name: {{ $projectName }}
+  {{- if .valueExtractor }}
+  valueExtractor: {{ .valueExtractor | quote }}
+  {{- end }}
+  {{- if .bucketOptions }}
+  bucketOptions:
+    {{- toYaml .bucketOptions | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
 {{- if .logBucket }}
 {{- range .logBucket }}
 ---
