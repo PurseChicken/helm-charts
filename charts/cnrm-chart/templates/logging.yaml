@@ -15,11 +15,11 @@ metadata:
     {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
-  name: {{ $projectName }}-{{ .name }}
+  name: {{ $projectName }}-{{ mustRegexReplaceAll "_" .name "-" }}
 spec:
   resourceID: {{ .name }}
   {{- if .description }}
-  description: {{ .description }}
+  description: {{ .description | quote }}
   {{- end }}
   {{- if .disabled }}
   disabled: true

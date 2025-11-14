@@ -16,6 +16,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Deprecated
 - Removed -->
 
+## [v1.2.20] - 2025-11-13
+
+### Fixed
+
+- Fixed LoggingLogMetric metadata \ name when using underscores.
+
+### Changed
+
+- Changed LoggingLogMetric description to be quoted.
+
 ## [v1.2.19] - 2025-11-13
 
 ### Added
