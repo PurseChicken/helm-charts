@@ -3,6 +3,23 @@ entries:
   cnrm-chart:
   - apiVersion: v2
     appVersion: 0.0.1
+    created: "2025-11-14T05:30:16.994701049Z"
+    description: Deploy Projects and Infrastructure with Config Connector.
+    digest: 672683b2a5b8207abb50ee2405630b85e8bea33bf777286845a495f3c0bd05b3
+    keywords:
+    - kubernetes
+    - cnrm
+    - Config Connector
+    - cnrm.cloud.google.com
+    name: cnrm-chart
+    sources:
+    - https://github.com/pursechicken/helm-charts
+    type: application
+    urls:
+    - https://github.com/PurseChicken/helm-charts/releases/download/cnrm-chart-1.2.20/cnrm-chart-1.2.20.tgz
+    version: 1.2.20
+  - apiVersion: v2
+    appVersion: 0.0.1
     created: "2025-11-14T05:16:21.456832825Z"
     description: Deploy Projects and Infrastructure with Config Connector.
     digest: 884a81cbf5d191f2e0d45e3f7acc28f0679b3d9858e412cf5dcecb2d060407cc
@@ -794,4 +811,4 @@ entries:
     urls:
     - https://github.com/PurseChicken/helm-charts/releases/download/snipeit-3.4.1/snipeit-3.4.1.tgz
     version: 3.4.1
-generated: "2025-11-14T05:16:21.457076208Z"
+generated: "2025-11-14T05:30:16.995003935Z"
