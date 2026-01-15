@@ -1,7 +1,6 @@
 {{- if .Values.securityPolicy }}
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
-{{- $myprojectName := .Values.projectName | default .Release.Name }}
-{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
 {{- range .Values.securityPolicy }}
 ---
 apiVersion: compute.cnrm.cloud.google.com/v1beta1

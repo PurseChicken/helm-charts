@@ -1,7 +1,6 @@
 {{- if .Values.sql }}
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
-{{- $myprojectName := .Values.projectName | default .Release.Name }}
-{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
 {{- range .Values.sql }}
 ---
 apiVersion: sql.cnrm.cloud.google.com/v1beta1
@@ -102,7 +101,7 @@ metadata:
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ $instanceName }}-{{ mustRegexReplaceAll "@.*" .resourceID "" }}
+  name: {{ $projectName }}-{{ $instanceName }}-{{ include "cnrm-chart.sanitizeEmail" .resourceID }}
 spec:
   instanceRef:
     name: {{ $projectName }}-{{ $instanceName }}
@@ -134,7 +133,7 @@ metadata:
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ $instanceName }}-{{ mustRegexReplaceAll "_" .name "-" }}
+  name: {{ $projectName }}-{{ $instanceName }}-{{ include "cnrm-chart.sanitizeName" .name }}
 spec:
   resourceID: {{ .name }}
   {{- if .deletionPolicy }}

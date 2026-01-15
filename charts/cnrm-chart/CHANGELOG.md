@@ -16,6 +16,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Deprecated
 - Removed -->
 
+## [v1.3.0] - 2026-01-15
+
+### Added
+
+- Added `_helpers.tpl` with `cnrm-chart.projectID` helper to consolidate project naming logic across all templates
+- Added `cnrm-chart.validateProject` helper to prevent specifying both organizationId and projectFolderId
+- Added `cnrm-chart.sanitizeName` helper to convert strings to valid Kubernetes resource names (lowercase, special chars to hyphens)
+- Added `cnrm-chart.sanitizeEmail` helper to handle email addresses in resource names (for Cloud SQL IAM users)
+- Added comprehensive documentation comments to all helper functions explaining inputs, outputs, and usage
+
+### Changed
+
+- Changed all templates to use `cnrm-chart.projectID` helper for consistent project name/ID resolution
+- Changed CloudIDSEndpoint projectRef to use `name` reference instead of `external` for proper Kubernetes resource tracking
+
+### Fixed
+
+- Fixed SQLUser metadata name generation to properly handle dots, underscores, plus signs, and @ symbols in resourceID (e.g., service accounts and email addresses)
+- Fixed SQLDatabase metadata name generation to sanitize uppercase letters and special characters
+- Fixed IAM resource names (IAMServiceAccount, IAMPolicyMember, IAMPolicy) to sanitize uppercase letters and special characters
+- Fixed LoggingLogMetric names to sanitize uppercase letters and special characters
+- Fixed API Service names to sanitize dots and special characters (e.g., `container.googleapis.com`)
+- Fixed MonitoringNotificationChannel labels field to be conditional, preventing errors when labels are not defined
+
 ## [v1.2.20] - 2025-11-13
 
 ### Fixed

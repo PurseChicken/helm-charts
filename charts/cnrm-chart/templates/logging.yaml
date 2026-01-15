@@ -1,7 +1,6 @@
 {{- if .Values.logging }}
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
-{{- $myprojectName := .Values.projectName | default .Release.Name }}
-{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
 {{- with .Values.logging }}
 {{- if .logMetric }}
 {{- range .logMetric }}
@@ -15,7 +14,7 @@ metadata:
     {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
-  name: {{ $projectName }}-{{ mustRegexReplaceAll "_" .name "-" }}
+  name: {{ $projectName }}-{{ include "cnrm-chart.sanitizeName" .name }}
 spec:
   resourceID: {{ .name }}
   {{- if .description }}

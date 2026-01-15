@@ -1,7 +1,6 @@
 {{- if .Values.gkeHub }}
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
-{{- $myprojectName := .Values.projectName | default .Release.Name }}
-{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
 {{- range .Values.gkeHub }}
 {{- if .membership }}
 {{- range .membership }}

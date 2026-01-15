@@ -1,7 +1,6 @@
 {{- if .Values.dns }}
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
-{{- $myprojectName := .Values.projectName | default .Release.Name }}
-{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
 {{- if .Values.dns.zone }}
 {{- range .Values.dns.zone }}
 {{- $name1 := mustRegexReplaceAll "\\W|\\B_" .name "-" }}

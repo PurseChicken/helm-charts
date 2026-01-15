@@ -1,7 +1,6 @@
 {{- if .Values.k8s }}
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
-{{- $myprojectName := .Values.projectName | default .Release.Name }}
-{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
 {{- range .Values.k8s }}
 ---
 apiVersion: container.cnrm.cloud.google.com/v1beta1

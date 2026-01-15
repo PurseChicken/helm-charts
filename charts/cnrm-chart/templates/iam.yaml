@@ -1,7 +1,6 @@
 {{- if .Values.iam }}
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
-{{- $myprojectName := .Values.projectName | default .Release.Name }}
-{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
 {{- range .Values.iam }}
 {{- if .name }}
 ---
@@ -20,7 +19,7 @@ metadata:
     {{- end }}
     {{- end }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ .name }}
+  name: {{ $projectName }}-{{ include "cnrm-chart.sanitizeName" .name }}
 spec:
   description: {{ .description }}
   resourceID: {{ .name }}
@@ -37,7 +36,7 @@ metadata:
     {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
-  name: {{ $projectName }}-{{ .name }}
+  name: {{ $projectName }}-{{ include "cnrm-chart.sanitizeName" .name }}
 spec:
   member: {{ .member }}
   role: {{ .role }}
@@ -60,7 +59,7 @@ metadata:
     {{- else }}
     cnrm.cloud.google.com/deletion-policy: "abandon"
     {{- end }}
-  name: {{ $projectName }}-{{ .name }}
+  name: {{ $projectName }}-{{ include "cnrm-chart.sanitizeName" .name }}
 spec:
   resourceRef:
     kind: {{ .kind }}

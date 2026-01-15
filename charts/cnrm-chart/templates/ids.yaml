@@ -1,7 +1,6 @@
 {{- if .Values.ids }}
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
-{{- $myprojectName := .Values.projectName | default .Release.Name }}
-{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
 {{- range .Values.ids }}
 ---
 apiVersion: cloudids.cnrm.cloud.google.com/v1beta1
@@ -25,7 +24,7 @@ spec:
   severity: {{ .severity }}
   location: {{ .location }}
   projectRef:
-    external: {{ $projectName }}
+    name: {{ $projectName }}
   {{- if .threatExceptions }}
   threatExceptions:
     {{- toYaml .threatExceptions | nindent 4 }}

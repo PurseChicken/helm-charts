@@ -1,7 +1,6 @@
 {{- if .Values.monitoring }}
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
-{{- $myprojectName := .Values.projectName | default .Release.Name }}
-{{- $projectName := .Values.projectID | default $myprojectName }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
 {{- range .Values.monitoring }}
 {{- if .notificationChannel }}
 {{- range .notificationChannel }}
@@ -22,8 +21,10 @@ spec:
   {{- if .displayName }}
   displayName: {{ .displayName | quote }}
   {{- end }}
+  {{- if .labels }}
   labels:
     {{- toYaml .labels | nindent 4 }}
+  {{- end }}
   {{- if .sensitiveLabels }}
   sensitiveLabels:
     {{- toYaml .sensitiveLabels | nindent 4 }}

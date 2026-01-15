@@ -1,4 +1,5 @@
 {{- if .Values.createOrManageProject }}
+{{- include "cnrm-chart.validateProject" . }}
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
 {{- $projectDisplayName := .Values.projectName | default .Release.Name }}
 {{- $projectID := .Values.projectID | default $projectDisplayName }}
