@@ -1,0 +1,59 @@
+{{- if .Values.computeRouter }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.computeRouter }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeRouter
+metadata:
+  annotations:
+    {{- if $allowResourceDeletion }}
+    cnrm.cloud.google.com/deletion-policy: "none"
+    {{- else }}
+    cnrm.cloud.google.com/deletion-policy: "abandon"
+    {{- end }}
+    {{- if .customAnnotations }}
+    {{- range $key, $value := .customAnnotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+    {{- end }}
+    cnrm.cloud.google.com/project-id: {{ $projectName }}
+  name: {{ $projectName }}-{{ .name }}
+spec:
+  resourceID: {{ .name }}
+  region: {{ .region }}
+  networkRef:
+    name: {{ $projectName }}-{{ .networkRefName }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if .encryptedInterconnectRouter }}
+  encryptedInterconnectRouter: {{ .encryptedInterconnectRouter }}
+  {{- end }}
+  {{- with .bgp }}
+  bgp:
+    asn: {{ .asn }}
+    {{- if .advertiseMode }}
+    advertiseMode: {{ .advertiseMode }}
+    {{- end }}
+    {{- if .advertisedGroups }}
+    advertisedGroups:
+      {{- range .advertisedGroups }}
+        - {{ . | quote }}
+      {{- end }}
+    {{- end }}
+    {{- if .advertisedIpRanges }}
+    advertisedIpRanges:
+      {{- range .advertisedIpRanges }}
+        - range: {{ .range | quote }}
+          {{- if .description }}
+          description: {{ .description | quote }}
+          {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- if .keepaliveInterval }}
+    keepaliveInterval: {{ .keepaliveInterval }}
+    {{- end }}
+  {{- end }}
+{{- end -}}
+{{- end -}}

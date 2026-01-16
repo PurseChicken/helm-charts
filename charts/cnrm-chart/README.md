@@ -39,6 +39,7 @@ NOTE: This chart includes the option to include secrets using the [external-secr
 - Logging Buckets
 - Security Policies
 - Cloud IDS
+- Cloud VPN (Compute Router, VPN Gateway, External VPN Gateway, VPN Tunnel)
 
 # Usage
 

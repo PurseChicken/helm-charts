@@ -6,15 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-<!-- ## [vX.Y.Z] - UNRELEASED
-### Highlights
-### All Changes
-- Added
-- Updated
-- Changed
-- Fixed
-- Deprecated
-- Removed -->
+## [v1.3.1] - 2026-01-15
+
+### Added
+
+- Added Cloud VPN support with four new resource templates:
+  - `computerouter.yaml` - Cloud Router for dynamic (BGP) routing
+  - `computevpngateway.yaml` - HA VPN Gateway (Google Cloud side)
+  - `computeexternalvpngateway.yaml` - External VPN Gateway (peer side definition)
+  - `computevpntunnel.yaml` - VPN Tunnels connecting gateways
+- Added comprehensive Cloud VPN configuration examples and documentation to `values.yaml`
+- Added Cloud VPN resources to README supported resources list
 
 ## [v1.3.0] - 2026-01-15
 

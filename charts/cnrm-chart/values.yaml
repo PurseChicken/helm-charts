@@ -710,3 +710,139 @@
 #       #toYaml
 #       - THREAT_ID1
 #       - THREAT_ID2
+
+# # Cloud VPN - Cloud Router Configuration
+# # Cloud Router enables dynamic (BGP) routing for VPN tunnels
+# computeRouter:
+#   - name: "my-router"
+#     # add custom annotations to this resource?
+#     customAnnotations:
+#       abc: "1234567890"
+#     # Reference to the VPC network
+#     networkRefName: "my-net"
+#     # Region where the router resides
+#     region: "us-central1"
+#     # Optional: Description
+#     description: "Cloud Router for VPN"
+#     # Optional: For encrypted VLAN attachments (interconnectAttachments)
+#     # encryptedInterconnectRouter: false
+#     # BGP configuration
+#     bgp:
+#       # Local BGP ASN (must be RFC6996 private ASN: 16-bit or 32-bit)
+#       asn: 64514
+#       # Optional: Advertisement mode - DEFAULT or CUSTOM
+#       advertiseMode: "CUSTOM"
+#       # Optional: Prefix groups to advertise (only with CUSTOM mode)
+#       advertisedGroups:
+#         - "ALL_SUBNETS"
+#       # Optional: Individual IP ranges to advertise (only with CUSTOM mode)
+#       advertisedIpRanges:
+#         - range: "10.0.0.0/24"
+#           description: "Custom range 1"
+#         - range: "10.1.0.0/24"
+#           description: "Custom range 2"
+#       # Optional: BGP keepalive interval (20-60 seconds, default 20)
+#       # keepaliveInterval: 20
+
+# # Cloud VPN - VPN Gateway (HA VPN Gateway - Google side)
+# computeVpnGateway:
+#   - name: "my-vpn-gateway"
+#     # add custom annotations to this resource?
+#     customAnnotations:
+#       abc: "1234567890"
+#     # Reference to the VPC network
+#     networkRefName: "my-net"
+#     # Region where the gateway resides
+#     region: "us-central1"
+#     # Optional: Description
+#     description: "HA VPN Gateway"
+#     # Optional: Stack type - IPV4_ONLY (default) or IPV4_IPV6
+#     # stackType: "IPV4_ONLY"
+#     # Optional: VPN interfaces configuration
+#     # Note: HA VPN automatically creates 2 interfaces (id: 0 and 1)
+#     # vpnInterfaces:
+#     #   - id: 0
+#     #     # Optional: IP address (read-only, auto-assigned)
+#     #     # ipAddress: "34.xxx.xxx.xxx"
+#     #     # Optional: Reference to interconnect attachment
+#     #     # interconnectAttachmentRefName: "my-attachment"
+
+# # Cloud VPN - External VPN Gateway (Peer side definition)
+# # This represents the peer VPN gateway (on-premises or another cloud)
+# computeExternalVpnGateway:
+#   - name: "peer-vpn-gateway"
+#     # add custom annotations to this resource?
+#     customAnnotations:
+#       abc: "1234567890"
+#     # Optional: Description
+#     description: "External peer VPN gateway"
+#     # Redundancy type based on peer gateway configuration
+#     # Options: SINGLE_IP_INTERNALLY_REDUNDANT, TWO_IPS_REDUNDANCY, FOUR_IPS_REDUNDANCY
+#     redundancyType: "SINGLE_IP_INTERNALLY_REDUNDANT"
+#     # Interface definitions for peer gateway
+#     interface:
+#       - id: 0
+#         ipAddress: "203.0.113.1"
+#       # For TWO_IPS_REDUNDANCY, add interface with id: 1
+#       # - id: 1
+#       #   ipAddress: "203.0.113.2"
+#       # For FOUR_IPS_REDUNDANCY, add interfaces with id: 0,1,2,3
+
+# # Cloud VPN - VPN Tunnels
+# # VPN tunnels connect the Google VPN gateway to the external VPN gateway
+# computeVpnTunnel:
+#   - name: "tunnel-1"
+#     # add custom annotations to this resource?
+#     customAnnotations:
+#       abc: "1234567890"
+#     # Region where the tunnel is located
+#     region: "us-central1"
+#     # Optional: Description
+#     description: "VPN Tunnel 1"
+#     # Optional: IKE version (1 or 2, default is 2)
+#     # ikeVersion: 2
+#     # Reference to Cloud Router (for dynamic routing)
+#     routerRefName: "my-router"
+#     # Reference to VPN Gateway (HA VPN)
+#     vpnGatewayRefName: "my-vpn-gateway"
+#     # VPN Gateway interface ID (0 or 1 for HA VPN)
+#     vpnGatewayInterface: 0
+#     # Reference to External VPN Gateway
+#     peerExternalGatewayRefName: "peer-vpn-gateway"
+#     # Peer External Gateway interface ID
+#     peerExternalGatewayInterface: 0
+#     # Shared secret for the tunnel (pre-shared key)
+#     # Can use value (not recommended) or valueFrom (recommended)
+#     sharedSecret:
+#       valueFrom:
+#         secretKeyRef:
+#           name: vpn-shared-secret
+#           key: tunnel-1-secret
+#       # Alternative: direct value (not recommended for production)
+#       # value: "my-super-secret-key"
+#     # Optional: Local traffic selector (CIDR ranges)
+#     # localTrafficSelector:
+#     #   - "192.168.0.0/16"
+#     # Optional: Remote traffic selector (CIDR ranges)
+#     # remoteTrafficSelector:
+#     #   - "10.0.0.0/8"
+#     # Optional: Peer IP (for Classic VPN or external gateways)
+#     # peerIp: "203.0.113.1"
+#     # Optional: For peer GCP VPN gateway (VPN peering between GCP projects)
+#     # peerGCPGatewayRefName: "other-project-vpn-gateway"
+#     # Optional: For Classic VPN (legacy)
+#     # targetVPNGatewayRefName: "my-target-vpn-gateway"
+#   # Second tunnel for HA configuration
+#   - name: "tunnel-2"
+#     region: "us-central1"
+#     description: "VPN Tunnel 2"
+#     routerRefName: "my-router"
+#     vpnGatewayRefName: "my-vpn-gateway"
+#     vpnGatewayInterface: 1
+#     peerExternalGatewayRefName: "peer-vpn-gateway"
+#     peerExternalGatewayInterface: 0
+#     sharedSecret:
+#       valueFrom:
+#         secretKeyRef:
+#           name: vpn-shared-secret
+#           key: tunnel-2-secret
