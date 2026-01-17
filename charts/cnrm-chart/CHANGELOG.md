@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.3.3] - 2026-01-17
+
 ### Changed
 
 - Updated GitHub Actions workflow to extract version-specific release notes for chart-releaser
