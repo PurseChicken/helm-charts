@@ -1,16 +1,25 @@
-# # This project name will be used to create the project and is referenced in every other subsection unless a projectID has been defined.
-# # When the project is created, it uses this field for the name as well as the ID. It may error if the project ID has been used anywhere before.
-# # You can omit projectName and projectID and the chart will default to using .Release.Name
-# # If the project already exists, and config connector has the appropriate permissions, then the project will become managed by this deployment unless createOrManageProject is false.
+# Project configuration
+# The project name/ID used for all resources in this chart
+# Priority: projectID > projectName > .Release.Name
+# Note: If the project already exists and Config Connector has appropriate permissions,
+# it will become managed by this deployment (unless createOrManageProject: false)
 # projectName: "my-unique-global-project"
 
-# # Use a different projectID for the project rather than trying to use projectName above.
-# # This reference will now be used in every other subsection.
-# projectID: "my-unique-global-project"
+# Use a different project ID than the project name
+# This is useful when the desired projectName is taken but you still want a readable name
+# projectID: "my-unique-global-project-123"
 
 # # Do you want this deployment to manage or create the project? By default the project is created, or becomes managed by config connector if it exists.
 # # This is useful if you want to use this chart to just managed infrastructure in an existing project, but not take over management of it.
 # createOrManageProject: true
+
+# ============================================================================
+# RESOURCE NAMING
+# ============================================================================
+# All Kubernetes resource names will be prefixed with the project name/ID
+# for uniqueness (e.g., "my-project-my-resource")
+# GCP resource names (resourceID) will use your specified names
+# ============================================================================
 
 # # Specify your organization ID so that when the project is created, it can tie it to your organization.
 # # Remove if not using an Organization.
@@ -21,7 +30,7 @@
 # billingAccountId: "ABCDE-12345-67890"
 
 # # Put the project in a folder? Specify the folder ID.
-# # This can't be used if you are specifying an organizationID
+# # IMPORTANT: Cannot be used with organizationId (a project can only have one parent)
 # # Remove if you are not using a folder
 # projectFolderId: "8675309"
 
@@ -29,8 +38,9 @@
 # # !!CAUTION!! If you enable this and apply it, any config connector resources deleted will actually be deleted in GCP.
 # allowResourceDeletion: false
 
-# # Enable the following API's on your project
-# # You can find the name of the API\Service under "Additional details" of the API page.
+# # Enable Google Cloud APIs on your project
+# # Find API names under "Additional details" on the API page in GCP Console
+# # Example: console.cloud.google.com/apis/library
 # apis:
 #   # Kubernetes Engine API
 #   - name: container.googleapis.com
@@ -97,6 +107,10 @@
 #         # Defaults to Active if not specified and purpose matches the above.
 #         role: "ACTIVE"
 
+# ============================================================================
+# COMPUTE
+# ============================================================================
+
 # # Would you like to create some Kubernetes clusters?
 # k8s:
 #   # Create this cluster
@@ -140,9 +154,14 @@
 #       enableComponents:
 #         - "SYSTEM_COMPONENTS"
 #         - "WORKLOADS"
-#     # this is not available until config connector v1.99.0
+#     # Optional: Enable Gateway API for advanced traffic management
+#     # Requires Config Connector v1.99.0 or higher
 #     gatewayApiConfig:
 #       channel: CHANNEL_STANDARD
+#     # Optional: Binary Authorization for enhanced security
+#     # binaryAuthorization:
+#     #   evaluationMode: PROJECT_SINGLETON_POLICY_ENFORCE
+#     #   # Options: DISABLED, PROJECT_SINGLETON_POLICY_ENFORCE
 #     # You can leave out monitoringConfig if you don't want to configure it.
 #     monitoringConfig:
 #       # toYaml
@@ -152,8 +171,8 @@
 #     maintenancePolicy:
 #       # toYaml
 #       dailyMaintenanceWindow:
-#         duration: "4H"
-#         # GMT
+#         duration: "PT4H0M0S"  # ISO 8601 duration format (4 hours)
+#         # GMT time zone
 #         startTime: "00:00"
 #     # These node pools will be created in the cluster
 #     # You can specify more than 1 if required.
@@ -176,29 +195,30 @@
 #           diskType: "pd-ssd"
 #           imageType: "COS_CONTAINERD"
 #           machineType: "n2-standard-2"
-#         # You can leave out metadata if you don't want to configure it.
-#         metadata:
-#           # toYaml
-#           disable-legacy-endpoints: "true"
-#         # You can leave out oauthScopes if you don't want to configure it.
-#         oauthScopes:
-#           # toYaml
-#           - "https://www.googleapis.com/auth/devstorage.read_only"
-#           - "https://www.googleapis.com/auth/logging.write"
-#           - "https://www.googleapis.com/auth/monitoring"
-#           - "https://www.googleapis.com/auth/servicecontrol"
-#           - "https://www.googleapis.com/auth/service.management.readonly"
-#           - "https://www.googleapis.com/auth/trace.append"
-#         shieldedInstanceConfig:
-#           enableSecureBoot: true
-#           enableIntegrityMonitoring: true
+#           # You can leave out metadata if you don't want to configure it.
+#           metadata:
+#             # toYaml
+#             disable-legacy-endpoints: "true"
+#           # You can leave out oauthScopes if you don't want to configure it.
+#           oauthScopes:
+#             # toYaml
+#             - "https://www.googleapis.com/auth/devstorage.read_only"
+#             - "https://www.googleapis.com/auth/logging.write"
+#             - "https://www.googleapis.com/auth/monitoring"
+#             - "https://www.googleapis.com/auth/servicecontrol"
+#             - "https://www.googleapis.com/auth/service.management.readonly"
+#             - "https://www.googleapis.com/auth/trace.append"
+#           shieldedInstanceConfig:
+#             enableSecureBoot: true
+#             enableIntegrityMonitoring: true
 #         # You can leave out upgradeSettings if you don't want to configure it.
 #         upgradeSettings:
 #           # toYaml
 #           maxSurge: 1
 #           maxUnavailable: 0
-#         # A tag is automatically added using "<node_pool_name>-nodes"
-#         # You can leave out tags if you don't want to configure more.
+#         # Network tags for the node pool
+#         # NOTE: A tag "<node_pool_name>-nodes" is automatically added to all nodes
+#         # Add additional tags here if needed
 #         tags:
 #           # toYaml
 #           - "mytag"
@@ -253,24 +273,28 @@
 #           diskType: "pd-ssd"
 #           imageType: "COS_CONTAINERD"
 #           machineType: "n2-standard-2"
-#         metadata:
-#           # toYaml
-#           disable-legacy-endpoints: "true"
-#         oauthScopes:
-#           # toYaml
-#           - "https://www.googleapis.com/auth/devstorage.read_only"
-#           - "https://www.googleapis.com/auth/logging.write"
-#           - "https://www.googleapis.com/auth/monitoring"
-#           - "https://www.googleapis.com/auth/servicecontrol"
-#           - "https://www.googleapis.com/auth/service.management.readonly"
-#           - "https://www.googleapis.com/auth/trace.append"
-#         shieldedInstanceConfig:
-#           enableSecureBoot: true
-#           enableIntegrityMonitoring: true
+#           metadata:
+#             # toYaml
+#             disable-legacy-endpoints: "true"
+#           oauthScopes:
+#             # toYaml
+#             - "https://www.googleapis.com/auth/devstorage.read_only"
+#             - "https://www.googleapis.com/auth/logging.write"
+#             - "https://www.googleapis.com/auth/monitoring"
+#             - "https://www.googleapis.com/auth/servicecontrol"
+#             - "https://www.googleapis.com/auth/service.management.readonly"
+#             - "https://www.googleapis.com/auth/trace.append"
+#           shieldedInstanceConfig:
+#             enableSecureBoot: true
+#             enableIntegrityMonitoring: true
 #         upgradeSettings:
 #           # toYaml
 #           maxSurge: 1
 #           maxUnavailable: 0
+
+# ============================================================================
+# IDENTITY & ACCESS MANAGEMENT
+# ============================================================================
 
 # # create IAM accounts, attach IAMPolicy or add Policy Members
 # iam:
@@ -329,7 +353,7 @@
 #       role: roles/container.admin
 #       external: projects/my-unique-global-project
 
-# # Create the following compute addresses
+# # Create Compute Addresses (Static IPs)
 # staticIp:
 #   - name: "my-address"
 #     addressType: "EXTERNAL"
@@ -361,6 +385,10 @@
 #       - name: "private-service-connection"
 #     service: "servicenetworking.googleapis.com"
 
+# ============================================================================
+# DNS
+# ============================================================================
+
 # # Create DNS Zones or records in the zone
 # dns:
 #   zone:
@@ -376,11 +404,11 @@
 #       type: A
 #       ttl: 300
 #       dnsZone: "my-fqdn-com"
-#       # if computeAddress is populated, the chart assumes you are creating a computeAddress reference (E.G. a static IP).
-#       # In that case it automatically adds the rrdatasRefs section.
-#       # Only one of computeAddress or rrdatas should be specified. 
+#       # If computeAddress is populated, the chart automatically creates a ComputeAddress reference
+#       # Use this for static IPs managed by this chart
+#       # Only specify ONE of computeAddress or rrdatas
 #       computeAddress: "my-address"
-#       # Otherwise, you must specify a list in rrdatas
+#       # Alternatively, use rrdatas for static IPs or external addresses
 #       # rrdatas:
 #       #   - "9.9.9.9"
 #     - name: "myaddress2.my.fqdn.com"
@@ -395,6 +423,10 @@
 #       dnsZone: "my-fqdn-com"
 #       rrdatas:
 #         - "somethingtotallyrandomgoeshere,1234567890987654321"
+
+# ============================================================================
+# GKE HUB (FLEET)
+# ============================================================================
 
 # # GKE Hub aka Fleet configuration
 # gkeHub:
@@ -433,6 +465,10 @@
 #         location: "global"
 #         resourceID: multiclusterservicediscovery
 
+# ============================================================================
+# SECURITY
+# ============================================================================
+
 # # Create SSL Policy
 # sslPolicy:
 #   # https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computesslpolicy
@@ -459,6 +495,10 @@
 #           config:
 #             srcIpRanges:
 #               - '*'
+
+# ============================================================================
+# OBSERVABILITY
+# ============================================================================
 
 # # Cloud Monitoring
 # monitoring:
@@ -555,7 +595,7 @@
 #         http_method: "EXTRACT(httpRequest.requestMethod)"
 #         http_path: "EXTRACT(httpRequest.requestUrl)"
 #         http_status: "EXTRACT(httpRequest.status)"
-#         http_useragent: "EXTRACT(httpRequest.ussssserAgent)"
+#         http_useragent: "EXTRACT(httpRequest.userAgent)"
 #       # Optional. The reference to the Log Bucket that owns the Log Metric.
 #       # loggingLogBucketRef:
 #       #   external: "mybucket"
@@ -601,6 +641,10 @@
 #           growthFactor: 2.0
 #           scale: 0.01
 
+# ============================================================================
+# STORAGE
+# ============================================================================
+
 # # Cloud SQL
 # sql:
 #   # Create a Cloud SQL Instance
@@ -609,7 +653,10 @@
 #     # add custom annotations to this resource?
 #     customAnnotations:
 #       abc: "1234567890"
-#     # Optional: Specify Instance Type (useful if setting up a replication Instance)
+#     # Optional: Specify Instance Type
+#     # Common values:
+#     #   - CLOUD_SQL_INSTANCE (default)
+#     #   - READ_REPLICA_INSTANCE (for read replicas)
 #     # instanceType: READ_REPLICA_INSTANCE
 #     databaseVersion: POSTGRES_14
 #     region: us-west4
@@ -680,6 +727,10 @@
 #         deletionPolicy: "ABANDON"
 #       - name: mydb99
 
+# ============================================================================
+# EXTERNAL SECRETS
+# ============================================================================
+
 # # Create Secrets using external-secrets operator.
 # # This is likely only useful here if you need to use a secret in a manifest. E.G. A Slack auth_token in a notification channel.
 # # Requires https://external-secrets.io/latest/ to be installed.
@@ -713,6 +764,10 @@
 #       - secretKey: auth-token
 #         remoteSecretKey: slack-auth-token
 
+# ============================================================================
+# NETWORK SECURITY
+# ============================================================================
+
 # # Cloud IDS
 # ids:
 #   - name: "my-ids-endpoint"
@@ -731,6 +786,10 @@
 #       - THREAT_ID1
 #       - THREAT_ID2
 
+# ============================================================================
+# VPN & INTERCONNECT
+# ============================================================================
+
 # # Cloud VPN - Cloud Router Configuration
 # # Cloud Router enables dynamic (BGP) routing for VPN tunnels
 # computeRouter:
@@ -748,6 +807,7 @@
 #     # encryptedInterconnectRouter: false
 #     # BGP configuration
 #     bgp:
+#       # toYaml
 #       # Local BGP ASN (must be RFC6996 private ASN: 16-bit or 32-bit)
 #       asn: 64514
 #       # Optional: Advertisement mode - DEFAULT or CUSTOM
@@ -763,6 +823,40 @@
 #           description: "Custom range 2"
 #       # Optional: BGP keepalive interval (20-60 seconds, default 20)
 #       # keepaliveInterval: 20
+#
+#     # Optional: Router Interfaces for BGP sessions
+#     # routerInterface:
+#     #   - name: "bgp-interface-0"
+#     #     # Link to VPN tunnel or interconnect attachment
+#     #     vpnTunnelRefName: "tunnel-1"
+#     #     # Optional: IP address for the interface (must be link-local /30)
+#     #     # ipRange: "169.254.0.1/30"
+#     #   - name: "bgp-interface-1"
+#     #     vpnTunnelRefName: "tunnel-2"
+#     #     # ipRange: "169.254.1.1/30"
+#
+#     # Optional: BGP Peers for dynamic routing
+#     # routerPeer:
+#     #   - name: "bgp-peer-0"
+#     #     routerInterfaceRefName: "bgp-interface-0"
+#     #     peerIpAddress: "169.254.0.2"
+#     #     peerAsn: 64515
+#     #     # Optional: Advertised route priority (0-65535, default 100)
+#     #     # advertisedRoutePriority: 100
+#     #     # Optional: BFD configuration for fast failure detection
+#     #     # bfd:
+#     #     #   sessionInitializationMode: "ACTIVE"
+#     #     #   minReceiveInterval: 1000  # milliseconds
+#     #     #   minTransmitInterval: 1000 # milliseconds
+#     #     #   multiplier: 5
+#     #     # Optional: MD5 authentication
+#     #     # md5AuthenticationKey:
+#     #     #   name: "vpn-md5-secret"
+#     #     #   key: "md5-key"
+#     #   - name: "bgp-peer-1"
+#     #     routerInterfaceRefName: "bgp-interface-1"
+#     #     peerIpAddress: "169.254.1.2"
+#     #     peerAsn: 64515
 
 # # Cloud VPN - VPN Gateway (HA VPN Gateway - Google side)
 # computeVpnGateway:

@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+- Fixed values.yaml nodePool example: moved metadata, oauthScopes, and shieldedInstanceConfig inside nodeConfig block (correct nesting)
+- Enhanced values.yaml documentation with section headers, improved comments, and better organization
+- Added binaryAuthorization example to GKE cluster configuration
+- Added ComputeRouterInterface and ComputeRouterPeer examples for BGP configuration
+- Fixed typo in logging metric example (userAgent)
+- Updated maintenance window duration to ISO 8601 format
+
 ## [v1.3.4] - 2026-01-17
 
 ### Changed
