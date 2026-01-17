@@ -44,6 +44,40 @@ def handle_subprocess_error(subprocess_result, error_message):
         sys.exit(1)
 
 
+def update_changelog(chart_name, new_version):
+    """Update CHANGELOG.md with new version"""
+    import datetime
+    changelog_path = f"./charts/{chart_name}/CHANGELOG.md"
+    
+    try:
+        with open(changelog_path, 'r') as f:
+            content = f.read()
+        
+        if "## [Unreleased]" not in content:
+            print(f"⚠️  WARNING: Could not find '## [Unreleased]' in CHANGELOG.md")
+            return False
+        
+        # Get today's date
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
+        
+        # Replace: ## [Unreleased]  ->  ## [Unreleased]\n\n## [vX.Y.Z] - DATE
+        updated_content = content.replace(
+            "## [Unreleased]",
+            f"## [Unreleased]\n\n## [v{new_version}] - {today}",
+            1  # Only replace first occurrence
+        )
+        
+        with open(changelog_path, 'w') as f:
+            f.write(updated_content)
+        
+        print(f"✅ Updated CHANGELOG.md with version v{new_version}")
+        return True
+        
+    except Exception as e:
+        print(f"⚠️  WARNING: Could not update CHANGELOG.md: {e}")
+        return False
+
+
 def check_unreleased_section(chart_name):
     """Check if CHANGELOG has Unreleased section for version bumping"""
     changelog_path = f"./charts/{chart_name}/CHANGELOG.md"
@@ -129,6 +163,14 @@ if __name__ == "__main__":
 
     print(f"🚀 Executing {upgrade_type.value} version bump...")
 
+    # Get the current version from .bumpversion.cfg before bump
+    current_version = None
+    with open(f"./charts/{chart_name}/.bumpversion.cfg", 'r') as f:
+        for line in f:
+            if line.startswith('current_version'):
+                current_version = line.split('=', 1)[1].strip()
+                break
+    
     # Execute bump2version
     bumpver_process = subprocess.run(
         f"bump2version {upgrade_type.value}",
@@ -137,6 +179,36 @@ if __name__ == "__main__":
         capture_output=True
     )
     handle_subprocess_error(bumpver_process, "❌ Could not execute version bump")
+
+    # Get the new version from Chart.yaml
+    new_version = None
+    with open(f"./charts/{chart_name}/Chart.yaml", 'r') as f:
+        for line in f:
+            if line.startswith('version:'):
+                new_version = line.split(':', 1)[1].strip()
+                break
+    
+    # Update CHANGELOG manually (bump2version has issues with multi-line replacements)
+    update_changelog(chart_name, new_version)
+    
+    # Commit both Chart.yaml and CHANGELOG.md changes
+    commit_msg = f"Bump {chart_name} version: {current_version} → {new_version}"
+    git_add = subprocess.run(
+        f"git add Chart.yaml CHANGELOG.md .bumpversion.cfg",
+        shell=True,
+        cwd=f"./charts/{chart_name}",
+        capture_output=True
+    )
+    git_commit = subprocess.run(
+        f'git commit -m "{commit_msg}"',
+        shell=True,
+        cwd=f"./charts/{chart_name}",
+        capture_output=True
+    )
+    
+    if git_commit.returncode != 0:
+        print("⚠️  Git commit failed, but version was bumped")
+        print(git_commit.stderr.decode('utf-8'))
 
     print("✅ Version bump completed successfully")
     write_github_output('changes', 'true')

@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Updated GitHub Actions workflow to extract version-specific release notes for chart-releaser
+- Updated bump-version.py script to handle CHANGELOG updates directly (avoiding bump2version multi-line config corruption)
+- Updated bump-version.py with conventional commit keyword support (chore, docs, refactor, perf, test, build, ci)
+- Updated bump-version.py with skip keywords support ([skip-bump], [no-bump])
+- Updated bump-version.py with breaking change exclamation mark syntax support (feat!:, fix!:)
+- Updated bump-version.py to properly write GitHub Actions outputs
+- Updated actions/checkout from v5 to v6
+
+### Fixed
+
+- Fixed bumpversion configuration to prevent config file corruption
+- Fixed CHANGELOG structure to follow Keep a Changelog standard with proper Unreleased section
+- Fixed release notes not appearing in GitHub releases due to extraction issues
+
+## [v1.3.2] - 2026-01-17
+
 ### Added
 
 - Added `cnrm-chart.resourceName` helper to generate consistent, sanitized `projectName-resourceName` patterns
@@ -48,7 +66,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Fixed `shieldedInstanceConfig` path to correctly reference `.nodeConfig.shieldedInstanceConfig` within node pool context
 - Added proper conditionals for: `releaseChannel`, `datapathProvider`, `enableIntranodeVisibility`, `enableShieldedNodes`, `verticalPodAutoscaling`, `management`, `nodeConfig`, `shieldedInstanceConfig`, `initialNodeCount`, `nodeLocation`, `maxPodsPerNode`
 
-## [v## [Unreleased]] - 2026-01-15
+## [v1.3.1] - 2026-01-15
 
 ### Added
 
