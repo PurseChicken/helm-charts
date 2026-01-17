@@ -7,18 +7,9 @@ apiVersion: sql.cnrm.cloud.google.com/v1beta1
 kind: SQLInstance
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
-    {{- if .customAnnotations }}
-    {{- range $key, $value := .customAnnotations }}
-    {{ $key }}: {{ $value | quote }}
-    {{- end }}
-    {{- end }}
-    cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ .name }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
 spec:
   {{- if .instanceType }}
   instanceType: {{ .instanceType }}
@@ -28,7 +19,7 @@ spec:
   region: {{ .region }}
   {{- if .masterInstanceRef }}
   masterInstanceRef: 
-    name: {{ $projectName }}-{{ .masterInstanceRef }}
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .masterInstanceRef) }}
   {{- end }}
   {{- if .replicaConfiguration }}
   replicaConfiguration:
@@ -71,9 +62,37 @@ spec:
     insightsConfig:
       {{- toYaml .insightsConfig | nindent 6 }}
     {{- end }}
-    {{- if .ipConfiguration }}
+    {{- with .ipConfiguration }}
     ipConfiguration:
-      {{- toYaml .ipConfiguration | nindent 6 }}
+      {{- if .ipv4Enabled }}
+      ipv4Enabled: {{ .ipv4Enabled }}
+      {{- end }}
+      {{- if .requireSsl }}
+      requireSsl: {{ .requireSsl }}
+      {{- end }}
+      {{- if .sslMode }}
+      sslMode: {{ .sslMode }}
+      {{- end }}
+      {{- if .privateNetworkRefName }}
+      privateNetworkRef:
+        name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .privateNetworkRefName) }}
+      {{- end }}
+      {{- if .allocatedIpRange }}
+      allocatedIpRange: {{ .allocatedIpRange | quote }}
+      {{- end }}
+      {{- with .authorizedNetworks }}
+      authorizedNetworks:
+        {{- range . }}
+          - name: {{ .name | quote }}
+            value: {{ .value | quote }}
+            {{- if .expirationTime }}
+            expirationTime: {{ .expirationTime | quote }}
+            {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- if .enablePrivatePathForGoogleCloudServices }}
+      enablePrivatePathForGoogleCloudServices: {{ .enablePrivatePathForGoogleCloudServices }}
+      {{- end }}
     {{- end }}
     {{- if .locationPreference }}
     locationPreference:
@@ -95,16 +114,11 @@ apiVersion: sql.cnrm.cloud.google.com/v1beta1
 kind: SQLUser
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
-    cnrm.cloud.google.com/project-id: {{ $projectName }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
   name: {{ $projectName }}-{{ $instanceName }}-{{ include "cnrm-chart.sanitizeEmail" .resourceID }}
 spec:
   instanceRef:
-    name: {{ $projectName }}-{{ $instanceName }}
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" $instanceName) }}
   type: {{ .type }}
   resourceID: {{ .resourceID }}
   {{- if .password }}
@@ -127,12 +141,7 @@ apiVersion: sql.cnrm.cloud.google.com/v1beta1
 kind: SQLDatabase
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
-    cnrm.cloud.google.com/project-id: {{ $projectName }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
   name: {{ $projectName }}-{{ $instanceName }}-{{ include "cnrm-chart.sanitizeName" .name }}
 spec:
   resourceID: {{ .name }}
@@ -140,7 +149,7 @@ spec:
   deletionPolicy: {{ .deletionPolicy | quote }}
   {{- end }}
   instanceRef:
-    name: {{ $projectName }}-{{ $instanceName }}
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" $instanceName) }}
 {{- end -}}
 {{- end -}}
 {{- end -}}

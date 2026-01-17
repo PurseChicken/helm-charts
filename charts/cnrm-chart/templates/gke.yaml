@@ -7,19 +7,10 @@ apiVersion: container.cnrm.cloud.google.com/v1beta1
 kind: ContainerCluster
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
-    {{- if .customAnnotations }}
-    {{- range $key, $value := .customAnnotations }}
-    {{ $key }}: {{ $value | quote }}
-    {{- end }}
-    {{- end }}
-    cnrm.cloud.google.com/project-id: {{ $projectName }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
     cnrm.cloud.google.com/remove-default-node-pool: "true"
-  name: {{ $projectName }}-{{ .clusterName }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .clusterName) }}
 spec:
   resourceID: {{ .clusterName }}
   location: {{ .clusterLocation }}
@@ -27,9 +18,9 @@ spec:
   workloadIdentityConfig:
     workloadPool: {{ $projectName }}.svc.id.goog
   networkRef:
-    name: {{ $projectName }}-{{ .networkName }}
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .networkName) }}
   subnetworkRef:
-    name: {{ $projectName }}-{{ .subnetName }}
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .subnetName) }}
   ipAllocationPolicy:
     servicesSecondaryRangeName: {{ .servicesSecondaryRangeName }}
     clusterSecondaryRangeName: {{ .clusterSecondaryRangeName }}
@@ -37,17 +28,27 @@ spec:
   clusterAutoscaling:
     {{- toYaml .clusterAutoscaling | nindent 4 }}
   {{- end }}
+  {{- if .releaseChannel }}
   releaseChannel:
     channel: {{ .releaseChannel }}
+  {{- end }}
+  {{- if .datapathProvider }}
   datapathProvider: {{ .datapathProvider }}
+  {{- end }}
+  {{- if .enableIntranodeVisibility }}
   enableIntranodeVisibility: {{ .enableIntranodeVisibility }}
+  {{- end }}
+  {{- if .enableShieldedNodes }}
   enableShieldedNodes: {{ .enableShieldedNodes }}
+  {{- end }}
   {{- if .addonsConfig }}
   addonsConfig:
     {{- toYaml .addonsConfig | nindent 4 }}
   {{- end }}
+  {{- if .verticalPodAutoscalingEnabled }}
   verticalPodAutoscaling:
     enabled: {{ .verticalPodAutoscalingEnabled }}
+  {{- end }}
   {{- if .loggingConfig }}
   loggingConfig:
     {{- toYaml .loggingConfig | nindent 4 }}
@@ -60,9 +61,13 @@ spec:
   monitoringConfig:
     {{- toYaml .monitoringConfig | nindent 4 }}
   {{- end }}
-  {{- if .gatewayApiConfig }}
+  {{- with .gatewayApiConfig }}
   gatewayApiConfig:
-    channel: {{ .gatewayApiConfig.channel }}
+    channel: {{ .channel }}
+  {{- end }}
+  {{- with .binaryAuthorization }}
+  binaryAuthorization:
+    evaluationMode: {{ .evaluationMode }}
   {{- end }}
   {{- if .costManagementConfig }}
   costManagementConfig:
@@ -71,41 +76,51 @@ spec:
 {{- if .nodePool }}
 {{- $clusterName := .clusterName }}
 {{- range .nodePool }}
+{{- $nodePoolName := .name }}
+{{- $nodePoolTags := .tags }}
 ---
 apiVersion: container.cnrm.cloud.google.com/v1beta1
 kind: ContainerNodePool
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
-    {{- if .customAnnotations }}
-    {{- range $key, $value := .customAnnotations }}
-    {{ $key }}: {{ $value | quote }}
-    {{- end }}
-    {{- end }}
-    cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ .name }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
 spec:
   resourceID: {{ .name }}
   autoscaling:
     minNodeCount: {{ .minNodeCount }}
     maxNodeCount: {{ .maxNodeCount }}
   clusterRef:
-    name: {{ $projectName }}-{{ $clusterName }}
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" $clusterName) }}
+  {{- if .initialNodeCount }}
   initialNodeCount: {{ .initialNodeCount }}
+  {{- end }}
+  {{- if .nodeLocation }}
   location: {{ .nodeLocation }}
+  {{- end }}
+  {{- with .management }}
   management:
-    autoRepair: {{ .management.autoRepair }}
-    autoUpgrade: {{ .management.autoUpgrade }}
+    autoRepair: {{ .autoRepair }}
+    autoUpgrade: {{ .autoUpgrade }}
+  {{- end }}
+  {{- if .maxPodsPerNode }}
   maxPodsPerNode: {{ .maxPodsPerNode }}
+  {{- end }}
+  {{- with .nodeConfig }}
   nodeConfig:
-    diskSizeGb: {{ .nodeConfig.diskSizeGb }}
-    diskType: {{ .nodeConfig.diskType }}
-    imageType: {{ .nodeConfig.imageType }}
-    machineType: {{ .nodeConfig.machineType }}
+    {{- if .diskSizeGb }}
+    diskSizeGb: {{ .diskSizeGb }}
+    {{- end }}
+    {{- if .diskType }}
+    diskType: {{ .diskType }}
+    {{- end }}
+    {{- if .imageType }}
+    imageType: {{ .imageType }}
+    {{- end }}
+    {{- if .machineType }}
+    machineType: {{ .machineType }}
+    {{- end }}
     {{- if .metadata }}
     metadata:
       {{- toYaml .metadata | nindent 6 }}
@@ -114,14 +129,17 @@ spec:
     oauthScopes:
       {{- toYaml .oauthScopes | nindent 6 }}
     {{- end }}
+    {{- with .shieldedInstanceConfig }}
     shieldedInstanceConfig:
-        enableSecureBoot: {{ .shieldedInstanceConfig.enableSecureBoot }}
-        enableIntegrityMonitoring: {{ .shieldedInstanceConfig.enableIntegrityMonitoring }}
-    tags:
-      - "{{ .name }}-nodes"
-    {{- if .tags }}
-      {{- toYaml .tags | nindent 6 }}
+      enableSecureBoot: {{ .enableSecureBoot }}
+      enableIntegrityMonitoring: {{ .enableIntegrityMonitoring }}
     {{- end }}
+    tags:
+      - "{{ $nodePoolName }}-nodes"
+    {{- if $nodePoolTags }}
+      {{- toYaml $nodePoolTags | nindent 6 }}
+    {{- end }}
+  {{- end }}
   {{- if .upgradeSettings }}
   upgradeSettings:
     {{- toYaml .upgradeSettings | nindent 4 }}

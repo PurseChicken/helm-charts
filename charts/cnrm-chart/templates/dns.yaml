@@ -10,14 +10,10 @@ apiVersion: dns.cnrm.cloud.google.com/v1beta1
 kind: DNSManagedZone
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
-    cnrm.cloud.google.com/project-id: {{ $projectName }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
   name: {{ $metaName }}
 spec:
+  resourceID: {{ $metaName }}
   description: {{ .description }}
   dnsName: {{ .name }}.
   dnssecConfig:
@@ -27,22 +23,18 @@ spec:
 {{- end }}
 {{- if .Values.dns.record }}
 {{- range .Values.dns.record }}
-{{- $name1 := mustRegexReplaceAll "\\W|\\B_" .name "-" }}
-{{- $name2 := mustRegexReplaceAll "_domainkey" $name1 "domainkey" }}
-{{- $metaName := mustRegexReplaceAll "^_" $name2 "" }}
+{{- $dotsToHyphens := mustRegexReplaceAll "\\W|\\B_" .name "-" }}
+{{- $dkimCleaned := mustRegexReplaceAll "_domainkey" $dotsToHyphens "domainkey" }}
+{{- $k8sName := mustRegexReplaceAll "^_" $dkimCleaned "" }}
 ---
 apiVersion: dns.cnrm.cloud.google.com/v1beta1
 kind: DNSRecordSet
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
-    cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ $metaName }}-{{ .type | lower }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+  name: {{ $projectName }}-{{ $k8sName }}-{{ .type | lower }}
 spec:
+  resourceID: {{ $projectName }}-{{ $k8sName }}-{{ .type | lower }}
   name: {{ .name }}.
   type: {{ .type }}
   ttl: {{ .ttl }}
@@ -50,7 +42,7 @@ spec:
     name: {{ .dnsZone }}
   {{- if .computeAddress }}
   rrdatasRefs:
-    - name: {{ $projectName }}-{{ .computeAddress }}
+    - name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .computeAddress) }}
       kind: ComputeAddress
   {{- else if .rrdatas }}
   rrdatas:

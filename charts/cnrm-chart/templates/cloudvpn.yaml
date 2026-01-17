@@ -1,0 +1,308 @@
+{{- if .Values.computeRouter }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.computeRouter }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeRouter
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .name }}
+  region: {{ .region }}
+  networkRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .networkRefName) }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if .encryptedInterconnectRouter }}
+  encryptedInterconnectRouter: {{ .encryptedInterconnectRouter }}
+  {{- end }}
+  {{- with .bgp }}
+  bgp:
+    asn: {{ .asn }}
+    {{- if .advertiseMode }}
+    advertiseMode: {{ .advertiseMode }}
+    {{- end }}
+    {{- if .advertisedGroups }}
+    advertisedGroups:
+      {{- range .advertisedGroups }}
+        - {{ . | quote }}
+      {{- end }}
+    {{- end }}
+    {{- if .advertisedIpRanges }}
+    advertisedIpRanges:
+      {{- range .advertisedIpRanges }}
+        - range: {{ .range | quote }}
+          {{- if .description }}
+          description: {{ .description | quote }}
+          {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- if .keepaliveInterval }}
+    keepaliveInterval: {{ .keepaliveInterval }}
+    {{- end }}
+  {{- end }}
+{{- end -}}
+{{- end -}}
+{{- if .Values.computeVpnGateway }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.computeVpnGateway }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeVPNGateway
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .name }}
+  region: {{ .region }}
+  networkRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .networkRefName) }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if .stackType }}
+  stackType: {{ .stackType }}
+  {{- end }}
+  {{- with .vpnInterfaces }}
+  vpnInterfaces:
+    {{- range . }}
+      - id: {{ .id }}
+        {{- if .ipAddress }}
+        ipAddress: {{ .ipAddress | quote }}
+        {{- end }}
+        {{- if .interconnectAttachmentRefName }}
+        interconnectAttachmentRef:
+          name: {{ $projectName }}-{{ .interconnectAttachmentRefName }}
+        {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end -}}
+{{- end -}}
+{{- if .Values.computeExternalVpnGateway }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.computeExternalVpnGateway }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeExternalVPNGateway
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .name }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if .redundancyType }}
+  redundancyType: {{ .redundancyType }}
+  {{- end }}
+  {{- with .interface }}
+  interface:
+    {{- range . }}
+      - id: {{ .id }}
+        {{- if .ipAddress }}
+        ipAddress: {{ .ipAddress | quote }}
+        {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end -}}
+{{- end -}}
+{{- if .Values.computeVpnTunnel }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.computeVpnTunnel }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeVPNTunnel
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .name }}
+  region: {{ .region }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if .ikeVersion }}
+  ikeVersion: {{ .ikeVersion }}
+  {{- end }}
+  {{- with .localTrafficSelector }}
+  localTrafficSelector:
+    {{- range . }}
+      - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  {{- with .remoteTrafficSelector }}
+  remoteTrafficSelector:
+    {{- range . }}
+      - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if .peerIp }}
+  peerIp: {{ .peerIp | quote }}
+  {{- end }}
+  {{- if .peerExternalGatewayRefName }}
+  peerExternalGatewayRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .peerExternalGatewayRefName) }}
+  {{- end }}
+  {{- if .peerExternalGatewayInterface }}
+  peerExternalGatewayInterface: {{ .peerExternalGatewayInterface }}
+  {{- end }}
+  {{- if .peerGCPGatewayRefName }}
+  peerGCPGatewayRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .peerGCPGatewayRefName) }}
+  {{- end }}
+  {{- if .vpnGatewayRefName }}
+  vpnGatewayRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .vpnGatewayRefName) }}
+  {{- end }}
+  {{- if .vpnGatewayInterface }}
+  vpnGatewayInterface: {{ .vpnGatewayInterface }}
+  {{- end }}
+  {{- if .targetVPNGatewayRefName }}
+  targetVPNGatewayRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .targetVPNGatewayRefName) }}
+  {{- end }}
+  {{- if .routerRefName }}
+  routerRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .routerRefName) }}
+  {{- end }}
+  {{- with .sharedSecret }}
+  sharedSecret:
+    {{- if .value }}
+    value: {{ .value | quote }}
+    {{- else if .valueFrom }}
+    valueFrom:
+      {{- toYaml .valueFrom | nindent 6 }}
+    {{- end }}
+  {{- end }}
+{{- end -}}
+{{- end -}}
+{{- if .Values.computeRouterInterface }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.computeRouterInterface }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeRouterInterface
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .name }}
+  region: {{ .region }}
+  routerRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .routerRefName) }}
+  {{- if .ipRange }}
+  ipRange: {{ .ipRange | quote }}
+  {{- end }}
+  {{- if .vpnTunnelRefName }}
+  vpnTunnelRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .vpnTunnelRefName) }}
+  {{- end }}
+  {{- if .interconnectAttachmentRefName }}
+  interconnectAttachmentRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .interconnectAttachmentRefName) }}
+  {{- end }}
+  {{- if .subnetworkRefName }}
+  subnetworkRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .subnetworkRefName) }}
+  {{- end }}
+  {{- if .privateIpAddress }}
+  privateIpAddress: {{ .privateIpAddress | quote }}
+  {{- end }}
+  {{- if .redundantInterface }}
+  redundantInterface: {{ .redundantInterface }}
+  {{- end }}
+{{- end -}}
+{{- end -}}
+{{- if .Values.computeRouterPeer }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.computeRouterPeer }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeRouterPeer
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .name }}
+  region: {{ .region }}
+  routerRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .routerRefName) }}
+  interfaceRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .interfaceRefName) }}
+  peerAsn: {{ .peerAsn }}
+  peerIpAddress: {{ .peerIpAddress | quote }}
+  {{- if .advertiseMode }}
+  advertiseMode: {{ .advertiseMode }}
+  {{- end }}
+  {{- with .advertisedGroups }}
+  advertisedGroups:
+    {{- range . }}
+      - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  {{- with .advertisedIpRanges }}
+  advertisedIpRanges:
+    {{- range . }}
+      - range: {{ .range | quote }}
+        {{- if .description }}
+        description: {{ .description | quote }}
+        {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if .advertisedRoutePriority }}
+  advertisedRoutePriority: {{ .advertisedRoutePriority }}
+  {{- end }}
+  {{- if .enable }}
+  enable: {{ .enable }}
+  {{- end }}
+  {{- if .enableIpv6 }}
+  enableIpv6: {{ .enableIpv6 }}
+  {{- end }}
+  {{- if .ipv6NexthopAddress }}
+  ipv6NexthopAddress: {{ .ipv6NexthopAddress | quote }}
+  {{- end }}
+  {{- if .peerIpv6NexthopAddress }}
+  peerIpv6NexthopAddress: {{ .peerIpv6NexthopAddress | quote }}
+  {{- end }}
+  {{- with .bfd }}
+  bfd:
+    minReceiveInterval: {{ .minReceiveInterval }}
+    minTransmitInterval: {{ .minTransmitInterval }}
+    multiplier: {{ .multiplier }}
+    sessionInitializationMode: {{ .sessionInitializationMode }}
+  {{- end }}
+  {{- with .md5AuthenticationKey }}
+  md5AuthenticationKey:
+    {{- if .name }}
+    name: {{ .name | quote }}
+    {{- end }}
+    {{- if .key }}
+    key: {{ .key | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if .routerApplianceInstanceRefName }}
+  routerApplianceInstanceRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .routerApplianceInstanceRefName) }}
+  {{- end }}
+{{- end -}}
+{{- end -}}

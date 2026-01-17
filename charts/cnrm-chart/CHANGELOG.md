@@ -4,7 +4,49 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
----
+## [Unreleased]
+
+### Added
+
+- Added `cnrm-chart.resourceName` helper to generate consistent, sanitized `projectName-resourceName` patterns
+- Added `cnrm-chart.cnrmAnnotations` helper to standardize CNRM deletion-policy and project-id annotations
+- Added `cnrm-chart.customAnnotations` helper to render user-defined custom annotations consistently
+- Added ComputeRouterInterface support for BGP session establishment with VPN tunnels
+- Added ComputeRouterPeer support for BGP peer configuration (advertised routes, BFD, MD5 auth)
+- Added structured SQL ipConfiguration fields for SSL, private networking, and authorized networks
+- Added GKE binaryAuthorization support for container image security enforcement
+- Added ComputeSubnetwork flow logs support (aggregationInterval, flowSampling, metadata)
+- Added ComputeSubnetwork privateIpGoogleAccess field for Private Google Access
+- Added IAMPolicyMember conditional IAM support (title, description, expression)
+- Added IAMServiceAccount displayName field for human-readable names
+- Added CloudIDSEndpoint resourceID field for naming consistency
+
+### Changed
+
+- Refactored all templates to use `cnrm-chart.resourceName` helper for resource naming (20+ templates)
+- All resource names now automatically sanitized to ensure Kubernetes compliance (lowercase, alphanumeric, hyphens)
+- Refactored all resource references (networkRef, clusterRef, routerRef, etc.) to use naming helper for consistency
+- Refactored all metadata annotations blocks to use `cnrm-chart.cnrmAnnotations` helper (net -185 lines of code)
+- Refactored custom annotations rendering to use `cnrm-chart.customAnnotations` helper
+- Improved GKE templates to use `{{- with }}` for nested objects (`management`, `nodeConfig`, `shieldedInstanceConfig`)
+- Boolean fields in nested objects now render explicit values when parent is defined (e.g., `autoRepair: false`)
+- Node pool tags now use captured variables to properly reference original node pool names within `with` blocks
+- Consolidated Cloud VPN resources into single `cloudvpn.yaml` file (previously 4 separate files)
+- Enhanced SQL ipConfiguration from basic `toYaml` to structured fields with proper resource references
+- Updated ComputeAddress to support full networkRef spec (name, external, namespace)
+- Updated ServiceNetworkingConnection to use naming helper for all resource references
+- Added resourceID fields to DNS resources for consistency with Config Connector best practices
+- Improved DNS template variable naming from generic ($name1, $name2) to descriptive ($dotsToHyphens, $dkimCleaned, $k8sName)
+- IAMServiceAccount description field now optional (previously required)
+
+### Fixed
+
+- Fixed GKE ContainerCluster template to properly handle optional fields with `{{- if }}` checks
+- Fixed ContainerNodePool template to prevent nil pointer errors when optional fields are not provided
+- Fixed ContainerNodePool to use `{{- with .nodeConfig }}` for cleaner context switching and proper field access
+- Fixed nodePool tags to always include default `<nodePoolName>-nodes` tag, with optional custom tags appended
+- Fixed `shieldedInstanceConfig` path to correctly reference `.nodeConfig.shieldedInstanceConfig` within node pool context
+- Added proper conditionals for: `releaseChannel`, `datapathProvider`, `enableIntranodeVisibility`, `enableShieldedNodes`, `verticalPodAutoscaling`, `management`, `nodeConfig`, `shieldedInstanceConfig`, `initialNodeCount`, `nodeLocation`, `maxPodsPerNode`
 
 ## [v1.3.1] - 2026-01-15
 

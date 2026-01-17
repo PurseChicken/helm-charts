@@ -9,13 +9,8 @@ apiVersion: gkehub.cnrm.cloud.google.com/v1beta1
 kind: GKEHubMembership
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
-    cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ .name }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
 spec:
   resourceID: {{ .name }}
   location: {{ .location }}
@@ -25,7 +20,7 @@ spec:
     {{- if .endpoint.gkeCluster }}
     gkeCluster:
       resourceRef:
-        name: {{ $projectName }}-{{ .endpoint.gkeCluster.name }}
+        name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .endpoint.gkeCluster.name) }}
     {{- end }}
   {{- end }}
 {{- end }}
@@ -37,12 +32,8 @@ apiVersion: gkehub.cnrm.cloud.google.com/v1beta1
 kind: GKEHubFeature
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
-  name: {{ $projectName }}-{{ .name }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
 spec:
   projectRef:
     name: {{ $projectName }}
@@ -52,7 +43,7 @@ spec:
   spec:
     multiclusteringress:
       configMembershipRef:
-        name: {{ $projectName }}-{{ .multiClusterIngress.mciName }}
+        name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .multiClusterIngress.mciName) }}
   {{- end }}
 {{- end -}}
 {{- end -}}

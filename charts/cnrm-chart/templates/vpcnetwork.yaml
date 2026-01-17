@@ -7,18 +7,9 @@ apiVersion: compute.cnrm.cloud.google.com/v1beta1
 kind: ComputeNetwork
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
-    {{- if .customAnnotations }}
-    {{- range $key, $value := .customAnnotations }}
-    {{ $key }}: {{ $value | quote }}
-    {{- end }}
-    {{- end }}
-    cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ .networkName }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .networkName) }}
 spec:
   resourceID: {{ .networkName }}
   {{- if .autoCreateSubnetworks }}
@@ -40,19 +31,14 @@ apiVersion: compute.cnrm.cloud.google.com/v1beta1
 kind: ComputeSubnetwork
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
-    cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ .subnetName }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .subnetName) }}
 spec:
   resourceID: {{ .subnetName }}
   ipCidrRange: {{ .subnetCidr }}
   region: {{ .vpcRegion }}
   networkRef:
-    name: {{ $projectName }}-{{ $networkName }}
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" $networkName) }}
   {{- if .purpose }}
   purpose: {{ .purpose }}
   {{- end }}
@@ -62,6 +48,21 @@ spec:
   {{- end }}
   {{- else }}
   role: {{ .role }}
+  {{- end }}
+  {{- if .privateIpGoogleAccess }}
+  privateIpGoogleAccess: {{ .privateIpGoogleAccess }}
+  {{- end }}
+  {{- with .logConfig }}
+  logConfig:
+    {{- if .aggregationInterval }}
+    aggregationInterval: {{ .aggregationInterval }}
+    {{- end }}
+    {{- if .flowSampling }}
+    flowSampling: {{ .flowSampling }}
+    {{- end }}
+    {{- if .metadata }}
+    metadata: {{ .metadata }}
+    {{- end }}
   {{- end }}
   {{- if .secondarySubnets }}
   secondaryIpRange:

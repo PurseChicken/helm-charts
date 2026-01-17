@@ -7,14 +7,10 @@ apiVersion: compute.cnrm.cloud.google.com/v1beta1
 kind: ComputeAddress
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
-    cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ .name }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
 spec:
+  resourceID: {{ .name }}
   addressType: {{ .addressType }}
   location: {{ .location }}
   ipVersion: {{ .ipVersion }}
@@ -24,9 +20,16 @@ spec:
   {{- if .prefixLength }}
   prefixLength: {{ .prefixLength }}
   {{- end }}
-  {{- if .networkRef }}
+  {{- with .networkRef }}
   networkRef:
-    name: {{ $projectName }}-{{ .networkRef.name }}
+    {{- if .external }}
+    external: {{ .external }}
+    {{- else if .name }}
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+    {{- end }}
+    {{- if .namespace }}
+    namespace: {{ .namespace }}
+    {{- end }}
   {{- end }}
 {{- end -}}
 {{- end -}}

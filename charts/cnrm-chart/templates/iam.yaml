@@ -8,20 +8,16 @@ apiVersion: iam.cnrm.cloud.google.com/v1beta1
 kind: IAMServiceAccount
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
-    {{- if .customAnnotations }}
-    {{- range $key, $value := .customAnnotations }}
-    {{ $key }}: {{ $value | quote }}
-    {{- end }}
-    {{- end }}
-    cnrm.cloud.google.com/project-id: {{ $projectName }}
-  name: {{ $projectName }}-{{ include "cnrm-chart.sanitizeName" .name }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
 spec:
+  {{- if .displayName }}
+  displayName: {{ .displayName | quote }}
+  {{- end }}
+  {{- if .description }}
   description: {{ .description }}
+  {{- end }}
   resourceID: {{ .name }}
 {{- end }}
 {{- if .iamPolicyMember }}
@@ -31,11 +27,7 @@ apiVersion: iam.cnrm.cloud.google.com/v1beta1
 kind: IAMPolicyMember
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
   name: {{ $projectName }}-{{ include "cnrm-chart.sanitizeName" .name }}
 spec:
   member: {{ .member }}
@@ -44,6 +36,14 @@ spec:
     apiVersion: resourcemanager.cnrm.cloud.google.com/v1beta1
     kind: Project
     external: {{ default (printf "projects/%s" $projectName) .external | quote }}
+  {{- with .condition }}
+  condition:
+    title: {{ .title | quote }}
+    {{- if .description }}
+    description: {{ .description | quote }}
+    {{- end }}
+    expression: {{ .expression | quote }}
+  {{- end }}
 {{- end }}
 {{- end }}
 {{- if .iamPolicy }}
@@ -54,11 +54,7 @@ apiVersion: iam.cnrm.cloud.google.com/v1beta1
 kind: IAMPolicy
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
   name: {{ $projectName }}-{{ include "cnrm-chart.sanitizeName" .name }}
 spec:
   resourceRef:

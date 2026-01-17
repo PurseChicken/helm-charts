@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
@@ -75,11 +75,21 @@ jobs:
         run: |
           helm repo add t3n-helm-charts https://storage.googleapis.com/t3n-helm-charts
 
+      - name: Extract version-specific release notes
+        run: |
+          for chart in charts/*/; do
+            chart_name=$(basename "$chart")
+            version=$(grep '^version:' "$chart/Chart.yaml" | awk '{print $2}')
+            echo "Processing $chart_name version $version"
+            # Extract section between [v$version] and next ## heading
+            sed -n "/## \[v${version}\]/,/^## \[/p" "$chart/CHANGELOG.md" | sed '$d' > "$chart/RELEASE_NOTES.md" || echo "No release notes found for $chart_name v$version"
+          done
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
         with:
           charts_dir: charts
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          CR_RELEASE_NOTES_FILE: "CHANGELOG.md"
+          CR_RELEASE_NOTES_FILE: "RELEASE_NOTES.md"
           CR_SKIP_EXISTING: true

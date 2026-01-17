@@ -7,20 +7,13 @@ apiVersion: cloudids.cnrm.cloud.google.com/v1beta1
 kind: CloudIDSEndpoint
 metadata:
   annotations:
-    {{- if $allowResourceDeletion }}
-    cnrm.cloud.google.com/deletion-policy: "none"
-    {{- else }}
-    cnrm.cloud.google.com/deletion-policy: "abandon"
-    {{- end }}
-    {{- if .customAnnotations }}
-    {{- range $key, $value := .customAnnotations }}
-    {{ $key }}: {{ $value | quote }}
-    {{- end }}
-    {{- end }}
-  name: {{ $projectName }}-{{ .name }}
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
 spec:
+  resourceID: {{ .name }}
   networkRef:
-    name: {{ $projectName }}-{{ .networkRefName }}
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .networkRefName) }}
   severity: {{ .severity }}
   location: {{ .location }}
   projectRef:

@@ -64,6 +64,13 @@
 #       - subnetName: "my-central-nodes"
 #         subnetCidr: "192.168.64.0/20"
 #         vpcRegion: "us-central1"
+#         # Optional. Enable Private Google Access (allows VMs without external IPs to access Google APIs)
+#         # privateIpGoogleAccess: true
+#         # Optional. Enable VPC Flow Logs for network monitoring and troubleshooting
+#         # logConfig:
+#         #   aggregationInterval: "INTERVAL_5_SEC"  # Options: INTERVAL_5_SEC, INTERVAL_30_SEC, INTERVAL_1_MIN, INTERVAL_5_MIN, INTERVAL_10_MIN, INTERVAL_15_MIN
+#         #   flowSampling: 0.5  # Sample 50% of traffic (0.0 to 1.0)
+#         #   metadata: "INCLUDE_ALL_METADATA"  # Options: EXCLUDE_ALL_METADATA, INCLUDE_ALL_METADATA, CUSTOM_METADATA
 #         # If you need secondary subnets use this block.
 #         secondarySubnets:
 #           # There must be two subnets for "services" and "pods" when specifying a VPC for a k8s cluster.
@@ -272,6 +279,9 @@
 #     # add custom annotations to this resource?
 #     customAnnotations:
 #       abc: "1234567890"
+#     # Optional. Human-readable display name shown in GCP Console
+#     # displayName: "Config Connector System Account"
+#     # Optional. Description of the service account
 #     description: "Config Connector Service Account"
 #     # Assign these roles to the account
 #     # If your config connector service account has access to other projects IAM (Project IAM Admin role),
@@ -287,6 +297,11 @@
 #         member: serviceAccount:cnrm-system@my-unique-global-project.iam.gserviceaccount.com
 #         role: roles/resourcemanager.projectIamAdmin
 #         external: projects/my-unique-global-project
+#         # Optional. Add IAM conditions for fine-grained access control
+#         # condition:
+#         #   title: "Expires at end of 2026"
+#         #   description: "Temporary access for migration"
+#         #   expression: 'request.time < timestamp("2026-12-31T23:59:59Z")'
 #       - name: cnrm-system-serviceaccountadmin
 #         member: serviceAccount:cnrm-system@my-unique-global-project.iam.gserviceaccount.com
 #         role: roles/iam.serviceAccountAdmin
@@ -328,9 +343,14 @@
 #     purpose: VPC_PEERING
 #     # Optional
 #     prefixLength: 16
-#     # Optional
+#     # Optional. Reference to VPC network
 #     networkRef:
+#       # Use 'name' for resources managed by this chart
 #       name: my-net
+#       # OR use 'external' for resources outside this chart (e.g., "projects/my-project/global/networks/my-network")
+#       # external: "projects/my-project/global/networks/existing-network"
+#       # Optional. Specify namespace if network is in different namespace
+#       # namespace: other-namespace
 
 # # Create a Service Networking Connection
 # snc:

@@ -47,3 +47,47 @@ Usage: include "cnrm-chart.sanitizeEmail" "user@example.com"
 {{- $removeAt := mustRegexReplaceAll "@.*$" . "" }}
 {{- include "cnrm-chart.sanitizeName" $removeAt }}
 {{- end }}
+
+{{/*
+Standard CNRM annotations (deletion policy + project ID)
+Generates the common Config Connector annotations used by all resources
+Input: dict with "projectName" and "allowResourceDeletion" keys
+Output: CNRM annotations block (not indented)
+Usage: include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion)
+*/}}
+{{- define "cnrm-chart.cnrmAnnotations" -}}
+{{- if .allowResourceDeletion }}
+cnrm.cloud.google.com/deletion-policy: "none"
+{{- else }}
+cnrm.cloud.google.com/deletion-policy: "abandon"
+{{- end }}
+cnrm.cloud.google.com/project-id: {{ .projectName }}
+{{- end }}
+
+{{/*
+Custom annotations from user configuration
+Renders user-provided custom annotations with proper quoting
+Input: dict with "annotations" key containing map of annotations
+Output: custom annotations block (not indented)
+Usage: include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations)
+*/}}
+{{- define "cnrm-chart.customAnnotations" -}}
+{{- if .annotations }}
+{{- range $key, $value := .annotations }}
+{{ $key }}: {{ $value | quote }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Generate a sanitized resource name with project prefix
+Applies sanitization to ensure Kubernetes-compliant resource names
+Input: dict with "projectName" and "name" keys
+Output: formatted resource name (projectName-sanitizedName)
+Usage: include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .clusterName)
+Note: Sanitization is safe for all names - valid names remain unchanged, invalid names are fixed
+*/}}
+{{- define "cnrm-chart.resourceName" -}}
+{{- $sanitized := include "cnrm-chart.sanitizeName" .name -}}
+{{ .projectName }}-{{ $sanitized }}
+{{- end }}
