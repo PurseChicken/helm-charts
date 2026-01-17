@@ -34,7 +34,6 @@ metadata:
     {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
   name: {{ $projectName }}-{{ $k8sName }}-{{ .type | lower }}
 spec:
-  resourceID: {{ $projectName }}-{{ $k8sName }}-{{ .type | lower }}
   name: {{ .name }}.
   type: {{ .type }}
   ttl: {{ .ttl }}
