@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.3.6] - 2026-01-17
+
 - Removed resourceID from DNSRecordSet to prevent sync issues with existing DNS records
 
 ## [v1.3.5] - 2026-01-17
