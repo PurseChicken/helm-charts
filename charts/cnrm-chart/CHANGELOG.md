@@ -48,7 +48,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Fixed `shieldedInstanceConfig` path to correctly reference `.nodeConfig.shieldedInstanceConfig` within node pool context
 - Added proper conditionals for: `releaseChannel`, `datapathProvider`, `enableIntranodeVisibility`, `enableShieldedNodes`, `verticalPodAutoscaling`, `management`, `nodeConfig`, `shieldedInstanceConfig`, `initialNodeCount`, `nodeLocation`, `maxPodsPerNode`
 
-## [v1.3.1] - 2026-01-15
+## [v## [Unreleased]] - 2026-01-15
 
 ### Added
 
