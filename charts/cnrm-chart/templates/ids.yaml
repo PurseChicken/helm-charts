@@ -7,7 +7,7 @@ apiVersion: cloudids.cnrm.cloud.google.com/v1beta1
 kind: CloudIDSEndpoint
 metadata:
   annotations:
-    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.deletionPolicy" (dict "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
     {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
   name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
 spec:
