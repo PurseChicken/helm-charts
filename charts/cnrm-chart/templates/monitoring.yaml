@@ -62,7 +62,7 @@ apiVersion: monitoring.cnrm.cloud.google.com/v1beta1
 kind: MonitoringMonitoredProject
 metadata:
   annotations:
-    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.deletionPolicy" (dict "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
   name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
 spec:
   metricsScope: {{ .name }}

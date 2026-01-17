@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Refactored deletion-policy annotation logic into dedicated helper function (cnrm-chart.deletionPolicy) for better code reusability
+
+### Fixed
+
+- Fixed ContainerCluster enableIntranodeVisibility to render explicit false value (previously only rendered when true)
+- Fixed IAMPolicyMember annotations to exclude project-id (uses resourceRef for project context)
+- Fixed IAMPolicy annotations to exclude project-id (uses resourceRef for project context)
+- Fixed Service (API) annotations to exclude project-id (uses projectRef.name for project context)
+- Fixed MonitoringMonitoredProject annotations to exclude project-id (uses metricsScope for project context)
+- Fixed GKEHubFeature annotations to exclude project-id (uses projectRef.name for project context)
+
 ## [v1.3.3] - 2026-01-17
 
 ### Changed

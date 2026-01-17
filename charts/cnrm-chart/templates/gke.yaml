@@ -35,9 +35,7 @@ spec:
   {{- if .datapathProvider }}
   datapathProvider: {{ .datapathProvider }}
   {{- end }}
-  {{- if .enableIntranodeVisibility }}
-  enableIntranodeVisibility: {{ .enableIntranodeVisibility }}
-  {{- end }}
+  enableIntranodeVisibility: {{ default false .enableIntranodeVisibility }}
   {{- if .enableShieldedNodes }}
   enableShieldedNodes: {{ .enableShieldedNodes }}
   {{- end }}

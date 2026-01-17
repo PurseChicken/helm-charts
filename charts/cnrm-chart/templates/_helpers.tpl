@@ -49,18 +49,29 @@ Usage: include "cnrm-chart.sanitizeEmail" "user@example.com"
 {{- end }}
 
 {{/*
-Standard CNRM annotations (deletion policy + project ID)
-Generates the common Config Connector annotations used by all resources
-Input: dict with "projectName" and "allowResourceDeletion" keys
-Output: CNRM annotations block (not indented)
-Usage: include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion)
+Deletion policy annotation only
+Generates just the deletion-policy annotation based on allowResourceDeletion
+Input: dict with "allowResourceDeletion" key
+Output: deletion-policy annotation (not indented)
+Usage: include "cnrm-chart.deletionPolicy" (dict "allowResourceDeletion" $allowResourceDeletion)
 */}}
-{{- define "cnrm-chart.cnrmAnnotations" -}}
+{{- define "cnrm-chart.deletionPolicy" -}}
 {{- if .allowResourceDeletion }}
 cnrm.cloud.google.com/deletion-policy: "none"
 {{- else }}
 cnrm.cloud.google.com/deletion-policy: "abandon"
 {{- end }}
+{{- end }}
+
+{{/*
+Standard CNRM annotations (deletion policy + project ID)
+Generates the common Config Connector annotations used by most resources
+Input: dict with "projectName" and "allowResourceDeletion" keys
+Output: CNRM annotations block (not indented)
+Usage: include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion)
+*/}}
+{{- define "cnrm-chart.cnrmAnnotations" -}}
+{{- include "cnrm-chart.deletionPolicy" (dict "allowResourceDeletion" .allowResourceDeletion) }}
 cnrm.cloud.google.com/project-id: {{ .projectName }}
 {{- end }}
 

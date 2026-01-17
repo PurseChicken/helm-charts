@@ -27,7 +27,7 @@ apiVersion: iam.cnrm.cloud.google.com/v1beta1
 kind: IAMPolicyMember
 metadata:
   annotations:
-    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.deletionPolicy" (dict "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
   name: {{ $projectName }}-{{ include "cnrm-chart.sanitizeName" .name }}
 spec:
   member: {{ .member }}
@@ -54,7 +54,7 @@ apiVersion: iam.cnrm.cloud.google.com/v1beta1
 kind: IAMPolicy
 metadata:
   annotations:
-    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.deletionPolicy" (dict "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
   name: {{ $projectName }}-{{ include "cnrm-chart.sanitizeName" .name }}
 spec:
   resourceRef:
