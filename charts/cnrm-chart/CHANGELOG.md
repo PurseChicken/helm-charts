@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.3.7] - 2026-01-17
+
 - Fixed LoggingLogMetric annotations to exclude project-id (uses projectRef for project context)
 - Fixed CloudIDSEndpoint annotations to exclude project-id (uses projectRef for project context)
 
