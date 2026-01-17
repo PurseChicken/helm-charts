@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.3.5] - 2026-01-17
+
 - Fixed values.yaml nodePool example: moved metadata, oauthScopes, and shieldedInstanceConfig inside nodeConfig block (correct nesting)
 - Enhanced values.yaml documentation with section headers, improved comments, and better organization
 - Added binaryAuthorization example to GKE cluster configuration
