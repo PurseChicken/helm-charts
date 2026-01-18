@@ -1,6 +1,7 @@
 {{- if .Values.k8s }}
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
 {{- $projectName := include "cnrm-chart.projectID" . }}
+{{- $sharedVpcHostProject := include "cnrm-chart.sharedVpcHostProject" . }}
 {{- range .Values.k8s }}
 ---
 apiVersion: container.cnrm.cloud.google.com/v1beta1
@@ -17,10 +18,28 @@ spec:
   initialNodeCount: 1
   workloadIdentityConfig:
     workloadPool: {{ $projectName }}.svc.id.goog
+  {{- include "cnrm-chart.validateNetworkRefs" . }}
+  {{- if .sharedVpcNetwork }}
+  networkRef:
+    external: {{ .sharedVpcNetwork }}
+  subnetworkRef:
+    external: {{ .sharedVpcSubnetwork }}
+  {{- else if .sharedVpc }}
+  {{- $hostProj := .sharedVpc.hostProject | default $sharedVpcHostProject }}
+  {{- if not $hostProj }}
+  {{- fail "sharedVpc.hostProject is required (or set sharedVpc.attachToHostProject at the top level)" }}
+  {{- end }}
+  {{- $region := .sharedVpc.subnetworkRegion | default (include "cnrm-chart.extractRegion" .clusterLocation) }}
+  networkRef:
+    external: {{ include "cnrm-chart.sharedVpcNetworkPath" (dict "hostProject" $hostProj "network" .sharedVpc.network) }}
+  subnetworkRef:
+    external: {{ include "cnrm-chart.sharedVpcSubnetworkPath" (dict "hostProject" $hostProj "region" $region "subnetwork" .sharedVpc.subnetwork) }}
+  {{- else }}
   networkRef:
     name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .networkName) }}
   subnetworkRef:
     name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .subnetName) }}
+  {{- end }}
   ipAllocationPolicy:
     servicesSecondaryRangeName: {{ .servicesSecondaryRangeName }}
     clusterSecondaryRangeName: {{ .clusterSecondaryRangeName }}

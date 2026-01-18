@@ -102,3 +102,118 @@ Note: Sanitization is safe for all names - valid names remain unchanged, invalid
 {{- $sanitized := include "cnrm-chart.sanitizeName" .name -}}
 {{ .projectName }}-{{ $sanitized }}
 {{- end }}
+
+{{/*
+Validate network reference configuration
+Ensures that either local OR shared VPC references are used, not both
+Also validates that paired fields are provided together
+Input: dict with cluster configuration
+Output: none (fails on validation error)
+Usage: include "cnrm-chart.validateNetworkRefs" .
+*/}}
+{{- define "cnrm-chart.validateNetworkRefs" -}}
+{{- if or .sharedVpcNetwork .sharedVpc }}
+  {{- if or .networkName .subnetName }}
+    {{- fail "Cannot use both Shared VPC and local VPC references. Use sharedVpcNetwork/sharedVpcSubnetwork OR sharedVpc object OR networkName/subnetName, not both." }}
+  {{- end }}
+  {{- if .sharedVpcNetwork }}
+    {{- if not .sharedVpcSubnetwork }}
+      {{- fail "sharedVpcSubnetwork is required when using sharedVpcNetwork" }}
+    {{- end }}
+  {{- end }}
+  {{- if .sharedVpc }}
+    {{- if not .sharedVpc.network }}
+      {{- fail "sharedVpc.network is required" }}
+    {{- end }}
+    {{- if not .sharedVpc.subnetwork }}
+      {{- fail "sharedVpc.subnetwork is required" }}
+    {{- end }}
+  {{- end }}
+{{- else if .sharedVpcSubnetwork }}
+  {{- fail "sharedVpcNetwork is required when using sharedVpcSubnetwork" }}
+{{- else }}
+  {{- if not .networkName }}
+    {{- fail "networkName is required (or use sharedVpcNetwork/sharedVpcSubnetwork for Shared VPC)" }}
+  {{- end }}
+  {{- if not .subnetName }}
+    {{- fail "subnetName is required (or use sharedVpcNetwork/sharedVpcSubnetwork for Shared VPC)" }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Build Shared VPC network path
+Constructs the full GCP resource path for a Shared VPC network
+Input: dict with "hostProject" and "network" keys
+Output: projects/{hostProject}/global/networks/{network}
+Usage: include "cnrm-chart.sharedVpcNetworkPath" (dict "hostProject" "host-proj" "network" "shared-net")
+*/}}
+{{- define "cnrm-chart.sharedVpcNetworkPath" -}}
+projects/{{ .hostProject }}/global/networks/{{ .network }}
+{{- end }}
+
+{{/*
+Build Shared VPC subnetwork path
+Constructs the full GCP resource path for a Shared VPC subnetwork
+Input: dict with "hostProject", "region", and "subnetwork" keys
+Output: projects/{hostProject}/regions/{region}/subnetworks/{subnetwork}
+Usage: include "cnrm-chart.sharedVpcSubnetworkPath" (dict "hostProject" "host-proj" "region" "us-central1" "subnetwork" "shared-subnet")
+*/}}
+{{- define "cnrm-chart.sharedVpcSubnetworkPath" -}}
+projects/{{ .hostProject }}/regions/{{ .region }}/subnetworks/{{ .subnetwork }}
+{{- end }}
+
+{{/*
+Get Shared VPC host project ID from top-level configuration
+Retrieves the host project ID that service projects attach to
+Input: root context (.)
+Output: host project ID string or empty string
+Usage: include "cnrm-chart.sharedVpcHostProject" .
+*/}}
+{{- define "cnrm-chart.sharedVpcHostProject" -}}
+{{- if .Values.sharedVpc }}
+{{- if .Values.sharedVpc.attachToHostProject }}
+{{- .Values.sharedVpc.attachToHostProject }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Extract region from location (handles both regional and zonal locations)
+Converts zone (e.g., "us-central1-a") to region (e.g., "us-central1")
+Regional locations (e.g., "us-central1") pass through unchanged
+Input: location string (region or zone)
+Output: region string
+Usage: include "cnrm-chart.extractRegion" "us-central1-a"
+*/}}
+{{- define "cnrm-chart.extractRegion" -}}
+{{- if regexMatch "^[a-z]+-[a-z]+-[0-9]+-[a-z]$" . }}
+{{- mustRegexReplaceAll "-[a-z]$" . "" }}
+{{- else if regexMatch "^[a-z]+-[a-z]+[0-9]+-[a-z]$" . }}
+{{- mustRegexReplaceAll "-[a-z]$" . "" }}
+{{- else }}
+{{- . }}
+{{- end }}
+{{- end }}
+
+{{/*
+Render networkRef for resources that support it
+Supports two patterns:
+1. networkRefName (local VPC) - converts to name with project prefix for resources in current project
+2. sharedVpc object - auto-builds external path using host project for Shared VPC resources
+Context expects: .context (root context), .projectName, .networkRefName, .sharedVpc
+*/}}
+{{- define "cnrm-chart.networkRef" -}}
+{{- $sharedVpcHostProject := include "cnrm-chart.sharedVpcHostProject" .context }}
+{{- if .sharedVpc }}
+{{- $hostProj := .sharedVpc.hostProject | default $sharedVpcHostProject }}
+{{- if not $hostProj }}
+{{- fail "sharedVpc.hostProject is required (or set sharedVpc.attachToHostProject at the top level)" }}
+{{- end }}
+networkRef:
+  external: {{ include "cnrm-chart.sharedVpcNetworkPath" (dict "hostProject" $hostProj "network" .sharedVpc.network) }}
+{{- else if .networkRefName }}
+networkRef:
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" .projectName "name" .networkRefName) }}
+{{- end }}
+{{- end }}

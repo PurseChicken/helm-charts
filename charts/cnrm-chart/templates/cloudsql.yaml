@@ -73,9 +73,8 @@ spec:
       {{- if .sslMode }}
       sslMode: {{ .sslMode }}
       {{- end }}
-      {{- if .privateNetworkRefName }}
-      privateNetworkRef:
-        name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .privateNetworkRefName) }}
+      {{- if or .privateNetworkRefName .sharedVpc }}
+      {{- include "cnrm-chart.networkRef" (dict "context" $ "projectName" $projectName "networkRefName" .privateNetworkRefName "sharedVpc" .sharedVpc) | nindent 6 | replace "networkRef:" "privateNetworkRef:" }}
       {{- end }}
       {{- if .allocatedIpRange }}
       allocatedIpRange: {{ .allocatedIpRange | quote }}

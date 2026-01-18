@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Comprehensive Shared VPC support across all network-dependent resources
+  - Two configuration patterns: local VPC (`networkRefName`) and Shared VPC (`sharedVpc` object with auto-path building)
+  - Supported resources: GKE clusters, Cloud SQL, Cloud IDS, Cloud VPN (Router and Gateway), Service Networking Connection
+  - Top-level `sharedVpc.attachToHostProject` setting eliminates redundant project specifications across resources
+  - Automatic subnetwork region extraction from GKE cluster location (supports both regional and zonal clusters)
+  - Network reference validation prevents misconfigurations
+- Helper functions for Shared VPC operations: `cnrm-chart.sharedVpcHostProject`, `cnrm-chart.extractRegion`, `cnrm-chart.sharedVpcNetworkPath`, `cnrm-chart.sharedVpcSubnetworkPath`, and `cnrm-chart.networkRef`
+
+### Changed
+
+- Reorganized `values.yaml` structure for improved clarity:
+  - Moved Cloud SQL configuration from STORAGE to new DATABASES section
+  - Added VPC NETWORK section separator
+- Simplified network reference patterns to always auto-build GCP resource paths for consistency
+
 ## [v1.3.8] - 2026-01-18
 
 ### Added

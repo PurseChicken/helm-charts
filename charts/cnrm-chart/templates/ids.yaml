@@ -12,8 +12,7 @@ metadata:
   name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
 spec:
   resourceID: {{ .name }}
-  networkRef:
-    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .networkRefName) }}
+  {{- include "cnrm-chart.networkRef" (dict "context" $ "projectName" $projectName "networkRefName" .networkRefName "sharedVpc" .sharedVpc) | nindent 2 }}
   severity: {{ .severity }}
   location: {{ .location }}
   projectRef:

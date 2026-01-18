@@ -84,6 +84,10 @@
 #   # Possible values: "ABANDON"
 #   # serviceProjectDeletionPolicy: "ABANDON"
 
+# ============================================================================
+# VPC NETWORK
+# ============================================================================
+
 # # Create the following VPC networks in your project
 # vpcNetwork:
 #   # You can specify more than 1 VPC network
@@ -155,9 +159,19 @@
 #     customAnnotations:
 #       abc: "1234567890"
 #     clusterLocation: "us-central1"
-#     # The following four network declarations must be created using the vpcNetwork section.
+#     # For LOCAL VPC (in this project): Use networkName and subnetName
 #     networkName: "my-net"
 #     subnetName: "my-central-nodes"
+#     # For SHARED VPC (from host project): Use sharedVpc object
+#     # (host project auto-detected from sharedVpc.attachToHostProject above)
+#     # sharedVpc:
+#     #   network: "shared-network"
+#     #   subnetwork: "shared-subnet"
+#     #   # subnetworkRegion auto-derived from clusterLocation
+#     #   # Optional: Override if using a different region (rare)
+#     #   # subnetworkRegion: "us-east1"
+#     #   # Optional: Override host project for this cluster only
+#     #   # hostProject: "different-host-project"
 #     servicesSecondaryRangeName: "services"
 #     clusterSecondaryRangeName: "pods"
 #     # Leave out clusterAutoscaling if you don't want to configure.
@@ -412,7 +426,12 @@
 # # Create a Service Networking Connection
 # snc:
 #   - name: "private-service-connection"
+#     # Network reference - choose ONE of the following patterns:
+#     # Pattern 1: Local VPC (in this project)
 #     networkRefName: "my-net"
+#     # Pattern 2: Shared VPC using helper (auto-detects host project)
+#     # sharedVpc:
+#     #   network: "shared-network"
 #     reservedPeeringRanges:
 #       # range
 #       - name: "private-service-connection"
@@ -675,7 +694,7 @@
 #           scale: 0.01
 
 # ============================================================================
-# STORAGE
+# DATABASES
 # ============================================================================
 
 # # Cloud SQL
@@ -727,6 +746,12 @@
 #     ipConfiguration:
 #       # toYaml
 #       requireSsl: true
+#       # Private IP configuration - choose ONE of the following patterns:
+#       # Pattern 1: Local VPC (in this project)
+#       # privateNetworkRefName: "my-net"
+#       # Pattern 2: Shared VPC using helper (auto-detects host project)
+#       # sharedVpc:
+#       #   network: "shared-network"
 #     # Optional: locationPreference
 #     locationPreference:
 #       zone: us-west4-b
@@ -807,8 +832,12 @@
 #     # add custom annotations to this resource?
 #     customAnnotations:
 #       abc: "1234567890"
-#     # Reference VPC which has ServiceNetworkingConnection and VPC_PEERING address
+#     # Network reference - choose ONE of the following patterns:
+#     # Pattern 1: Local VPC (in this project)
 #     networkRefName: my-net
+#     # Pattern 2: Shared VPC using helper (auto-detects host project)
+#     # sharedVpc:
+#     #   network: "shared-network"
 #     # Alert level of endpoint INFORMATIONAL, LOW, MEDIUM, HIGH, CRITICAL
 #     severity: INFORMATIONAL
 #     # zone
@@ -830,8 +859,12 @@
 #     # add custom annotations to this resource?
 #     customAnnotations:
 #       abc: "1234567890"
-#     # Reference to the VPC network
+#     # Network reference - choose ONE of the following patterns:
+#     # Pattern 1: Local VPC (in this project)
 #     networkRefName: "my-net"
+#     # Pattern 2: Shared VPC using helper (auto-detects host project)
+#     # sharedVpc:
+#     #   network: "shared-network"
 #     # Region where the router resides
 #     region: "us-central1"
 #     # Optional: Description
@@ -897,8 +930,12 @@
 #     # add custom annotations to this resource?
 #     customAnnotations:
 #       abc: "1234567890"
-#     # Reference to the VPC network
+#     # Network reference - choose ONE of the following patterns:
+#     # Pattern 1: Local VPC (in this project)
 #     networkRefName: "my-net"
+#     # Pattern 2: Shared VPC using helper (auto-detects host project)
+#     # sharedVpc:
+#     #   network: "shared-network"
 #     # Region where the gateway resides
 #     region: "us-central1"
 #     # Optional: Description
