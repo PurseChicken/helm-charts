@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.3.10] - 2026-01-18
+
 ### Changed
 
 - Removed `sharedVpc.hostProjectId` field - host project enablement now always uses the current project for consistency with chart's per-project deployment model
