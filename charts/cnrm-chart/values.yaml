@@ -67,9 +67,6 @@
 #   # Only create one ComputeSharedVPCHostProject per project
 #   # The host project owns the VPC networks that can be shared
 #   enableHostProject: true
-#   # Optional: Specify a different project ID to enable as host
-#   # If not specified, uses the current project
-#   # hostProjectId: "my-host-project"
 #   # Optional: add custom annotations to the host project resource?
 #   # hostProjectAnnotations:
 #   #   abc: "1234567890"

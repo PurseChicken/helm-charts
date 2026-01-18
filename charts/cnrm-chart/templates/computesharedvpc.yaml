@@ -8,11 +8,7 @@ kind: ComputeSharedVPCHostProject
 metadata:
   annotations:
     {{- include "cnrm-chart.deletionPolicy" (dict "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
-    {{- if .Values.sharedVpc.hostProjectId }}
-    cnrm.cloud.google.com/project-id: {{ .Values.sharedVpc.hostProjectId }}
-    {{- else }}
     cnrm.cloud.google.com/project-id: {{ $projectName }}
-    {{- end }}
     {{- include "cnrm-chart.customAnnotations" (dict "annotations" .Values.sharedVpc.hostProjectAnnotations) | nindent 4 }}
   name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" "sharedvpc-host") }}
 spec: {}
