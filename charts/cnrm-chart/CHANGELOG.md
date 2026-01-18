@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.3.9] - 2026-01-18
+
 ### Added
 
 - Comprehensive Shared VPC support across all network-dependent resources
