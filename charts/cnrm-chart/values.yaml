@@ -51,6 +51,39 @@
 #   # Error Reporting API
 #   - name: clouderrorreporting.googleapis.com
 
+# ============================================================================
+# SHARED VPC
+# ============================================================================
+
+# # Shared VPC Configuration
+# # Shared VPC allows you to share VPC networks across multiple projects in your organization
+# # https://cloud.google.com/vpc/docs/shared-vpc
+# #
+# # Typical usage:
+# # 1. In the HOST project: Enable this project as a Shared VPC host
+# # 2. In SERVICE projects: Attach each service project to the host
+# sharedVpc:
+#   # Enable this project as a Shared VPC Host Project
+#   # Only create one ComputeSharedVPCHostProject per project
+#   # The host project owns the VPC networks that can be shared
+#   enableHostProject: true
+#   # Optional: Specify a different project ID to enable as host
+#   # If not specified, uses the current project
+#   # hostProjectId: "my-host-project"
+#   # Optional: add custom annotations to the host project resource?
+#   # hostProjectAnnotations:
+#   #   abc: "1234567890"
+#
+#   # Attach this project as a Service Project to a Shared VPC host
+#   # Allows this project to use VPC networks from the host project
+#   attachToHostProject: "my-host-project-id"
+#   # Optional: add custom annotations to the service project resource?
+#   # serviceProjectAnnotations:
+#   #   abc: "1234567890"
+#   # Optional: Specify deletion policy for the service project association
+#   # Possible values: "ABANDON"
+#   # serviceProjectDeletionPolicy: "ABANDON"
+
 # # Create the following VPC networks in your project
 # vpcNetwork:
 #   # You can specify more than 1 VPC network

@@ -25,6 +25,7 @@ NOTE: This chart includes the option to include secrets using the [external-secr
 - Projects
 - API's
 - VPC networks
+- Shared VPC (Host and Service Projects)
 - Kubernetes Clusters
 - Kubernetes Node Pools
 - IAM Service Accounts

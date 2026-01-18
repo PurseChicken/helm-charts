@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+  - Shared VPC capability using ComputeSharedVPCHostProject and ComputeSharedVPCServiceProject resources
+  - Enable a project as a Shared VPC host to share VPC networks across multiple projects
+  - Attach service projects to a Shared VPC host to use shared networks
+
+### Changed
+
+- Improved helper function variable naming in `_helpers.tpl` (sanitizeName function now uses descriptive variable names)
+- Reorganized values.yaml: moved Shared VPC section to appear after project configuration and before VPC networks for better logical flow
+
 ## [v1.3.7] - 2026-01-17
 
 - Fixed LoggingLogMetric annotations to exclude project-id (uses projectRef for project context)

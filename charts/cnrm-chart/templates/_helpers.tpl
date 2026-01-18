@@ -29,11 +29,11 @@ Output: lowercase with special characters replaced by hyphens
 Usage: include "cnrm-chart.sanitizeName" "My_String.Name"
 */}}
 {{- define "cnrm-chart.sanitizeName" -}}
-{{- $step1 := lower . }}
-{{- $step2 := mustRegexReplaceAll "\\." $step1 "-" }}
-{{- $step3 := mustRegexReplaceAll "_" $step2 "-" }}
-{{- $step4 := mustRegexReplaceAll "\\+" $step3 "-" }}
-{{- mustRegexReplaceAll "[^a-z0-9-]" $step4 "-" }}
+{{- $lowercase := lower . }}
+{{- $dotsReplaced := mustRegexReplaceAll "\\." $lowercase "-" }}
+{{- $underscoresReplaced := mustRegexReplaceAll "_" $dotsReplaced "-" }}
+{{- $plusReplaced := mustRegexReplaceAll "\\+" $underscoresReplaced "-" }}
+{{- mustRegexReplaceAll "[^a-z0-9-]" $plusReplaced "-" }}
 {{- end }}
 
 {{/*
