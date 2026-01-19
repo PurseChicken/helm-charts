@@ -142,6 +142,127 @@
 #         role: "ACTIVE"
 
 # ============================================================================
+# VPC PEERING
+# ============================================================================
+
+# # VPC Network Peering Configuration
+# # VPC peering allows you to connect VPC networks across projects or within the same project
+# # https://cloud.google.com/vpc/docs/vpc-peering
+# #
+# # Important Notes:
+# # - Peering is bidirectional; you typically need to create peering in both directions
+# # - Networks cannot have overlapping IP ranges
+# # - For cross-project peering, both projects must configure the peering
+# vpcPeering:
+#   - name: "my-net-to-peer-net"
+#     # add custom annotations to this resource?
+#     customAnnotations:
+#       abc: "1234567890"
+#     # Optional: Whether to export custom routes to the peer network. Defaults to false if not specified
+#     exportCustomRoutes: false
+#     # Optional: Whether to import custom routes from the peer network. Defaults to false if not specified
+#     importCustomRoutes: false
+#     # Optional: Export subnet routes with public IP (Immutable). Defaults to false if not specified
+#     # exportSubnetRoutesWithPublicIp: true
+#     # Optional: Import subnet routes with public IP (Immutable). Defaults to false if not specified
+#     # importSubnetRoutesWithPublicIp: true
+#     # Optional: IP version(s) of traffic and routes allowed. Possible values: "IPV4_ONLY" (default), "IPV4_IPV6"
+#     # stackType: "IPV4_ONLY"
+#     # Network reference - choose ONE of the following patterns:
+#     # Pattern 1: Local VPC (in this project)
+#     networkRefName: "my-net"
+#     # Pattern 2: Shared VPC using helper (for peering from a shared VPC network)
+#     # network:
+#     #   network: "shared-network"
+#     #   hostProject: "host-project-id"
+#     # Peer Network reference - choose ONE of the following patterns:
+#     peerNetworkRef:
+#       # Option 1: Reference a network managed by this chart (same namespace)
+#       name: "other-net"
+#       # Option 2: Cross-project peering - specify project and network (path auto-generated)
+#       # project: "peer-project-id"
+#       # network: "peer-network-name"
+#       # Option 3: Reference an external network (provide full selfLink path manually)
+#       # external: "projects/peer-project-id/global/networks/peer-network-name"
+#       # Option 4: Cross-namespace reference (advanced - only if peer network is in different K8s namespace)
+#       # name: "other-net"
+#       # namespace: "other-namespace"
+
+# ============================================================================
+# FIREWALL RULES
+# ============================================================================
+
+# # Firewall Rules Configuration
+# # Firewall rules control incoming and outgoing traffic to your VPC network
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computefirewall
+# #
+# # Important Notes:
+# # - Each rule must specify either 'allow' or 'deny', not both
+# # - For INGRESS traffic, one of 'sourceRanges', 'sourceTags', or 'sourceServiceAccounts' is required
+# # - Default priority is 1000 if not specified (0-65535, lower = higher precedence)
+# # - DENY rules take precedence over ALLOW rules with equal priority
+# firewall:
+#   - name: "allow-ssh"
+#     # add custom annotations to this resource?
+#     customAnnotations:
+#       abc: "1234567890"
+#     # Optional: Description of the firewall rule
+#     description: "Allow SSH from specific ranges"
+#     # Network reference - choose ONE of the following patterns:
+#     # Pattern 1: Local VPC (in this project)
+#     networkRefName: "my-net"
+#     # Pattern 2: Shared VPC using helper
+#     # network:
+#     #   network: "shared-network"
+#     #   hostProject: "host-project-id"
+#     # Optional: Direction of traffic. Possible values: "INGRESS" (default), "EGRESS"
+#     direction: "INGRESS"
+#     # Optional: Priority (0-65535, lower = higher precedence). All rules default to 1000 if not specified
+#     priority: 1000
+#     # Optional: Disable the firewall rule
+#     # disabled: false
+#     # Specify either 'allow' or 'deny', not both
+#     allow:
+#       - protocol: tcp
+#         ports:
+#           - "22"
+#           - "3389"
+#       - protocol: icmp
+#     # OR use deny rules
+#     # deny:
+#     #   - protocol: tcp
+#     #     ports:
+#     #       - "23"
+#     # Optional: Source IP ranges (CIDR format). For INGRESS, one of sourceRanges, sourceTags, or sourceServiceAccounts is required
+#     sourceRanges:
+#       - "10.0.0.0/8"
+#       - "172.16.0.0/12"
+#     # Optional: Source tags (for INGRESS traffic)
+#     # sourceTags:
+#     #   - "web"
+#     #   - "api"
+#     # Optional: Source service accounts (for INGRESS traffic)
+#     # sourceServiceAccounts:
+#     #   - name: "my-service-account"
+#     #   # OR use external reference
+#     #   - external: "my-sa@my-project.iam.gserviceaccount.com"
+#     # Optional: Destination IP ranges (CIDR format, for EGRESS traffic)
+#     # destinationRanges:
+#     #   - "192.168.0.0/16"
+#     # Optional: Target tags (apply rule to instances with these tags)
+#     # targetTags:
+#     #   - "web-server"
+#     #   - "database"
+#     # Optional: Target service accounts (apply rule to instances with these service accounts)
+#     # targetServiceAccounts:
+#     #   - name: "my-service-account"
+#     #   # OR use external reference
+#     #   - external: "my-sa@my-project.iam.gserviceaccount.com"
+#     # Optional: Enable logging for this rule
+#     # logConfig:
+#     #   metadata: "INCLUDE_ALL_METADATA"  # Options: "EXCLUDE_ALL_METADATA", "INCLUDE_ALL_METADATA"
+
+# ============================================================================
 # COMPUTE
 # ============================================================================
 

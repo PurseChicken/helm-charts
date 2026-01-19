@@ -24,7 +24,9 @@ NOTE: This chart includes the option to include secrets using the [external-secr
 
 - Projects
 - API's
-- VPC networks
+- VPC Networks
+- VPC Network Peering
+- Firewall Rules
 - Shared VPC (Host and Service Projects)
 - Kubernetes Clusters
 - Kubernetes Node Pools

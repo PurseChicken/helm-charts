@@ -1,0 +1,45 @@
+{{- if .Values.vpcPeering }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.vpcPeering }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeNetworkPeering
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .name }}
+  {{- if .exportCustomRoutes }}
+  exportCustomRoutes: {{ .exportCustomRoutes }}
+  {{- end }}
+  {{- if .exportSubnetRoutesWithPublicIp }}
+  exportSubnetRoutesWithPublicIp: {{ .exportSubnetRoutesWithPublicIp }}
+  {{- end }}
+  {{- if .importCustomRoutes }}
+  importCustomRoutes: {{ .importCustomRoutes }}
+  {{- end }}
+  {{- if .importSubnetRoutesWithPublicIp }}
+  importSubnetRoutesWithPublicIp: {{ .importSubnetRoutesWithPublicIp }}
+  {{- end }}
+  {{- include "cnrm-chart.networkRef" (dict "context" $ "projectName" $projectName "networkRefName" .networkRefName "sharedVpc" .network) | nindent 2 }}
+  {{- with .peerNetworkRef }}
+  peerNetworkRef:
+    {{- if .external }}
+    external: {{ .external }}
+    {{- else if and .project .network }}
+    external: {{ include "cnrm-chart.sharedVpcNetworkPath" (dict "hostProject" .project "network" .network) }}
+    {{- else if .name }}
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+    {{- if .namespace }}
+    namespace: {{ .namespace }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if .stackType }}
+  stackType: {{ .stackType }}
+  {{- end }}
+{{- end -}}
+{{- end -}}

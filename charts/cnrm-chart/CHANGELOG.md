@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- VPC Network Peering support via ComputeNetworkPeering resource
+  - Same-project and cross-project peering configurations
+  - Auto-format cross-project paths using `project` and `network` fields
+  - Manual external path support for advanced use cases
+- Firewall Rules support via ComputeFirewall resource
+  - Allow and deny rules with protocol and port specifications
+  - Source filtering: IP ranges, tags, service accounts
+  - Target filtering: tags, service accounts
+  - Egress rules with destination ranges
+  - Priority control and logging options
+
 ## [v1.3.10] - 2026-01-18
 
 ### Changed

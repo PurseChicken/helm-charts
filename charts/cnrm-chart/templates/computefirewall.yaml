@@ -1,0 +1,107 @@
+{{- if .Values.firewall }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.firewall }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeFirewall
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .name }}
+  {{- if .allow }}
+  allow:
+    {{- range .allow }}
+    - protocol: {{ .protocol }}
+      {{- if .ports }}
+      ports:
+        {{- range .ports }}
+        - {{ . | quote }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if .deny }}
+  deny:
+    {{- range .deny }}
+    - protocol: {{ .protocol }}
+      {{- if .ports }}
+      ports:
+        {{- range .ports }}
+        - {{ . | quote }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if .destinationRanges }}
+  destinationRanges:
+    {{- range .destinationRanges }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if .direction }}
+  direction: {{ .direction }}
+  {{- end }}
+  {{- if .disabled }}
+  disabled: {{ .disabled }}
+  {{- end }}
+  {{- with .logConfig }}
+  logConfig:
+    metadata: {{ .metadata }}
+  {{- end }}
+  {{- include "cnrm-chart.networkRef" (dict "context" $ "projectName" $projectName "networkRefName" .networkRefName "sharedVpc" .network) | nindent 2 }}
+  {{- if .priority }}
+  priority: {{ .priority }}
+  {{- end }}
+  {{- if .sourceRanges }}
+  sourceRanges:
+    {{- range .sourceRanges }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if .sourceServiceAccounts }}
+  sourceServiceAccounts:
+    {{- range .sourceServiceAccounts }}
+    {{- if .external }}
+    - external: {{ .external }}
+    {{- else if .name }}
+    - name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+      {{- if .namespace }}
+      namespace: {{ .namespace }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if .sourceTags }}
+  sourceTags:
+    {{- range .sourceTags }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if .targetServiceAccounts }}
+  targetServiceAccounts:
+    {{- range .targetServiceAccounts }}
+    {{- if .external }}
+    - external: {{ .external }}
+    {{- else if .name }}
+    - name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+      {{- if .namespace }}
+      namespace: {{ .namespace }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if .targetTags }}
+  targetTags:
+    {{- range .targetTags }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+{{- end -}}
+{{- end -}}
