@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.3.11] - 2026-01-19
+
 ### Added
 
 - VPC Network Peering support via ComputeNetworkPeering resource
