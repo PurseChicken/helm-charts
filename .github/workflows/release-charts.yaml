@@ -53,13 +53,27 @@ jobs:
             HEAD_SHA="HEAD"
           fi
           
+          # Check if BASE and HEAD are the same (no changes)
+          if [ "$BASE_SHA" = "$HEAD_SHA" ]; then
+            echo "Warning: BASE_SHA and HEAD_SHA are the same ($BASE_SHA)"
+            echo "This means no changes were detected. Setting empty array."
+            echo "charts=[]" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
           # Get list of changed files in charts/ directory
           echo "Checking for changed files between $BASE_SHA and $HEAD_SHA..."
+          echo "BASE_SHA commit: $(git log -1 --oneline "$BASE_SHA" 2>/dev/null || echo 'unknown')"
+          echo "HEAD_SHA commit: $(git log -1 --oneline "$HEAD_SHA" 2>/dev/null || echo 'unknown')"
+          
           changed_files=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -E '^charts/[^/]+/' || true)
           
           if [ -z "$changed_files" ]; then
             echo "No files changed in charts/ directory"
-            echo "Skipping workflow - no charts to release"
+            echo "All changed files:"
+            git diff --name-only "$BASE_SHA" "$HEAD_SHA" || echo "Could not get diff"
+            echo "Setting empty array and skipping workflow"
+            echo "charts=[]" >> $GITHUB_OUTPUT
             exit 0
           fi
           
@@ -72,7 +86,8 @@ jobs:
           
           if [ -z "$changed_charts" ]; then
             echo "No chart directories found in changed files"
-            echo "Skipping workflow - no charts to release"
+            echo "Setting empty array and skipping workflow"
+            echo "charts=[]" >> $GITHUB_OUTPUT
             exit 0
           fi
           
@@ -95,7 +110,8 @@ jobs:
           # Convert to JSON array using jq (compact format, no newlines)
           if [ -z "$valid_charts" ]; then
             echo "No valid changed charts found"
-            echo "Skipping workflow - no charts to release"
+            echo "Setting empty array and skipping workflow"
+            echo "charts=[]" >> $GITHUB_OUTPUT
             exit 0
           fi
           
@@ -110,6 +126,7 @@ jobs:
   lint-and-validate:
     needs: discover-charts
     runs-on: ubuntu-latest
+    if: needs.discover-charts.outputs.charts != '[]'
     strategy:
       matrix:
         chart: ${{ fromJson(needs.discover-charts.outputs.charts) }}
@@ -150,6 +167,7 @@ jobs:
 
   bump-versions:
     needs: [discover-charts, lint-and-validate]
+    if: needs.discover-charts.outputs.charts != '[]'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -174,6 +192,7 @@ jobs:
   push-changes:
     runs-on: ubuntu-latest
     needs: [discover-charts, bump-versions]
+    if: needs.discover-charts.outputs.charts != '[]'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
