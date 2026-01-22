@@ -22,7 +22,7 @@ jobs:
             if [ -f "$dir/Chart.yaml" ]; then
               basename "$dir"
             fi
-          done | jq -R . | jq -s .)
+          done | jq -R . | jq -s -c .)
           # Handle empty array case
           if [ "$charts" = "[]" ]; then
             echo "No charts found in charts/ directory"

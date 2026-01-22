@@ -92,16 +92,18 @@ jobs:
             fi
           done
           
-          # Convert to JSON array using jq
+          # Convert to JSON array using jq (compact format, no newlines)
           if [ -z "$valid_charts" ]; then
             echo "No valid changed charts found"
             echo "Skipping workflow - no charts to release"
             exit 0
           fi
           
-          charts_json=$(echo "$valid_charts" | jq -R . | jq -s .)
+          # Build JSON array in compact format (no pretty printing)
+          charts_json=$(echo "$valid_charts" | jq -R . | jq -s -c .)
           chart_count=$(echo "$charts_json" | jq 'length')
           
+          # Output must be on a single line for GitHub Actions
           echo "charts=$charts_json" >> $GITHUB_OUTPUT
           echo "Discovered $chart_count changed chart(s): $charts_json"
 
