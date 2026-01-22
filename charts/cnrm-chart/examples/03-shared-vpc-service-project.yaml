@@ -1,0 +1,168 @@
+# ============================================================================
+# Example 3: Shared VPC Service Project
+# ============================================================================
+# This example demonstrates a service project that attaches to a Shared VPC
+# host project. The service project uses networks and subnets from the host.
+#
+# Key Features:
+# - Attaches to existing Shared VPC host project
+# - Creates GKE cluster using shared network
+# - Creates resources that reference shared VPC resources
+#
+# Prerequisites:
+# - Host project must exist and have Shared VPC enabled
+# - Host project must grant necessary permissions to this service project
+# ============================================================================
+
+projectName: "service-project"
+projectID: "service-project-67890"
+createOrManageProject: true
+allowResourceDeletion: false
+
+# ============================================================================
+# SHARED VPC CONFIGURATION
+# ============================================================================
+# Attach this service project to the Shared VPC host project
+sharedVpc:
+  attachToHostProject: "host-project-id"  # Replace with your host project ID
+  serviceProjectAnnotations:
+    environment: "production"
+    team: "platform"
+
+# ============================================================================
+# GKE CLUSTER USING SHARED VPC
+# ============================================================================
+k8s:
+  - clusterName: "service-cluster"
+    customAnnotations:
+      environment: "production"
+      vpc-type: "shared"
+    clusterLocation: "us-central1"
+    # Use sharedVpc object instead of networkName/subnetName
+    sharedVpc:
+      network: "shared-network"  # Network name in host project
+      subnetwork: "shared-subnet-central"  # Subnet name in host project
+      # subnetworkRegion is auto-derived from clusterLocation, but can be overridden
+      # subnetworkRegion: "us-central1"
+      # Optional: Override host project for this cluster only
+      # hostProject: "different-host-project"
+    servicesSecondaryRangeName: "services"
+    clusterSecondaryRangeName: "pods"
+    releaseChannel: "REGULAR"
+    datapathProvider: "ADVANCED_DATAPATH"
+    enableShieldedNodes: true
+    addonsConfig:
+      configConnectorConfig:
+        enabled: true
+      gcePersistentDiskCsiDriverConfig:
+        enabled: true
+      horizontalPodAutoscaling:
+        disabled: false
+      httpLoadBalancing:
+        disabled: false
+    verticalPodAutoscalingEnabled: true
+    loggingConfig:
+      enableComponents:
+        - "SYSTEM_COMPONENTS"
+        - "WORKLOADS"
+    monitoringConfig:
+      enableComponents:
+        - "SYSTEM_COMPONENTS"
+    nodePool:
+      - name: "service-pool"
+        initialNodeCount: 2
+        minNodeCount: 2
+        maxNodeCount: 5
+        nodeLocation: "us-central1"
+        management:
+          autoRepair: true
+          autoUpgrade: true
+        maxPodsPerNode: 110
+        nodeConfig:
+          diskSizeGb: 100
+          diskType: "pd-ssd"
+          imageType: "COS_CONTAINERD"
+          machineType: "n2-standard-2"
+          oauthScopes:
+            - "https://www.googleapis.com/auth/devstorage.read_only"
+            - "https://www.googleapis.com/auth/logging.write"
+            - "https://www.googleapis.com/auth/monitoring"
+            - "https://www.googleapis.com/auth/servicecontrol"
+            - "https://www.googleapis.com/auth/service.management.readonly"
+            - "https://www.googleapis.com/auth/trace.append"
+          shieldedInstanceConfig:
+            enableSecureBoot: true
+            enableIntegrityMonitoring: true
+        upgradeSettings:
+          maxSurge: 1
+          maxUnavailable: 0
+
+# ============================================================================
+# FIREWALL RULES ON SHARED VPC
+# ============================================================================
+# Note: Firewall rules on Shared VPC networks are typically managed by
+# the host project, but service projects can create rules if they have
+# compute.networks.update permission
+firewall:
+  - name: "allow-service-internal"
+    description: "Allow internal traffic for service project workloads"
+    # Use sharedVpc object to reference shared network
+    network:
+      network: "shared-network"
+      hostProject: "host-project-id"  # Can be omitted if set at top level
+    direction: "INGRESS"
+    priority: 1000
+    allow:
+      - protocol: tcp
+      - protocol: udp
+      - protocol: icmp
+    sourceRanges:
+      - "10.0.0.0/8"
+      - "172.16.0.0/12"
+    targetTags:
+      - "service-project-nodes"
+
+# ============================================================================
+# CLOUD SQL WITH PRIVATE IP ON SHARED VPC
+# ============================================================================
+sql:
+  - name: "service-db"
+    customAnnotations:
+      environment: "production"
+    databaseVersion: POSTGRES_14
+    region: us-central1
+    tier: db-custom-2-8192
+    diskSize: 100
+    availabilityType: REGIONAL
+    deletionProtectionEnabled: true
+    backupRetention:
+      retainedBackups: 7
+      retentionUnit: "COUNT"
+    ipConfiguration:
+      requireSsl: true
+      # Use sharedVpc for private IP configuration
+      sharedVpc:
+        network: "shared-network"
+        # hostProject auto-detected from sharedVpc.attachToHostProject
+    locationPreference:
+      zone: us-central1-b
+    maintenanceWindow:
+      day: 1
+      hour: 4
+      updateTrack: stable
+    databases:
+      - name: servicedb
+
+# ============================================================================
+# IAM CONFIGURATION
+# ============================================================================
+iam:
+  # Create service account for workloads
+  - name: "service-workload-sa"
+    description: "Service account for service project workloads"
+    displayName: "Service Workload Account"
+    iamPolicyMember:
+      - name: "workload-storage"
+        member: serviceAccount:service-workload-sa@service-project-67890.iam.gserviceaccount.com
+        role: roles/storage.objectViewer
+        external: projects/service-project-67890

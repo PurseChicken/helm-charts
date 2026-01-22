@@ -1,0 +1,120 @@
+# ============================================================================
+# Example 1: Simple Development Environment
+# ============================================================================
+# This example demonstrates a minimal setup for a development environment
+# with a single VPC network, subnet, and GKE cluster.
+#
+# Key Features:
+# - Single region deployment (us-central1)
+# - Basic VPC network with one subnet
+# - Single GKE cluster with one node pool
+# - Minimal configuration for quick setup
+# ============================================================================
+
+projectName: "dev-project"
+createOrManageProject: true
+allowResourceDeletion: true  # Allow deletion for dev environments
+
+# ============================================================================
+# VPC NETWORK
+# ============================================================================
+vpcNetwork:
+  - networkName: "dev-network"
+    description: "Development VPC Network"
+    mtu: 1460
+    routingMode: "REGIONAL"
+    subNets:
+      - subnetName: "dev-subnet"
+        subnetCidr: "10.0.0.0/24"
+        vpcRegion: "us-central1"
+        privateIpGoogleAccess: true
+        # Secondary ranges for GKE
+        secondarySubnets:
+          - name: services
+            ipCidrRange: 10.1.0.0/20
+          - name: pods
+            ipCidrRange: 10.2.0.0/20
+
+# ============================================================================
+# FIREWALL RULES
+# ============================================================================
+firewall:
+  - name: "allow-ssh"
+    description: "Allow SSH from internal networks"
+    networkRefName: "dev-network"
+    direction: "INGRESS"
+    priority: 1000
+    allow:
+      - protocol: tcp
+        ports:
+          - "22"
+    sourceRanges:
+      - "10.0.0.0/8"
+  - name: "allow-internal"
+    description: "Allow all internal traffic"
+    networkRefName: "dev-network"
+    direction: "INGRESS"
+    priority: 1000
+    allow:
+      - protocol: tcp
+      - protocol: udp
+      - protocol: icmp
+    sourceRanges:
+      - "10.0.0.0/8"
+      - "172.16.0.0/12"
+
+# ============================================================================
+# GKE CLUSTER
+# ============================================================================
+k8s:
+  - clusterName: "dev-cluster"
+    clusterLocation: "us-central1"
+    networkName: "dev-network"
+    subnetName: "dev-subnet"
+    servicesSecondaryRangeName: "services"
+    clusterSecondaryRangeName: "pods"
+    releaseChannel: "REGULAR"
+    datapathProvider: "ADVANCED_DATAPATH"
+    enableShieldedNodes: true
+    addonsConfig:
+      configConnectorConfig:
+        enabled: true
+      gcePersistentDiskCsiDriverConfig:
+        enabled: true
+      horizontalPodAutoscaling:
+        disabled: false
+      httpLoadBalancing:
+        disabled: false
+    verticalPodAutoscalingEnabled: true
+    loggingConfig:
+      enableComponents:
+        - "SYSTEM_COMPONENTS"
+        - "WORKLOADS"
+    monitoringConfig:
+      enableComponents:
+        - "SYSTEM_COMPONENTS"
+    nodePool:
+      - name: "dev-pool"
+        initialNodeCount: 1
+        minNodeCount: 1
+        maxNodeCount: 3
+        nodeLocation: "us-central1"
+        management:
+          autoRepair: true
+          autoUpgrade: true
+        maxPodsPerNode: 110
+        nodeConfig:
+          diskSizeGb: 50
+          diskType: "pd-standard"
+          imageType: "COS_CONTAINERD"
+          machineType: "e2-medium"
+          oauthScopes:
+            - "https://www.googleapis.com/auth/devstorage.read_only"
+            - "https://www.googleapis.com/auth/logging.write"
+            - "https://www.googleapis.com/auth/monitoring"
+            - "https://www.googleapis.com/auth/servicecontrol"
+            - "https://www.googleapis.com/auth/service.management.readonly"
+            - "https://www.googleapis.com/auth/trace.append"
+          shieldedInstanceConfig:
+            enableSecureBoot: false
+            enableIntegrityMonitoring: true

@@ -1,0 +1,495 @@
+# ============================================================================
+# Example 4: Complete Infrastructure Deployment
+# ============================================================================
+# This example demonstrates a comprehensive infrastructure setup including:
+# - VPC networks with peering
+# - Multiple GKE clusters
+# - Cloud SQL databases
+# - DNS zones and records
+# - Static IPs
+# - IAM service accounts and policies
+# - Monitoring and logging
+# - Security policies
+#
+# This is a reference example showing many features of the chart.
+# ============================================================================
+
+projectName: "complete-project"
+projectID: "complete-project-99999"
+createOrManageProject: true
+allowResourceDeletion: false
+billingAccountId: "ABCDE-12345-67890"
+organizationId: "1234567890"
+
+# ============================================================================
+# ENABLE APIS
+# ============================================================================
+apis:
+  - name: container.googleapis.com
+  - name: compute.googleapis.com
+  - name: sqladmin.googleapis.com
+  - name: dns.googleapis.com
+  - name: monitoring.googleapis.com
+  - name: logging.googleapis.com
+  - name: servicenetworking.googleapis.com
+
+# ============================================================================
+# VPC NETWORKS
+# ============================================================================
+vpcNetwork:
+  - networkName: "main-network"
+    description: "Main production network"
+    mtu: 1460
+    routingMode: "REGIONAL"
+    subNets:
+      - subnetName: "main-central-subnet"
+        subnetCidr: "10.0.0.0/20"
+        vpcRegion: "us-central1"
+        privateIpGoogleAccess: true
+        logConfig:
+          aggregationInterval: "INTERVAL_5_SEC"
+          flowSampling: 0.5
+          metadata: "INCLUDE_ALL_METADATA"
+        secondarySubnets:
+          - name: services
+            ipCidrRange: 10.16.0.0/20
+          - name: pods
+            ipCidrRange: 172.16.0.0/20
+      - subnetName: "main-east-subnet"
+        subnetCidr: "10.1.0.0/20"
+        vpcRegion: "us-east1"
+        privateIpGoogleAccess: true
+        secondarySubnets:
+          - name: services
+            ipCidrRange: 10.17.0.0/20
+          - name: pods
+            ipCidrRange: 172.17.0.0/20
+
+  - networkName: "dmz-network"
+    description: "DMZ network for public-facing services"
+    mtu: 1460
+    routingMode: "REGIONAL"
+    subNets:
+      - subnetName: "dmz-central-subnet"
+        subnetCidr: "10.2.0.0/24"
+        vpcRegion: "us-central1"
+
+# ============================================================================
+# VPC PEERING
+# ============================================================================
+vpcPeering:
+  - name: "main-to-dmz"
+    networkRefName: "main-network"
+    exportCustomRoutes: false
+    importCustomRoutes: false
+    peerNetworkRef:
+      name: "dmz-network"
+
+# ============================================================================
+# FIREWALL RULES
+# ============================================================================
+firewall:
+  - name: "allow-ssh-admin"
+    description: "Allow SSH from admin network"
+    networkRefName: "main-network"
+    direction: "INGRESS"
+    priority: 1000
+    allow:
+      - protocol: tcp
+        ports:
+          - "22"
+    sourceRanges:
+      - "203.0.113.0/24"
+    targetTags:
+      - "admin-nodes"
+  - name: "allow-internal"
+    description: "Allow all internal traffic"
+    networkRefName: "main-network"
+    direction: "INGRESS"
+    priority: 1000
+    allow:
+      - protocol: tcp
+      - protocol: udp
+      - protocol: icmp
+    sourceRanges:
+      - "10.0.0.0/8"
+      - "172.16.0.0/12"
+  - name: "allow-https"
+    description: "Allow HTTPS from internet"
+    networkRefName: "dmz-network"
+    direction: "INGRESS"
+    priority: 1000
+    allow:
+      - protocol: tcp
+        ports:
+          - "443"
+    sourceRanges:
+      - "0.0.0.0/0"
+
+# ============================================================================
+# STATIC IP ADDRESSES
+# ============================================================================
+staticIp:
+  - name: "web-lb-ip"
+    addressType: "EXTERNAL"
+    location: global
+    ipVersion: IPV4
+  - name: "api-lb-ip"
+    addressType: "EXTERNAL"
+    location: global
+    ipVersion: IPV4
+  - name: "private-service-ip"
+    addressType: "INTERNAL"
+    location: global
+    ipVersion: IPV4
+    purpose: VPC_PEERING
+    prefixLength: 16
+    networkRef:
+      name: main-network
+
+# ============================================================================
+# SERVICE NETWORKING CONNECTION
+# ============================================================================
+snc:
+  - name: "private-service-connection"
+    networkRefName: "main-network"
+    reservedPeeringRanges:
+      - name: "private-service-ip"
+    service: "servicenetworking.googleapis.com"
+
+# ============================================================================
+# GKE CLUSTERS
+# ============================================================================
+k8s:
+  - clusterName: "web-cluster"
+    customAnnotations:
+      environment: "production"
+      tier: "web"
+    clusterLocation: "us-central1"
+    networkName: "main-network"
+    subnetName: "main-central-subnet"
+    servicesSecondaryRangeName: "services"
+    clusterSecondaryRangeName: "pods"
+    clusterAutoscaling:
+      enabled: true
+      autoscalingProfile: "BALANCED"
+    releaseChannel: "REGULAR"
+    datapathProvider: "ADVANCED_DATAPATH"
+    enableShieldedNodes: true
+    addonsConfig:
+      configConnectorConfig:
+        enabled: true
+      gcePersistentDiskCsiDriverConfig:
+        enabled: true
+      horizontalPodAutoscaling:
+        disabled: false
+      httpLoadBalancing:
+        disabled: false
+    verticalPodAutoscalingEnabled: true
+    loggingConfig:
+      enableComponents:
+        - "SYSTEM_COMPONENTS"
+        - "WORKLOADS"
+    monitoringConfig:
+      enableComponents:
+        - "SYSTEM_COMPONENTS"
+    nodePool:
+      - name: "web-pool"
+        initialNodeCount: 2
+        minNodeCount: 2
+        maxNodeCount: 10
+        nodeLocation: "us-central1"
+        management:
+          autoRepair: true
+          autoUpgrade: true
+        maxPodsPerNode: 110
+        nodeConfig:
+          diskSizeGb: 100
+          diskType: "pd-ssd"
+          imageType: "COS_CONTAINERD"
+          machineType: "n2-standard-4"
+          oauthScopes:
+            - "https://www.googleapis.com/auth/devstorage.read_only"
+            - "https://www.googleapis.com/auth/logging.write"
+            - "https://www.googleapis.com/auth/monitoring"
+            - "https://www.googleapis.com/auth/servicecontrol"
+            - "https://www.googleapis.com/auth/service.management.readonly"
+            - "https://www.googleapis.com/auth/trace.append"
+          shieldedInstanceConfig:
+            enableSecureBoot: true
+            enableIntegrityMonitoring: true
+        upgradeSettings:
+          maxSurge: 1
+          maxUnavailable: 0
+
+  - clusterName: "api-cluster"
+    customAnnotations:
+      environment: "production"
+      tier: "api"
+    clusterLocation: "us-east1"
+    networkName: "main-network"
+    subnetName: "main-east-subnet"
+    servicesSecondaryRangeName: "services"
+    clusterSecondaryRangeName: "pods"
+    clusterAutoscaling:
+      enabled: true
+      autoscalingProfile: "BALANCED"
+    releaseChannel: "REGULAR"
+    datapathProvider: "ADVANCED_DATAPATH"
+    enableShieldedNodes: true
+    addonsConfig:
+      configConnectorConfig:
+        enabled: true
+      gcePersistentDiskCsiDriverConfig:
+        enabled: true
+      horizontalPodAutoscaling:
+        disabled: false
+      httpLoadBalancing:
+        disabled: false
+    verticalPodAutoscalingEnabled: true
+    loggingConfig:
+      enableComponents:
+        - "SYSTEM_COMPONENTS"
+        - "WORKLOADS"
+    monitoringConfig:
+      enableComponents:
+        - "SYSTEM_COMPONENTS"
+    nodePool:
+      - name: "api-pool"
+        initialNodeCount: 2
+        minNodeCount: 2
+        maxNodeCount: 10
+        nodeLocation: "us-east1"
+        management:
+          autoRepair: true
+          autoUpgrade: true
+        maxPodsPerNode: 110
+        nodeConfig:
+          diskSizeGb: 100
+          diskType: "pd-ssd"
+          imageType: "COS_CONTAINERD"
+          machineType: "n2-standard-4"
+          oauthScopes:
+            - "https://www.googleapis.com/auth/devstorage.read_only"
+            - "https://www.googleapis.com/auth/logging.write"
+            - "https://www.googleapis.com/auth/monitoring"
+            - "https://www.googleapis.com/auth/servicecontrol"
+            - "https://www.googleapis.com/auth/service.management.readonly"
+            - "https://www.googleapis.com/auth/trace.append"
+          shieldedInstanceConfig:
+            enableSecureBoot: true
+            enableIntegrityMonitoring: true
+        upgradeSettings:
+          maxSurge: 1
+          maxUnavailable: 0
+
+# ============================================================================
+# CLOUD SQL
+# ============================================================================
+sql:
+  - name: "primary-db"
+    customAnnotations:
+      environment: "production"
+      tier: "primary"
+    databaseVersion: POSTGRES_14
+    region: us-central1
+    tier: db-custom-4-16384
+    diskSize: 200
+    availabilityType: REGIONAL
+    deletionProtectionEnabled: true
+    backupRetention:
+      retainedBackups: 7
+      retentionUnit: "COUNT"
+    databaseFlags:
+      - name: cloudsql.iam_authentication
+        value: "on"
+    insightsConfig:
+      queryInsightsEnabled: true
+      queryPlansPerMinute: 5
+      queryStringLength: 1024
+    ipConfiguration:
+      requireSsl: true
+      privateNetworkRefName: "main-network"
+    locationPreference:
+      zone: us-central1-b
+    maintenanceWindow:
+      day: 1
+      hour: 4
+      updateTrack: stable
+    users:
+      - resourceID: "app-user"
+        type: BUILT_IN
+        password:
+          valueFrom:
+            secretKeyRef:
+              key: postgres-app-user-password
+              name: db-secrets
+    databases:
+      - name: appdb
+        deletionPolicy: "ABANDON"
+
+  - name: "read-replica-db"
+    customAnnotations:
+      environment: "production"
+      tier: "replica"
+    instanceType: READ_REPLICA_INSTANCE
+    databaseVersion: POSTGRES_14
+    region: us-east1
+    masterInstanceRef: "primary-db"
+    tier: db-custom-4-16384
+    diskSize: 200
+    availabilityType: ZONAL
+    deletionProtectionEnabled: true
+    ipConfiguration:
+      requireSsl: true
+      privateNetworkRefName: "main-network"
+    locationPreference:
+      zone: us-east1-b
+
+# ============================================================================
+# DNS
+# ============================================================================
+dns:
+  zone:
+    - name: example.com
+      description: "Production DNS Zone"
+      visibility: "public"
+      dnssecConfigState: "on"
+  record:
+    - name: "www.example.com"
+      type: A
+      ttl: 300
+      dnsZone: "example-com"
+      computeAddress: "web-lb-ip"
+    - name: "api.example.com"
+      type: A
+      ttl: 300
+      dnsZone: "example-com"
+      computeAddress: "api-lb-ip"
+    - name: "_dmarc.example.com"
+      type: TXT
+      ttl: 300
+      dnsZone: "example-com"
+      rrdatas:
+        - "v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com"
+
+# ============================================================================
+# IAM
+# ============================================================================
+iam:
+  - name: "app-service-account"
+    description: "Service account for application workloads"
+    displayName: "Application Service Account"
+    iamPolicyMember:
+      - name: "app-storage"
+        member: serviceAccount:app-service-account@complete-project-99999.iam.gserviceaccount.com
+        role: roles/storage.objectViewer
+        external: projects/complete-project-99999
+      - name: "app-sql-client"
+        member: serviceAccount:app-service-account@complete-project-99999.iam.gserviceaccount.com
+        role: roles/cloudsql.client
+        external: projects/complete-project-99999
+    iamPolicy:
+      - name: "app-workload-identity"
+        kind: IAMServiceAccount
+        bindings:
+          - role: roles/iam.workloadIdentityUser
+            members:
+              - serviceAccount:complete-project-99999.svc.id.goog[default/app-sa]
+
+# ============================================================================
+# SECURITY POLICIES
+# ============================================================================
+securityPolicy:
+  - name: "web-waf-policy"
+    description: "WAF policy for web services"
+    layer7DdosDefenseConfig: true
+    type: "CLOUD_ARMOR"
+    rule:
+      - action: allow
+        description: "Default allow rule"
+        preview: false
+        priority: 2147483647
+        match:
+          versionedExpr: SRC_IPS_V1
+          config:
+            srcIpRanges:
+              - '*'
+
+sslPolicy:
+  - name: "tls1-2-modern-policy"
+    description: "Modern TLS 1.2+ policy"
+    minTlsVersion: TLS_1_2
+    profile: MODERN
+
+# ============================================================================
+# MONITORING
+# ============================================================================
+monitoring:
+  - name: ""
+    notificationChannel:
+      - name: "ops-alerts"
+        type: "email"
+        labels:
+          email_address: "ops@example.com"
+        description: "Operations team alerts"
+        enabled: true
+    alertPolicy:
+      - name: "high-cpu-alert"
+        displayName: "High CPU Usage"
+        enabled: true
+        notificationChannels:
+          - name: "ops-alerts"
+        combiner: "OR"
+        conditions:
+          - displayName: "CPU usage above 80%"
+            conditionThreshold:
+              filter: 'resource.type = "gce_instance" AND metric.type = "compute.googleapis.com/instance/cpu/utilization"'
+              aggregations:
+                - perSeriesAligner: "ALIGN_MEAN"
+                  alignmentPeriod: "60s"
+                  crossSeriesReducer: "REDUCE_MEAN"
+              comparison: "COMPARISON_GT"
+              thresholdValue: 0.8
+              duration: "300s"
+              trigger:
+                count: 1
+
+# ============================================================================
+# LOGGING
+# ============================================================================
+logging:
+  logBucket:
+    - name: "Production-Logs"
+      location: "global"
+      description: "Production log storage"
+      locked: "false"
+      retentionDays: 90
+  logMetric:
+    - name: "http-request-latency"
+      description: "HTTP request latency from logs"
+      filter: 'resource.type="http_load_balancer"'
+      labelExtractors:
+        http_method: "EXTRACT(httpRequest.requestMethod)"
+        http_path: "EXTRACT(httpRequest.requestUrl)"
+        http_status: "EXTRACT(httpRequest.status)"
+      metricDescriptor:
+        labels:
+          - key: "http_method"
+            valueType: "STRING"
+            description: "HTTP Request Method"
+          - key: "http_path"
+            valueType: "STRING"
+            description: "HTTP Request URL Path"
+          - key: "http_status"
+            valueType: "STRING"
+            description: "HTTP Request Status Code"
+        metricKind: "DELTA"
+        unit: "s"
+        valueType: "DISTRIBUTION"
+      valueExtractor: "EXTRACT(httpRequest.latency)"
+      bucketOptions:
+        exponentialBuckets:
+          numFiniteBuckets: 64
+          growthFactor: 2.0
+          scale: 0.01

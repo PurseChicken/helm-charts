@@ -1,0 +1,341 @@
+# ============================================================================
+# Example 2: Production Multi-Region Deployment
+# ============================================================================
+# This example demonstrates a production-ready setup with:
+# - Multi-region VPC network (us-central1, us-east1)
+# - Multiple GKE clusters across regions
+# - Production-grade security and monitoring
+# - High availability configuration
+#
+# Key Features:
+# - Regional redundancy
+# - Enhanced security (Shielded Nodes, Binary Authorization)
+# - Comprehensive monitoring and logging
+# - Cost management enabled
+# ============================================================================
+
+projectName: "prod-project"
+projectID: "prod-project-12345"
+createOrManageProject: true
+allowResourceDeletion: false  # Protect production resources
+billingAccountId: "ABCDE-12345-67890"
+organizationId: "1234567890"
+
+# ============================================================================
+# ENABLE APIS
+# ============================================================================
+apis:
+  - name: container.googleapis.com
+  - name: compute.googleapis.com
+  - name: sqladmin.googleapis.com
+  - name: monitoring.googleapis.com
+  - name: logging.googleapis.com
+  - name: stackdriver.googleapis.com
+
+# ============================================================================
+# VPC NETWORK
+# ============================================================================
+vpcNetwork:
+  - networkName: "prod-network"
+    description: "Production VPC Network"
+    mtu: 1460
+    routingMode: "REGIONAL"
+    subNets:
+      - subnetName: "prod-central-subnet"
+        subnetCidr: "10.0.0.0/20"
+        vpcRegion: "us-central1"
+        privateIpGoogleAccess: true
+        logConfig:
+          aggregationInterval: "INTERVAL_5_SEC"
+          flowSampling: 0.5
+          metadata: "INCLUDE_ALL_METADATA"
+        secondarySubnets:
+          - name: services
+            ipCidrRange: 10.16.0.0/20
+          - name: pods
+            ipCidrRange: 172.16.0.0/20
+      - subnetName: "prod-east-subnet"
+        subnetCidr: "10.1.0.0/20"
+        vpcRegion: "us-east1"
+        privateIpGoogleAccess: true
+        logConfig:
+          aggregationInterval: "INTERVAL_5_SEC"
+          flowSampling: 0.5
+          metadata: "INCLUDE_ALL_METADATA"
+        secondarySubnets:
+          - name: services
+            ipCidrRange: 10.17.0.0/20
+          - name: pods
+            ipCidrRange: 172.17.0.0/20
+
+# ============================================================================
+# FIREWALL RULES
+# ============================================================================
+firewall:
+  - name: "allow-ssh-admin"
+    description: "Allow SSH from admin networks only"
+    networkRefName: "prod-network"
+    direction: "INGRESS"
+    priority: 1000
+    allow:
+      - protocol: tcp
+        ports:
+          - "22"
+    sourceRanges:
+      - "203.0.113.0/24"  # Replace with your admin network
+    targetTags:
+      - "admin-nodes"
+  - name: "allow-internal"
+    description: "Allow all internal traffic"
+    networkRefName: "prod-network"
+    direction: "INGRESS"
+    priority: 1000
+    allow:
+      - protocol: tcp
+      - protocol: udp
+      - protocol: icmp
+    sourceRanges:
+      - "10.0.0.0/8"
+      - "172.16.0.0/12"
+  - name: "deny-external"
+    description: "Deny external access to internal services"
+    networkRefName: "prod-network"
+    direction: "INGRESS"
+    priority: 900
+    deny:
+      - protocol: tcp
+        ports:
+          - "3306"  # MySQL
+          - "5432"  # PostgreSQL
+    sourceRanges:
+      - "0.0.0.0/0"
+
+# ============================================================================
+# GKE CLUSTERS
+# ============================================================================
+k8s:
+  - clusterName: "prod-central-cluster"
+    customAnnotations:
+      environment: "production"
+      region: "us-central1"
+    clusterLocation: "us-central1"
+    networkName: "prod-network"
+    subnetName: "prod-central-subnet"
+    servicesSecondaryRangeName: "services"
+    clusterSecondaryRangeName: "pods"
+    clusterAutoscaling:
+      enabled: true
+      autoscalingProfile: "BALANCED"
+    releaseChannel: "REGULAR"
+    datapathProvider: "ADVANCED_DATAPATH"
+    enableIntranodeVisibility: true
+    enableShieldedNodes: true
+    addonsConfig:
+      configConnectorConfig:
+        enabled: true
+      gcePersistentDiskCsiDriverConfig:
+        enabled: true
+      horizontalPodAutoscaling:
+        disabled: false
+      httpLoadBalancing:
+        disabled: false
+    verticalPodAutoscalingEnabled: true
+    binaryAuthorization:
+      evaluationMode: "PROJECT_SINGLETON_POLICY_ENFORCE"
+    loggingConfig:
+      enableComponents:
+        - "SYSTEM_COMPONENTS"
+        - "WORKLOADS"
+    monitoringConfig:
+      enableComponents:
+        - "SYSTEM_COMPONENTS"
+    costManagementConfig: true
+    maintenancePolicy:
+      dailyMaintenanceWindow:
+        duration: "PT4H0M0S"
+        startTime: "02:00"  # 2 AM UTC
+    nodePool:
+      - name: "prod-central-pool"
+        customAnnotations:
+          environment: "production"
+        initialNodeCount: 3
+        minNodeCount: 3
+        maxNodeCount: 10
+        nodeLocation: "us-central1"
+        management:
+          autoRepair: true
+          autoUpgrade: true
+        maxPodsPerNode: 110
+        nodeConfig:
+          diskSizeGb: 100
+          diskType: "pd-ssd"
+          imageType: "COS_CONTAINERD"
+          machineType: "n2-standard-4"
+          metadata:
+            disable-legacy-endpoints: "true"
+          oauthScopes:
+            - "https://www.googleapis.com/auth/devstorage.read_only"
+            - "https://www.googleapis.com/auth/logging.write"
+            - "https://www.googleapis.com/auth/monitoring"
+            - "https://www.googleapis.com/auth/servicecontrol"
+            - "https://www.googleapis.com/auth/service.management.readonly"
+            - "https://www.googleapis.com/auth/trace.append"
+          shieldedInstanceConfig:
+            enableSecureBoot: true
+            enableIntegrityMonitoring: true
+        upgradeSettings:
+          maxSurge: 1
+          maxUnavailable: 0
+        tags:
+          - "production"
+          - "central-region"
+
+  - clusterName: "prod-east-cluster"
+    customAnnotations:
+      environment: "production"
+      region: "us-east1"
+    clusterLocation: "us-east1"
+    networkName: "prod-network"
+    subnetName: "prod-east-subnet"
+    servicesSecondaryRangeName: "services"
+    clusterSecondaryRangeName: "pods"
+    clusterAutoscaling:
+      enabled: true
+      autoscalingProfile: "BALANCED"
+    releaseChannel: "REGULAR"
+    datapathProvider: "ADVANCED_DATAPATH"
+    enableIntranodeVisibility: true
+    enableShieldedNodes: true
+    addonsConfig:
+      configConnectorConfig:
+        enabled: true
+      gcePersistentDiskCsiDriverConfig:
+        enabled: true
+      horizontalPodAutoscaling:
+        disabled: false
+      httpLoadBalancing:
+        disabled: false
+    verticalPodAutoscalingEnabled: true
+    binaryAuthorization:
+      evaluationMode: "PROJECT_SINGLETON_POLICY_ENFORCE"
+    loggingConfig:
+      enableComponents:
+        - "SYSTEM_COMPONENTS"
+        - "WORKLOADS"
+    monitoringConfig:
+      enableComponents:
+        - "SYSTEM_COMPONENTS"
+    costManagementConfig: true
+    maintenancePolicy:
+      dailyMaintenanceWindow:
+        duration: "PT4H0M0S"
+        startTime: "02:00"
+    nodePool:
+      - name: "prod-east-pool"
+        customAnnotations:
+          environment: "production"
+        initialNodeCount: 3
+        minNodeCount: 3
+        maxNodeCount: 10
+        nodeLocation: "us-east1"
+        management:
+          autoRepair: true
+          autoUpgrade: true
+        maxPodsPerNode: 110
+        nodeConfig:
+          diskSizeGb: 100
+          diskType: "pd-ssd"
+          imageType: "COS_CONTAINERD"
+          machineType: "n2-standard-4"
+          metadata:
+            disable-legacy-endpoints: "true"
+          oauthScopes:
+            - "https://www.googleapis.com/auth/devstorage.read_only"
+            - "https://www.googleapis.com/auth/logging.write"
+            - "https://www.googleapis.com/auth/monitoring"
+            - "https://www.googleapis.com/auth/servicecontrol"
+            - "https://www.googleapis.com/auth/service.management.readonly"
+            - "https://www.googleapis.com/auth/trace.append"
+          shieldedInstanceConfig:
+            enableSecureBoot: true
+            enableIntegrityMonitoring: true
+        upgradeSettings:
+          maxSurge: 1
+          maxUnavailable: 0
+        tags:
+          - "production"
+          - "east-region"
+
+# ============================================================================
+# GKE HUB (FLEET)
+# ============================================================================
+gkeHub:
+  - name: ""
+    membership:
+      - name: "prod-central-cluster"
+        location: "global"
+        description: "Production Central Cluster Fleet membership"
+        endpoint:
+          gkeCluster:
+            name: "prod-central-cluster"
+      - name: "prod-east-cluster"
+        location: "global"
+        description: "Production East Cluster Fleet membership"
+        endpoint:
+          gkeCluster:
+            name: "prod-east-cluster"
+    feature:
+      - name: "prod-central-mci"
+        location: "global"
+        resourceID: multiclusteringress
+        multiClusterIngress:
+          mciName: "prod-central-cluster"
+      - name: "multi-cluster-service-discovery"
+        location: "global"
+        resourceID: multiclusterservicediscovery
+
+# ============================================================================
+# MONITORING
+# ============================================================================
+monitoring:
+  - name: ""
+    notificationChannel:
+      - name: "prod-alerts"
+        type: "email"
+        labels:
+          email_address: "ops@example.com"
+        description: "Production alerts channel"
+        enabled: true
+    alertPolicy:
+      - name: "cluster-quota-alert"
+        displayName: "GKE Cluster Quota Exceeded"
+        enabled: true
+        notificationChannels:
+          - name: "prod-alerts"
+        combiner: "OR"
+        conditions:
+          - displayName: "Consumer Quota - Quota exceeded error"
+            conditionThreshold:
+              filter: 'resource.type = "consumer_quota" AND metric.type = "serviceruntime.googleapis.com/quota/exceeded"'
+              aggregations:
+                - perSeriesAligner: "ALIGN_COUNT_TRUE"
+                  alignmentPeriod: "60s"
+                  crossSeriesReducer: "REDUCE_SUM"
+                  groupByFields:
+                    - "metric.label.quota_metric"
+              comparison: "COMPARISON_GT"
+              thresholdValue: 0
+              duration: "0s"
+              trigger:
+                count: 1
+
+# ============================================================================
+# LOGGING
+# ============================================================================
+logging:
+  logBucket:
+    - name: "Production-Logs"
+      location: "global"
+      description: "Production log bucket"
+      locked: "false"
+      retentionDays: 90
