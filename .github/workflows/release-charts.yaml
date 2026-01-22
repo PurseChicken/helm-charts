@@ -24,16 +24,30 @@ jobs:
           
           # Determine the base commit to compare against
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            # Manual trigger: compare with previous commit
-            BASE_SHA="HEAD^"
-            HEAD_SHA="HEAD"
-            echo "Manual trigger: comparing HEAD^ to HEAD"
-          else
-            # Push event: use event data
-            BASE_SHA="${{ github.event.before }}"
-            HEAD_SHA="${{ github.event.after }}"
-            echo "Push event: comparing $BASE_SHA to $HEAD_SHA"
+            # Manual trigger: process all charts (ignore change detection)
+            echo "Manual trigger: processing all charts"
+            charts=$(find charts -mindepth 1 -maxdepth 1 -type d | while read dir; do
+              if [ -f "$dir/Chart.yaml" ]; then
+                basename "$dir"
+              fi
+            done | jq -R . | jq -s -c .)
+            
+            if [ "$charts" = "[]" ]; then
+              echo "No charts found in charts/ directory"
+              echo "charts=[]" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            
+            chart_count=$(echo "$charts" | jq 'length')
+            echo "charts=$charts" >> $GITHUB_OUTPUT
+            echo "Discovered $chart_count chart(s) for manual release: $charts"
+            exit 0
           fi
+          
+          # Push event: use event data to find changed charts
+          BASE_SHA="${{ github.event.before }}"
+          HEAD_SHA="${{ github.event.after }}"
+          echo "Push event: comparing $BASE_SHA to $HEAD_SHA"
           
           # Validate commits exist
           if [ -z "$BASE_SHA" ] || ! git rev-parse --verify "$BASE_SHA" >/dev/null 2>&1; then
