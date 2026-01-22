@@ -1,0 +1,78 @@
+name: Lint and Test Charts
+
+on:
+  pull_request:
+    paths:
+      - 'charts/**'
+
+jobs:
+  discover-charts:
+    runs-on: ubuntu-latest
+    outputs:
+      charts: ${{ steps.set-matrix.outputs.charts }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      
+      - name: Discover charts
+        id: set-matrix
+        run: |
+          # Find all directories in charts/ that contain a Chart.yaml file
+          charts=$(find charts -mindepth 1 -maxdepth 1 -type d | while read dir; do
+            if [ -f "$dir/Chart.yaml" ]; then
+              basename "$dir"
+            fi
+          done | jq -R . | jq -s .)
+          # Handle empty array case
+          if [ "$charts" = "[]" ]; then
+            echo "No charts found in charts/ directory"
+            echo "Skipping workflow - no charts to lint/test"
+            exit 0
+          fi
+          echo "charts=$charts" >> $GITHUB_OUTPUT
+          echo "Discovered charts: $charts"
+
+  lint-and-test:
+    needs: discover-charts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chart: ${{ fromJson(needs.discover-charts.outputs.charts) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4.3.1
+        with:
+          version: 'latest'
+
+      - name: Add Helm repo(s)
+        run: |
+          helm repo add t3n-helm-charts https://storage.googleapis.com/t3n-helm-charts
+          helm repo update
+
+      - name: Lint Chart
+        run: |
+          helm lint charts/${{ matrix.chart }}
+          helm dependency update charts/${{ matrix.chart }} || true
+
+      - name: Template Chart (Default Values)
+        run: |
+          helm template test-release charts/${{ matrix.chart }} > /dev/null
+
+      - name: Template Chart (Example Values)
+        continue-on-error: true
+        run: |
+          if [ -d "charts/${{ matrix.chart }}/examples" ]; then
+            for example in charts/${{ matrix.chart }}/examples/*.yaml; do
+              if [ -f "$example" ]; then
+                echo "Testing with $example"
+                helm template test-release charts/${{ matrix.chart }} -f "$example" > /dev/null
+              fi
+            done
+          fi
+
+      - name: Validate Chart Schema
+        run: |
+          helm template test-release charts/${{ matrix.chart }} | kubectl apply --dry-run=client -f - || true

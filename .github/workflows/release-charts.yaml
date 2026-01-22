@@ -7,8 +7,151 @@ on:
       - 'charts/**'
   workflow_dispatch:
 jobs:
-  bump-versions:
+  discover-charts:
     runs-on: ubuntu-latest
+    outputs:
+      charts: ${{ steps.set-matrix.outputs.charts }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      
+      - name: Discover changed charts
+        id: set-matrix
+        run: |
+          set -e  # Exit on error
+          
+          # Determine the base commit to compare against
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Manual trigger: compare with previous commit
+            BASE_SHA="HEAD^"
+            HEAD_SHA="HEAD"
+            echo "Manual trigger: comparing HEAD^ to HEAD"
+          else
+            # Push event: use event data
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.event.after }}"
+            echo "Push event: comparing $BASE_SHA to $HEAD_SHA"
+          fi
+          
+          # Validate commits exist
+          if [ -z "$BASE_SHA" ] || ! git rev-parse --verify "$BASE_SHA" >/dev/null 2>&1; then
+            echo "Warning: Could not resolve base commit $BASE_SHA"
+            # Try HEAD^ as fallback, but handle first commit case
+            if git rev-parse --verify "HEAD^" >/dev/null 2>&1; then
+              BASE_SHA="HEAD^"
+              echo "Using HEAD^ as base"
+            else
+              echo "No previous commit found (first commit?), comparing with empty tree"
+              BASE_SHA="4b825dc642cb6eb9a060e54bf8d69288fbee4904"  # Git's empty tree SHA
+            fi
+          fi
+          
+          if [ -z "$HEAD_SHA" ] || ! git rev-parse --verify "$HEAD_SHA" >/dev/null 2>&1; then
+            echo "Warning: Could not resolve HEAD commit $HEAD_SHA, using HEAD"
+            HEAD_SHA="HEAD"
+          fi
+          
+          # Get list of changed files in charts/ directory
+          echo "Checking for changed files between $BASE_SHA and $HEAD_SHA..."
+          changed_files=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -E '^charts/[^/]+/' || true)
+          
+          if [ -z "$changed_files" ]; then
+            echo "No files changed in charts/ directory"
+            echo "Skipping workflow - no charts to release"
+            exit 0
+          fi
+          
+          echo "Changed files:"
+          echo "$changed_files"
+          
+          # Extract unique chart names from changed file paths
+          # Format: charts/<chart-name>/<file>
+          changed_charts=$(echo "$changed_files" | cut -d'/' -f2 | sort -u)
+          
+          if [ -z "$changed_charts" ]; then
+            echo "No chart directories found in changed files"
+            echo "Skipping workflow - no charts to release"
+            exit 0
+          fi
+          
+          # Validate each chart has Chart.yaml and build JSON array
+          valid_charts=""
+          
+          for chart in $changed_charts; do
+            if [ -f "charts/$chart/Chart.yaml" ]; then
+              if [ -z "$valid_charts" ]; then
+                valid_charts="$chart"
+              else
+                valid_charts="$valid_charts"$'\n'"$chart"
+              fi
+              echo "Found changed chart: $chart"
+            else
+              echo "Warning: charts/$chart/Chart.yaml not found, skipping"
+            fi
+          done
+          
+          # Convert to JSON array using jq
+          if [ -z "$valid_charts" ]; then
+            echo "No valid changed charts found"
+            echo "Skipping workflow - no charts to release"
+            exit 0
+          fi
+          
+          charts_json=$(echo "$valid_charts" | jq -R . | jq -s .)
+          chart_count=$(echo "$charts_json" | jq 'length')
+          
+          echo "charts=$charts_json" >> $GITHUB_OUTPUT
+          echo "Discovered $chart_count changed chart(s): $charts_json"
+
+  lint-and-validate:
+    needs: discover-charts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chart: ${{ fromJson(needs.discover-charts.outputs.charts) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4.3.1
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Add Helm repo(s)
+        run: |
+          helm repo add t3n-helm-charts https://storage.googleapis.com/t3n-helm-charts
+          helm repo update
+
+      - name: Lint Chart
+        run: |
+          helm lint charts/${{ matrix.chart }}
+          helm dependency update charts/${{ matrix.chart }} || true
+
+      - name: Template Chart (Default Values)
+        run: |
+          helm template test-release charts/${{ matrix.chart }} > /dev/null
+
+      - name: Template Chart (Example Values)
+        continue-on-error: true
+        run: |
+          if [ -d "charts/${{ matrix.chart }}/examples" ]; then
+            for example in charts/${{ matrix.chart }}/examples/*.yaml; do
+              if [ -f "$example" ]; then
+                echo "Testing with $example"
+                helm template test-release charts/${{ matrix.chart }} -f "$example" > /dev/null
+              fi
+            done
+          fi
+
+  bump-versions:
+    needs: [discover-charts, lint-and-validate]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chart: ${{ fromJson(needs.discover-charts.outputs.charts) }}
     steps:
     - name: Checkout
       uses: actions/checkout@v6
@@ -20,43 +163,53 @@ jobs:
         git config user.name "$GITHUB_ACTOR"
         git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-    - name: Bump cnrm-chart
+    - name: Bump ${{ matrix.chart }} version
+      id: bump
       uses: ./.github/actions/bumpVersionAction
       with:
-        chart: cnrm-chart
+        chart: ${{ matrix.chart }}
 
-    - name: Bump gateway-api-chart
-      uses: ./.github/actions/bumpVersionAction
-      with:
-        chart: gateway-api-chart
+  push-changes:
+    runs-on: ubuntu-latest
+    needs: [discover-charts, bump-versions]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}  # Needed for git push
 
-    - name: Bump snipeit
-      uses: ./.github/actions/bumpVersionAction
-      with:
-        chart: snipeit
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-    - name: Push Results
-      id: pushResults
-      run: |
-        if git merge-base --is-ancestor HEAD @{u} ; then
-          echo "publish=false" >> $GITHUB_OUTPUT
-          echo "No push necessary"
-        else
-          echo "Version bumps happened. Pushing now..."
-          git push
-          echo "publish=true" >> $GITHUB_OUTPUT
-        fi
+      - name: Pull latest changes
+        run: git pull --ff-only || true
+
+      - name: Check for changes and push
+        id: pushResults
+        run: |
+          if git merge-base --is-ancestor HEAD @{u} ; then
+            echo "publish=false" >> $GITHUB_OUTPUT
+            echo "No push necessary"
+          else
+            echo "Version bumps happened. Pushing now..."
+            git push
+            echo "publish=true" >> $GITHUB_OUTPUT
+          fi
     outputs:
       publish: ${{ steps.pushResults.outputs.publish }}
 
   chart-releaser:
     runs-on: ubuntu-latest
     needs:
-      - bump-versions
-    if: needs.bump-versions.outputs.publish == 'true'
+      - discover-charts
+      - push-changes
+    if: needs.push-changes.outputs.publish == 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -64,7 +217,9 @@ jobs:
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git pull --ff-only
+          
+      - name: Pull latest changes
+        run: git pull --ff-only
 
       - name: Install Helm
         uses: azure/setup-helm@v4.3.1
@@ -77,12 +232,22 @@ jobs:
 
       - name: Extract version-specific release notes
         run: |
-          for chart in charts/*/; do
-            chart_name=$(basename "$chart")
-            version=$(grep '^version:' "$chart/Chart.yaml" | awk '{print $2}')
-            echo "Processing $chart_name version $version"
-            # Extract section between [v$version] and next ## heading
-            sed -n "/## \[v${version}\]/,/^## \[/p" "$chart/CHANGELOG.md" | sed '$d' > "$chart/RELEASE_NOTES.md" || echo "No release notes found for $chart_name v$version"
+          # Only process charts that were changed (from discover-charts output)
+          changed_charts='${{ needs.discover-charts.outputs.charts }}'
+          
+          # Process each changed chart
+          echo "$changed_charts" | jq -r '.[]' | while IFS= read -r chart_name || [ -n "$chart_name" ]; do
+            if [ -n "$chart_name" ] && [ -f "charts/$chart_name/Chart.yaml" ]; then
+              version=$(grep '^version:' "charts/$chart_name/Chart.yaml" | awk '{print $2}' | tr -d '"' | tr -d "'")
+              echo "Processing $chart_name version $version"
+              
+              # Extract section between [v$version] and next ## heading
+              if [ -f "charts/$chart_name/CHANGELOG.md" ]; then
+                sed -n "/## \[v${version}\]/,/^## \[/p" "charts/$chart_name/CHANGELOG.md" | sed '$d' > "charts/$chart_name/RELEASE_NOTES.md" || echo "No release notes found for $chart_name v$version"
+              else
+                echo "Warning: CHANGELOG.md not found for $chart_name"
+              fi
+            fi
           done
 
       - name: Run chart-releaser
