@@ -6,15 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-<!-- ## [vX.Y.Z] - UNRELEASED
-### Highlights
-### All Changes
-- Added
-- Updated
-- Changed
-- Fixed
-- Deprecated
-- Removed -->
+## [Unreleased]
 
 ## [1.1.4] - 2025-10-23
 
