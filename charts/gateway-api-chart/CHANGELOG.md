@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.1.5] - 2026-01-23
+
 ### Added
 
 - Added default description for ComputeSecurityPolicy (defaults to "Cloud Armor WAF policy for <service-name>" if not specified)
