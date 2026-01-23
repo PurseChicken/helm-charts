@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.1.6] - 2026-01-23
+
 ### Added
 
 - Added support for regular Kubernetes Services (via `service` section) in addition to ServiceExport, enabling dependency chart use cases for exposing standard Kubernetes applications via Gateway API
