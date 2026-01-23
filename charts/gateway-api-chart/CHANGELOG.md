@@ -8,6 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Added default description for ComputeSecurityPolicy (defaults to "Cloud Armor WAF policy for <service-name>" if not specified)
+- Added `enabled` flag support for individual WAF rule configurations (sqliConfig, xssConfig, etc.) to allow disabling rules without removing config blocks
+- Added comprehensive comments explaining WAF wave structure, priorities, and attack categories
+
+### Changed
+
+- Enhanced code readability and maintainability of `computesecuritypolicy.yaml` template
+- Improved documentation in values.yaml for security policy configuration
+
 ## [1.1.4] - 2025-10-23
 
 ### Fixed

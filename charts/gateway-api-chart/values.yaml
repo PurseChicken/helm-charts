@@ -99,6 +99,9 @@
 #       securityPolicy:
 #         # Enable this Policy? (Can disable but leave all the config in place if needed by setting to false)
 #         enabled: true
+#         # Optional description for the security policy (max 2048 characters)
+#         # If not specified, defaults to "Cloud Armor WAF policy for <service-name>"
+#         # description: "WAF policy for production API endpoints"
 #         # Enable Adaptive Protection on this Security Policy? https://cloud.google.com/armor/docs/adaptive-protection-overview
 #         # enableAdaptiveProtection: true
 #         # By default the action for all the rules is "deny(403)" However if you want to specify your own action you can do so here:
@@ -108,10 +111,20 @@
 #         preview: false
 #         # Must specify the GCP project ID:
 #         project: my-gcp-project
+#         # WAF Rules are grouped into "waves" to minimize rule quota usage.
+#         # Each wave combines multiple WAF rule sets into a single rule using OR operators.
+#         # This approach reduces the total number of rules from 12+ to just 3-4 rules.
+#         # Wave priorities: 5 (highest), 10, 15 (lowest) - evaluated before default allow rule.
+#         # Wave 1: SQL Injection, XSS, LFI, RCE, RFI rules - Core injection attacks
+#         # Wave 2: Method Enforcement, Scanner Detection, Protocol Attack, PHP, Session Fixation rules - Protocol and method-based attacks
+#         # Wave 3: Java, NodeJS, CVE, JSON SQLi rules - Language-specific and vulnerability-based attacks
 #         # The below is only documented \ commented for the SQL Injection Rules, however the same sensitivity and optOut and optIn Rule configuration can be applied to all the preconfigured WAF Rules
-#         # If you leave out a section, then those WAF rules will not apply at all.
+#         # If you leave out a section entirely, then those WAF rules will not apply at all.
+#         # Alternatively, you can set enabled: false to disable a rule set without removing the config block.
 #         # Configure SQL Injection Rules: https://cloud.google.com/armor/docs/waf-rules#sql_injection_sqli
 #         sqliConfig:
+#           # Set enabled: false to disable this rule set without removing the config block
+#           # If enabled is not specified, defaults to true (backwards compatible)
 #           # Specify a Sensitivity level that you want to apply: https://cloud.google.com/armor/docs/rule-tuning#choose_a_sensitivity_level
 #           sensitivity: 1
 #           # Specify which signatures you want to not apply. https://cloud.google.com/armor/docs/rule-tuning#opt_out_rule_signatures
@@ -122,10 +135,12 @@
 #             - "owasp-crs-v030301-id942440-sqli"
 #         # Cross Site Scripting Rules: https://cloud.google.com/armor/docs/waf-rules#cross-site_scripting_xss
 #         xssConfig:
-#           # enabled: true here is just a placeholder. If you want to disable the specific rule, you must omit the entire section.
+#           # Set enabled: false to disable this rule set without removing the config block
+#           # If enabled is not specified, defaults to true
 #           enabled: true
 #         # Local File Inclusion Rules: https://cloud.google.com/armor/docs/waf-rules#local_file_inclusion_lfi
 #         lfiConfig:
+#           # Set enabled: false to disable without removing the config block
 #           enabled: true
 #         # Remote Code Execution Rules: https://cloud.google.com/armor/docs/waf-rules#remote_code_execution_rce
 #         rceConfig:
@@ -156,11 +171,13 @@
 #           enabled: true
 #         # CVE and Other Vulnerability Rules: https://cloud.google.com/armor/docs/waf-rules#cves_and_other_vulnerabilities
 #         cveConfig:
+#           # Example: Set enabled: false to disable CVE rules
 #           enabled: true
 #         # JSON-formatted content SQLi vulnerability: https://cloud.google.com/armor/docs/waf-rules#json-formatted_content_sqli_vulnerability
 #         jsonsqliConfig:
 #           enabled: true
 #         # Set a default rate limit ban or throttling
+#         # Rate limiting rule is applied just before default allow rule (priority 2147483646)
 #         rateLimitConfig:
 #           # rate_based_ban or throttle
 #           # throttle can be changed to rate_based_ban but not rate_based_ban to throttle
@@ -180,6 +197,7 @@
 #           # See: https://cloud.google.com/armor/docs/rate-limiting-overview#identifying_clients_for_rate_limiting
 #           # enforceOnKey: "XFF_IP"
 #           # Optional. Specify enforceOnKeyConfigs list.
+#           # Note: When using enforceOnKeyConfigs, enforceOnKey must be empty string (handled automatically)
 #           # enforceOnKeyConfigs:
 #           #   - keyType: "IP"
 #           #   - keyType: "HTTP_COOKIE"
@@ -187,7 +205,7 @@
 #           #     keyName: "HTTP_COOKIE_NAME"
 #           # Required when using enforceOnKey HTTP_HEADER or HTTP_COOKIE:
 #           # enforceOnKeyName: "MY_COOKIE"
-#         # Custom Rules. This can be any rule(s) you want to create yourself:
+#         # Custom Rules. This can be any rule(s) you want to create yourself (passed through as-is):
 #         customRules:
 #           # toYaml
 #           - description: "my-custom-rule"
