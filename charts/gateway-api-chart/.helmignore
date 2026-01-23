@@ -23,5 +23,5 @@
 .vscode/
 # custom
 images/
-templates/
+examples/
 .bumpversion.cfg

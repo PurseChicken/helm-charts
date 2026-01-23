@@ -1,33 +1,32 @@
 # ============================================================================
-# Example 1: Basic Service Configuration (Dependency Chart Use Case)
+# Example 1: Basic Service Configuration
 # ============================================================================
-# This example demonstrates the PRIMARY USE CASE: exposing a regular
-# Kubernetes Service via Gateway API when used as a dependency chart.
+# Exposes a regular Kubernetes Service via Gateway API.
 #
-# Use Case: Deploying as a dependency chart (e.g., for argo-cd, prometheus)
-# where you have a regular Kubernetes Service and want to expose it via
-# Gateway API instead of Ingress.
+# Use Case: Standalone or dependency (e.g., argo-cd, prometheus) where you
+# have a regular Kubernetes Service and want to expose it via Gateway API.
 #
 # Key Features:
 # - Regular Kubernetes Service (not ServiceImport)
 # - Basic health check configuration
 # - Simple backend policy with timeout
-# - Resources deploy to Release.Namespace (parent chart's namespace)
+#
+# When used as a DEPENDENCY CHART: Nest everything under "gateway-api-chart:" in
+# your parent chart's values (e.g., gateway-api-chart: <this entire file content>).
 # ============================================================================
 
-gateway-api-chart:
-  # For regular Kubernetes Services (recommended for dependency charts)
-  service:
-    - name: my-app-service
-      # Health check configuration
-      healthCheck:
-        type: HTTP
-        httpHealthCheck:
-          requestPath: "/healthz"
-      
-      # Backend policy configuration
-      backendPolicy:
-        timeoutSec: 30
-        logging:
-          enabled: true
-          sampleRate: 500000
+# For regular Kubernetes Services (recommended for single-cluster)
+service:
+  - name: my-app-service
+    # Health check configuration
+    healthCheck:
+      type: HTTP
+      httpHealthCheck:
+        requestPath: "/healthz"
+    
+    # Backend policy configuration
+    backendPolicy:
+      timeoutSec: 30
+      logging:
+        enabled: true
+        sampleRate: 500000

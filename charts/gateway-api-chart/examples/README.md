@@ -2,6 +2,22 @@
 
 This directory contains example values files demonstrating different deployment scenarios using the gateway-api-chart. Each example showcases specific patterns and use cases.
 
+## Values Structure
+
+Examples are written for **direct/standalone use** and work with `helm template` and `helm install` as-is.
+
+**When used as a dependency chart:** Nest the entire example under `gateway-api-chart:` in your parent chart's values:
+
+```yaml
+# In your parent chart's values.yaml
+gateway-api-chart:
+  service:        # or gateway:, httpRoute:, serviceExport: as in the example
+    - name: my-app-service
+      ...
+```
+
+---
+
 ## Example Files
 
 ### 1. Basic Service Configuration (`01-basic-service.yaml`)
@@ -152,19 +168,13 @@ WAF configuration patterns:
 
 ## Testing Examples
 
-To test any example, use Helm template command:
+Examples work directly with `helm template` and `helm install`:
 
 ```bash
-# Test example 1 (basic service)
+# From the chart directory (charts/gateway-api-chart)
 helm template test-release . -f examples/01-basic-service.yaml
-
-# Test example 2 (service with WAF)
 helm template test-release . -f examples/02-service-with-waf.yaml
-
-# Test example 3 (complete gateway setup)
 helm template test-release . -f examples/03-complete-gateway-setup.yaml
-
-# Test example 4 (multi-cluster)
 helm template test-release . -f examples/04-multi-cluster-serviceexport.yaml
 ```
 

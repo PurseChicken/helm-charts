@@ -8,7 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed `.helmignore` accidentally excluding `templates/`, which caused the chart to render no manifests
+- Restructured examples for standalone/direct use; they now work with `helm template` and `helm install` as-is (when used as a dependency, nest values under `gateway-api-chart:`)
+
 ## [v1.1.6] - 2026-01-23
+
+**⚠️ Do not use:** This release is broken. `.helmignore` excluded `templates/`, so the chart renders no manifests. Use v1.1.7 or later.
 
 ### Added
 
