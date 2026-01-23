@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.1.8] - 2026-01-23
+
 ### Fixed
 
 - Fixed `targetRef` helper outputting `group:` and `kind:` on the same line when both were present, causing YAML parse error: "mapping values are not allowed in this context"
