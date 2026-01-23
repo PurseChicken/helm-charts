@@ -9,12 +9,30 @@ keywords:
   - gateway-api
   - api gateway
   - httproute
+  - gateway
   - serviceexport
   - serviceimport
-  - multi cluster ingress
+  - service
+  - multi-cluster
+  - multi-cluster ingress
+  - GKE
+  - Google Kubernetes Engine
+  - GCP
+  - Google Cloud Platform
   - cloud armor
   - web application firewall
   - WAF
+  - rate limiting
+  - backend policy
+  - gateway policy
+  - health check
+  - session affinity
+  - connection draining
+  - IAP
+  - Identity-Aware Proxy
+  - Config Connector
+  - dependency chart
+  - ingress alternative
   - gateway.networking.k8s.io
 sources:
   - https://github.com/pursechicken/helm-charts

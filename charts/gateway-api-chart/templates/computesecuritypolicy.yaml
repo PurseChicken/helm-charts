@@ -1,6 +1,6 @@
 {{- if .Values.serviceExport }}
 {{- range .Values.serviceExport }}
-{{- $importName := .name }}
+{{- $serviceName := .name }}
 {{- if .backendPolicy }}
 {{- with .backendPolicy }}
 {{- if .securityPolicy }}
@@ -12,106 +12,47 @@ kind: ComputeSecurityPolicy
 metadata:
   annotations:
     cnrm.cloud.google.com/project-id: {{ .project }}
-  name: {{ $importName }}-ca-waf
+  name: {{ $serviceName }}-ca-waf
 spec:
-  resourceID: {{ $importName }}-ca-waf
-  description: {{ .description | default (printf "Cloud Armor WAF policy for %s" $importName) | quote }}
+  resourceID: {{ $serviceName }}-ca-waf
+  description: {{ .description | default (printf "Cloud Armor WAF policy for %s" $serviceName) | quote }}
   adaptiveProtectionConfig:
     layer7DdosDefenseConfig:
       enable: {{ .enableAdaptiveProtection | default "true" }}
   type: "CLOUD_ARMOR"
   rule:
-    {{- /* Default allow rule - lowest priority, matches all traffic */}}
-    - description: "Default allow rule."
-      action: allow
-      preview: false
-      priority: 2147483647
-      match:
-        versionedExpr: SRC_IPS_V1
-        config:
-          srcIpRanges:
-            - '*'
-    {{- /* WAF rules are grouped into "waves" to minimize rule quota usage.
-         Each wave combines multiple WAF rule sets into a single rule using OR operators.
-         This reduces the total number of rules from 12+ to just 3-4 rules. */}}
-    {{- $securityPolicy := . }}
-    {{- /* Wave 1: Core injection attacks (SQLi, XSS, LFI, RCE, RFI) - Priority 5 (highest) */}}
-    {{- $wave1Enabled := or (and .sqliConfig (ne .sqliConfig.enabled false)) (and .xssConfig (ne .xssConfig.enabled false)) (and .lfiConfig (ne .lfiConfig.enabled false)) (and .rceConfig (ne .rceConfig.enabled false)) (and .rfiConfig (ne .rfiConfig.enabled false)) }}
-    {{- if $wave1Enabled }}
-    - description: "waf-rules-wave-1"
-      action: {{ .action | default "deny(403)" }}
-      preview: {{ .preview | default false }}
-      priority: 5
-      match:
-        expr:
-          expression: "{{- if and .sqliConfig (ne .sqliConfig.enabled false) -}}{{ with .sqliConfig }}{{ include "gateway-api-chart.wafRuleExpression" (dict "ruleSet" "sqli-v33-stable" "config" .) }}{{ end }}{{- if or (and ($securityPolicy.xssConfig) (ne $securityPolicy.xssConfig.enabled false)) (and ($securityPolicy.lfiConfig) (ne $securityPolicy.lfiConfig.enabled false)) (and ($securityPolicy.rceConfig) (ne $securityPolicy.rceConfig.enabled false)) (and ($securityPolicy.rfiConfig) (ne $securityPolicy.rfiConfig.enabled false)) }} || {{ end -}}{{ end -}}{{- if and .xssConfig (ne .xssConfig.enabled false) -}}{{ with .xssConfig }}{{ include "gateway-api-chart.wafRuleExpression" (dict "ruleSet" "xss-v33-stable" "config" .) }}{{ end }}{{- if or (and ($securityPolicy.lfiConfig) (ne $securityPolicy.lfiConfig.enabled false)) (and ($securityPolicy.rceConfig) (ne $securityPolicy.rceConfig.enabled false)) (and ($securityPolicy.rfiConfig) (ne $securityPolicy.rfiConfig.enabled false)) }} || {{ end -}}{{ end -}}{{- if and .lfiConfig (ne .lfiConfig.enabled false) -}}{{ with .lfiConfig }}{{ include "gateway-api-chart.wafRuleExpression" (dict "ruleSet" "lfi-v33-stable" "config" .) }}{{ end }}{{- if or (and ($securityPolicy.rceConfig) (ne $securityPolicy.rceConfig.enabled false)) (and ($securityPolicy.rfiConfig) (ne $securityPolicy.rfiConfig.enabled false)) }} || {{ end -}}{{ end -}}{{- if and .rceConfig (ne .rceConfig.enabled false) -}}{{ with .rceConfig }}{{ include "gateway-api-chart.wafRuleExpression" (dict "ruleSet" "rce-v33-stable" "config" .) }}{{ end }}{{- if and ($securityPolicy.rfiConfig) (ne $securityPolicy.rfiConfig.enabled false) }} || {{ end -}}{{ end -}}{{- if and .rfiConfig (ne .rfiConfig.enabled false) -}}{{ with .rfiConfig }}{{ include "gateway-api-chart.wafRuleExpression" (dict "ruleSet" "rfi-v33-stable" "config" .) }}{{ end }}{{- end -}}"
-    {{- end }}
-    {{- /* Wave 2: Protocol and method-based attacks - Priority 10 */}}
-    {{- $wave2Enabled := or (and .methodConfig (ne .methodConfig.enabled false)) (and .scannerConfig (ne .scannerConfig.enabled false)) (and .protocolConfig (ne .protocolConfig.enabled false)) (and .phpConfig (ne .phpConfig.enabled false)) (and .sessionConfig (ne .sessionConfig.enabled false)) }}
-    {{- if $wave2Enabled }}
-    - description: "waf-rules-wave-2"
-      action: {{ .action | default "deny(403)" }}
-      preview: {{ .preview | default false }}
-      priority: 10
-      match:
-        expr:
-          expression: "{{- if and .methodConfig (ne .methodConfig.enabled false) -}}{{ with .methodConfig }}{{ include "gateway-api-chart.wafRuleExpression" (dict "ruleSet" "methodenforcement-v33-stable" "config" .) }}{{ end }}{{- if or (and ($securityPolicy.scannerConfig) (ne $securityPolicy.scannerConfig.enabled false)) (and ($securityPolicy.protocolConfig) (ne $securityPolicy.protocolConfig.enabled false)) (and ($securityPolicy.phpConfig) (ne $securityPolicy.phpConfig.enabled false)) (and ($securityPolicy.sessionConfig) (ne $securityPolicy.sessionConfig.enabled false)) }} || {{ end -}}{{ end -}}{{- if and .scannerConfig (ne .scannerConfig.enabled false) -}}{{ with .scannerConfig }}{{ include "gateway-api-chart.wafRuleExpression" (dict "ruleSet" "scannerdetection-v33-stable" "config" .) }}{{ end }}{{- if or (and ($securityPolicy.protocolConfig) (ne $securityPolicy.protocolConfig.enabled false)) (and ($securityPolicy.phpConfig) (ne $securityPolicy.phpConfig.enabled false)) (and ($securityPolicy.sessionConfig) (ne $securityPolicy.sessionConfig.enabled false)) }} || {{ end -}}{{ end -}}{{- if and .protocolConfig (ne .protocolConfig.enabled false) -}}{{ with .protocolConfig }}{{ include "gateway-api-chart.wafRuleExpression" (dict "ruleSet" "protocolattack-v33-stable" "config" .) }}{{ end }}{{- if or (and ($securityPolicy.phpConfig) (ne $securityPolicy.phpConfig.enabled false)) (and ($securityPolicy.sessionConfig) (ne $securityPolicy.sessionConfig.enabled false)) }} || {{ end -}}{{ end -}}{{- if and .phpConfig (ne .phpConfig.enabled false) -}}{{ with .phpConfig }}{{ include "gateway-api-chart.wafRuleExpression" (dict "ruleSet" "php-v33-stable" "config" .) }}{{ end }}{{- if and ($securityPolicy.sessionConfig) (ne $securityPolicy.sessionConfig.enabled false) }} || {{ end -}}{{ end -}}{{- if and .sessionConfig (ne .sessionConfig.enabled false) -}}{{ with .sessionConfig }}{{ include "gateway-api-chart.wafRuleExpression" (dict "ruleSet" "sessionfixation-v33-stable" "config" .) }}{{ end }}{{- end -}}"
-    {{- end }}
-    {{- /* Wave 3: Language-specific and vulnerability-based attacks - Priority 15 (lowest) */}}
-    {{- $wave3Enabled := or (and .javaConfig (ne .javaConfig.enabled false)) (and .nodejsConfig (ne .nodejsConfig.enabled false)) (and .cveConfig (ne .cveConfig.enabled false)) (and .jsonsqliConfig (ne .jsonsqliConfig.enabled false)) }}
-    {{- if $wave3Enabled }}
-    - description: "waf-rules-wave-3"
-      action: {{ .action | default "deny(403)" }}
-      preview: {{ .preview | default false }}
-      priority: 15
-      match:
-        expr:
-          expression: "{{- if and .javaConfig (ne .javaConfig.enabled false) -}}{{ with .javaConfig }}{{ include "gateway-api-chart.wafRuleExpression" (dict "ruleSet" "java-v33-stable" "config" .) }}{{ end }}{{- if or (and ($securityPolicy.nodejsConfig) (ne $securityPolicy.nodejsConfig.enabled false)) (and ($securityPolicy.cveConfig) (ne $securityPolicy.cveConfig.enabled false)) (and ($securityPolicy.jsonsqliConfig) (ne $securityPolicy.jsonsqliConfig.enabled false)) }} || {{ end -}}{{ end -}}{{- if and .nodejsConfig (ne .nodejsConfig.enabled false) -}}{{ with .nodejsConfig }}{{ include "gateway-api-chart.wafRuleExpression" (dict "ruleSet" "nodejs-v33-stable" "config" .) }}{{ end }}{{- if or (and ($securityPolicy.cveConfig) (ne $securityPolicy.cveConfig.enabled false)) (and ($securityPolicy.jsonsqliConfig) (ne $securityPolicy.jsonsqliConfig.enabled false)) }} || {{ end -}}{{ end -}}{{- if and .cveConfig (ne .cveConfig.enabled false) -}}{{ with .cveConfig }}{{ include "gateway-api-chart.wafRuleExpression" (dict "ruleSet" "cve-canary" "config" .) }}{{ end }}{{- if and ($securityPolicy.jsonsqliConfig) (ne $securityPolicy.jsonsqliConfig.enabled false) }} || {{ end -}}{{ end -}}{{- if and .jsonsqliConfig (ne .jsonsqliConfig.enabled false) -}}{{ with .jsonsqliConfig }}{{ include "gateway-api-chart.wafRuleExpression" (dict "ruleSet" "json-sqli-canary" "config" .) }}{{ end }}{{- end -}}"
-    {{- end }}
-    {{- if .rateLimitConfig }}
-    {{- with .rateLimitConfig }}
-    - description: "default-rate-limiting"
-      action: {{ .action | quote }}
-      preview: {{ .preview | default false }}
-      priority: 2147483646
-      rateLimitOptions:
-        {{- if eq .action "rate_based_ban" }}
-        banDurationSec: {{ .banDurationSec }}
-        banThreshold:
-          count: {{ .requests }}
-          intervalSec: {{ .interval }}
-        {{- end }}
-        conformAction: allow
-        {{- if .enforceOnKeyConfigs }}
-        enforceOnKey: ""
-        enforceOnKeyConfigs:
-          {{- range .enforceOnKeyConfigs }}
-          - enforceOnKeyType: {{ .keyType }}
-            {{- if or (eq .keyType "HTTP_HEADER") (eq .keyType "HTTP_COOKIE") }}
-            enforceOnKeyName: {{ .keyName }}
-            {{- end }}
-          {{- end }}
-        {{- end }}
-        {{- if not .enforceOnKeyConfigs }}
-        enforceOnKey: {{ .enforceOnKey | default "ALL" }}
-        {{- if and .enforceOnKeyName (or (eq .enforceOnKey "HTTP_HEADER") (eq .enforceOnKey "HTTP_COOKIE")) }}
-        enforceOnKeyName: {{ .enforceOnKeyName }}
-        {{- end }}
-        {{- end }}
-        exceedAction: {{ .exceedAction }}
-        rateLimitThreshold:
-          count: {{ .requests }}
-          intervalSec: {{ .interval }}
-      match:
-        versionedExpr: SRC_IPS_V1
-        config:
-          srcIpRanges:
-            - "*"
-    {{- end }}
-    {{- end }}
-    {{- if .customRules }}
-    {{- toYaml .customRules | nindent 4 }}
-    {{- end }}
+    {{- include "gateway-api-chart.securityPolicyRules" (dict "securityPolicy" .) | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if .Values.service }}
+{{- range .Values.service }}
+{{- $serviceName := .name }}
+{{- if .backendPolicy }}
+{{- with .backendPolicy }}
+{{- if .securityPolicy }}
+{{- if .securityPolicy.enabled }}
+{{- with .securityPolicy }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeSecurityPolicy
+metadata:
+  annotations:
+    cnrm.cloud.google.com/project-id: {{ .project }}
+  name: {{ $serviceName }}-ca-waf
+spec:
+  resourceID: {{ $serviceName }}-ca-waf
+  description: {{ .description | default (printf "Cloud Armor WAF policy for %s" $serviceName) | quote }}
+  adaptiveProtectionConfig:
+    layer7DdosDefenseConfig:
+      enable: {{ .enableAdaptiveProtection | default "true" }}
+  type: "CLOUD_ARMOR"
+  rule:
+    {{- include "gateway-api-chart.securityPolicyRules" (dict "securityPolicy" .) | nindent 4 }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

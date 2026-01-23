@@ -1,0 +1,94 @@
+# ============================================================================
+# Example 4: Multi-Cluster ServiceExport Configuration
+# ============================================================================
+# This example demonstrates ServiceExport for multi-cluster scenarios.
+#
+# ⚠️  USE THIS ONLY FOR MULTI-CLUSTER SCENARIOS
+# Use this when you need to export a service for cross-cluster access
+# via ServiceImport. For single-cluster deployments, use the "service"
+# section instead (see examples 01-03).
+#
+# Key Features:
+# - ServiceExport for multi-cluster access
+# - ServiceImport target (group: net.gke.io, kind: ServiceImport)
+# - Health checks and backend policies
+# - Cloud Armor WAF configuration
+# ============================================================================
+
+gateway-api-chart:
+  # For multi-cluster scenarios only (ServiceImport)
+  serviceExport:
+    - name: my-multi-cluster-service
+      # Optional: Override targetRef if ServiceImport is in different namespace
+      # targetRef:
+      #   namespace: other-namespace
+      
+      healthCheck:
+        type: HTTP
+        httpHealthCheck:
+          requestPath: "/healthz"
+      
+      backendPolicy:
+        timeoutSec: 40
+        sessionAffinity:
+          type: GENERATED_COOKIE
+          cookieTtlSec: 50
+        connectionDraining:
+          timeoutSec: 60
+        logging:
+          enabled: true
+          sampleRate: 500000
+        
+        securityPolicy:
+          enabled: true
+          preview: false
+          project: my-gcp-project
+          
+          # Wave 1: Core injection attacks
+          sqliConfig:
+            sensitivity: 1
+            optOutRules:
+              - "owasp-crs-v030301-id942190-sqli"
+          xssConfig:
+            enabled: true
+          lfiConfig:
+            enabled: true
+          rceConfig:
+            enabled: true
+          rfiConfig:
+            enabled: true
+          
+          # Wave 2: Protocol and method-based attacks
+          methodConfig:
+            enabled: true
+          scannerConfig:
+            enabled: true
+          protocolConfig:
+            enabled: true
+          phpConfig:
+            enabled: true
+          sessionConfig:
+            enabled: true
+          
+          # Wave 3: Language-specific and vulnerability-based attacks
+          javaConfig:
+            enabled: true
+          nodejsConfig:
+            enabled: true
+          cveConfig:
+            enabled: true
+          jsonsqliConfig:
+            enabled: true
+          
+          # Rate limiting
+          rateLimitConfig:
+            action: "rate_based_ban"
+            preview: false
+            banDurationSec: 60
+            exceedAction: deny(429)
+            requests: 500
+            interval: 60
+            enforceOnKeyConfigs:
+              - keyType: IP
+              - keyType: HTTP_HEADER
+                keyName: "User-Agent"

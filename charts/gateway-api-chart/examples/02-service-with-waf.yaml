@@ -1,0 +1,85 @@
+# ============================================================================
+# Example 2: Service with Cloud Armor WAF
+# ============================================================================
+# This example demonstrates configuring a service with Cloud Armor WAF
+# security policies, including WAF rules and rate limiting.
+#
+# Use Case: Production services requiring web application firewall protection
+#
+# Key Features:
+# - Cloud Armor WAF security policy
+# - WAF rule waves (SQLi, XSS, etc.)
+# - Rate limiting configuration
+# - Custom rule opt-outs
+# ============================================================================
+
+gateway-api-chart:
+  service:
+    - name: api-service
+      healthCheck:
+        type: HTTP
+        httpHealthCheck:
+          requestPath: "/health"
+      
+      backendPolicy:
+        timeoutSec: 40
+        logging:
+          enabled: true
+          sampleRate: 500000
+        
+        # Cloud Armor WAF Security Policy
+        securityPolicy:
+          enabled: true
+          preview: false
+          project: my-gcp-project
+          
+          # Wave 1: Core injection attacks
+          sqliConfig:
+            sensitivity: 1
+            optOutRules:
+              - "owasp-crs-v030301-id942190-sqli"
+              - "owasp-crs-v030301-id942270-sqli"
+          xssConfig:
+            optOutRules:
+              - "owasp-crs-v030301-id941380-xss"
+          lfiConfig:
+            enabled: true
+          rceConfig:
+            optOutRules:
+              - "owasp-crs-v030301-id932200-rce"
+          rfiConfig:
+            enabled: true
+          
+          # Wave 2: Protocol and method-based attacks
+          methodConfig:
+            optOutRules:
+              - "owasp-crs-v030301-id911100-methodenforcement"
+          scannerConfig:
+            enabled: true
+          protocolConfig:
+            enabled: true
+          phpConfig:
+            enabled: true
+          sessionConfig:
+            enabled: true
+          
+          # Wave 3: Language-specific and vulnerability-based attacks
+          javaConfig:
+            enabled: true
+          nodejsConfig:
+            enabled: true
+          cveConfig:
+            enabled: true
+          
+          # Rate limiting configuration
+          rateLimitConfig:
+            action: "rate_based_ban"
+            preview: false
+            banDurationSec: 60
+            exceedAction: deny(429)
+            requests: 500
+            interval: 60
+            enforceOnKeyConfigs:
+              - keyType: IP
+              - keyType: HTTP_HEADER
+                keyName: "User-Agent"

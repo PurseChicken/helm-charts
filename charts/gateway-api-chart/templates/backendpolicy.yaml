@@ -1,49 +1,53 @@
 {{- if .Values.serviceExport }}
 {{- range .Values.serviceExport }}
-{{- $importName := .name }}
+{{- $serviceName := .name }}
+{{- $targetGroup := "net.gke.io" }}
+{{- $targetKind := "ServiceImport" }}
+{{- $targetNamespace := "" }}
+{{- if .targetRef }}
+{{- $targetGroup = .targetRef.group | default "net.gke.io" }}
+{{- $targetKind = .targetRef.kind | default "ServiceImport" }}
+{{- $targetNamespace = .targetRef.namespace | default "" }}
+{{- end }}
 {{- if .backendPolicy }}
 {{- with .backendPolicy }}
 ---
 apiVersion: networking.gke.io/v1
 kind: GCPBackendPolicy
 metadata:
-  name: {{ $importName }}-backend-policy
+  name: {{ $serviceName }}-backend-policy
 spec:
   default:
-    {{- if .timeoutSec }}
-    timeoutSec: {{ .timeoutSec }}
-    {{- end }}
-    {{- if .sessionAffinity }}
-    {{- with .sessionAffinity }}
-    sessionAffinity:
-      type: {{ .type }}
-      {{- if eq .type "GENERATED_COOKIE" }}
-      cookieTtlSec: {{ .cookieTtlSec }}
-      {{- end }}
-    {{- end }}
-    {{- end }}
-    {{- if .connectionDraining }}
-    {{- with .connectionDraining }}
-    connectionDraining:
-      drainingTimeoutSec: {{ .timeoutSec }}
-    {{- end }}
-    {{- end }}
-    {{- if .logging }}
-    {{- with .logging }}
-    logging:
-      enabled: {{ .enabled }}
-      sampleRate: {{ .sampleRate }}
-    {{- end }}
-    {{- end }}
-    {{- if .securityPolicy }}
-    {{- with .securityPolicy.enabled }}
-    securityPolicy: {{ $importName }}-ca-waf
-    {{- end }}
-    {{- end }}
+    {{- include "gateway-api-chart.backendPolicySpec" (dict "backendPolicy" . "serviceName" $serviceName) | nindent 4 }}
   targetRef:
-    group: net.gke.io
-    kind: ServiceImport
-    name: {{ $importName }}
+    {{- include "gateway-api-chart.targetRef" (dict "group" $targetGroup "kind" $targetKind "name" $serviceName "namespace" $targetNamespace) | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if .Values.service }}
+{{- range .Values.service }}
+{{- $serviceName := .name }}
+{{- $targetGroup := "" }}
+{{- $targetKind := "Service" }}
+{{- $targetNamespace := "" }}
+{{- if .targetRef }}
+{{- $targetGroup = .targetRef.group | default "" }}
+{{- $targetKind = .targetRef.kind | default "Service" }}
+{{- $targetNamespace = .targetRef.namespace | default "" }}
+{{- end }}
+{{- if .backendPolicy }}
+{{- with .backendPolicy }}
+---
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: {{ $serviceName }}-backend-policy
+spec:
+  default:
+    {{- include "gateway-api-chart.backendPolicySpec" (dict "backendPolicy" . "serviceName" $serviceName) | nindent 4 }}
+  targetRef:
+    {{- include "gateway-api-chart.targetRef" (dict "group" $targetGroup "kind" $targetKind "name" $serviceName "namespace" $targetNamespace) | nindent 4 }}
 {{- end }}
 {{- end }}
 {{- end }}

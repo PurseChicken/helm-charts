@@ -8,6 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Added support for regular Kubernetes Services (via `service` section) in addition to ServiceExport, enabling dependency chart use cases for exposing standard Kubernetes applications via Gateway API
+- Added examples directory with comprehensive example configurations for common use cases (basic service, WAF configuration, complete gateway setup, multi-cluster scenarios)
+- Added support for advanced GCPBackendPolicy features: optional logging fields (`optionalMode`, `optionalFields`), traffic-based autoscaling (`maxRatePerEndpoint`), backend selection with custom metrics (`backends`), and Identity-Aware Proxy (`iap`) configuration
+
+### Changed
+
+- Refactored templates to use helper functions, significantly reducing code duplication and improving maintainability (backendpolicy.yaml, healthcheck.yaml, computesecuritypolicy.yaml)
+- Enhanced Chart.yaml keywords for better discoverability (GKE, GCP, policy types, features)
+
 ## [v1.1.5] - 2026-01-23
 
 ### Added

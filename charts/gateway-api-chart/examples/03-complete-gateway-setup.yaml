@@ -1,0 +1,78 @@
+# ============================================================================
+# Example 3: Complete Gateway Setup with HTTPRoute
+# ============================================================================
+# This example demonstrates a complete Gateway API setup including:
+# Gateway, HTTPRoute, and Service configuration.
+#
+# Use Case: Full Gateway API deployment with TLS termination and routing
+#
+# Key Features:
+# - Gateway with HTTP and HTTPS listeners
+# - HTTPRoute with redirects and filters
+# - Service with health checks and backend policies
+# - Gateway policy with SSL policy
+# ============================================================================
+
+gateway-api-chart:
+  gateway:
+    - name: my-app-gateway
+      issuer:
+        type: cluster-issuer
+        name: my-cluster-issuer
+      gatewayClassName: gke-l7-global-external-managed-mc
+      listeners:
+        - name: http
+          hostname: myapp.example.com
+          port: 80
+          protocol: HTTP
+          allowedRoutes:
+            kinds:
+              - kind: HTTPRoute
+        - name: https
+          hostname: myapp.example.com
+          port: 443
+          protocol: HTTPS
+          allowedRoutes:
+            kinds:
+              - kind: HTTPRoute
+          tls:
+            mode: Terminate
+            certificateRefs:
+              - name: my-app-cert
+      gatewayPolicy:
+        allowGlobalAccess: false
+        sslPolicy: modern-policy
+
+  httpRoute:
+    - name: my-app-route
+      gatewayName: my-app-gateway
+      # Automatically redirect HTTP to HTTPS
+      redirectHTTP:
+        httpListenerName: http
+      rules:
+        - backendRefs:
+            - group: ""  # Empty group means core v1 API
+              kind: Service
+              name: my-app-service
+              port: 80
+          filters:
+            - type: ResponseHeaderModifier
+              responseHeaderModifier:
+                add:
+                  - name: Strict-Transport-Security
+                    value: "max-age=31536000; includeSubDomains"
+
+  service:
+    - name: my-app-service
+      healthCheck:
+        type: HTTP
+        httpHealthCheck:
+          requestPath: "/healthz"
+      backendPolicy:
+        timeoutSec: 30
+        sessionAffinity:
+          type: GENERATED_COOKIE
+          cookieTtlSec: 3600
+        logging:
+          enabled: true
+          sampleRate: 500000

@@ -2,12 +2,16 @@
 {{- range .Values.gateway }}
 {{- if .gatewayPolicy }}
 {{- $gatewayName := .name }}
+{{- $gatewayNamespace := .namespace }}
 {{- with .gatewayPolicy }}
 ---
 apiVersion: networking.gke.io/v1
 kind: GCPGatewayPolicy
 metadata:
   name: {{ $gatewayName }}-gateway-policy
+  {{- if $gatewayNamespace }}
+  namespace: {{ $gatewayNamespace }}
+  {{- end }}
 spec:
   default:
     {{- if .allowGlobalAccess }}
@@ -15,6 +19,9 @@ spec:
     {{- end }}
     {{- if .sslPolicy }}
     sslPolicy: {{ .sslPolicy }}
+    {{- end }}
+    {{- if .region }}
+    region: {{ .region }}
     {{- end }}
   targetRef:
     group: gateway.networking.k8s.io

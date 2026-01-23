@@ -1,11 +1,35 @@
-# # Deploy a Gateway
+# Gateway API Chart - Values Configuration
+#
+# This chart deploys Gateway API resources for GKE, including:
+# - Gateway and HTTPRoute resources
+# - ServiceExport (multi-cluster) or Service (single-cluster) configurations
+# - GCP-specific policies (Gateway Policy, Backend Policy, Health Check Policy)
+# - Cloud Armor WAF security policies (requires Config Connector)
+#
+# PRIMARY USE CASE: This chart is designed as a dependency chart for exposing
+# regular Kubernetes Services via Gateway API instead of Ingress.
+#
+# For detailed documentation, see: https://github.com/PurseChicken/helm-charts/tree/main/charts/gateway-api-chart
+#
+# ==============================================================================
+# GATEWAY CONFIGURATION
+# ==============================================================================
+# Deploy a Gateway
 # gateway:
 #   - name: my-gw
+#     # Optional: Namespace for the Gateway (defaults to Release.Namespace if not specified)
+#     # For dependency charts, typically leave this unset to deploy to parent chart's namespace
+#     # For shared Gateways, you might use a dedicated namespace like "gateway-system"
+#     # namespace: gateway-system
 #     # If you use cert-manager, you can specify the issuer type and name here
 #     issuer:
 #       type: cluster-issuer
 #       name: my-cluster-issuer
-#     # Specify the gateway class (GKE: https://cloud.google.com/kubernetes-engine/docs/how-to/gatewayclass-capabilities)
+#     # REQUIRED: Gateway class name
+#     # GKE options: https://cloud.google.com/kubernetes-engine/docs/how-to/gatewayclass-capabilities
+#     # Common classes:
+#     #   - gke-l7-global-external-managed-mc (Global external, multi-cluster)
+#     #   - gke-l7-regional-external-managed-mc (Regional external, multi-cluster)
 #     gatewayClassName: gke-l7-global-external-managed-mc
 #     listeners:
 #       # toYaml
@@ -20,14 +44,26 @@
 #           mode: Terminate
 #           certificateRefs:
 #             - name: my-cert
-#     # Specify a Gateway Policy !Uses GCPGatewayPolicy!
+#     # Configure Gateway Policy (GCPGatewayPolicy resource)
+#     # ⚠️  GKE-SPECIFIC: GCPGatewayPolicy MUST be in the same namespace as the Gateway
+#     # If Gateway has a namespace specified, the policy will be deployed to that namespace
+#     # All fields are optional
 #     gatewayPolicy:
-#       # Allow Global Access? If not specified, it defaults to false https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_global_access
+#       # Allow global access to the Gateway (default: false)
+#       # See: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_global_access
 #       allowGlobalAccess: false
-#       # This Policy must already exist to be able to apply to the Gateway in question. https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_ssl_policies
-#       sslPolicy: my-modern-policy
+#       # SSL Policy name (must already exist in GCP)
+#       # See: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_ssl_policies
+#       # sslPolicy: my-modern-policy
+#       # Region for multi-cluster regional Gateways
+#       # Requires: GKE 1.30.3+
+#       # If not specified, defaults to the config cluster's region
+#       # region: us-central1
 
-# # Deploy a httpRoute and attach to a gateway.
+# ==============================================================================
+# HTTP ROUTE CONFIGURATION
+# ==============================================================================
+# Deploy an HTTPRoute and attach to a gateway.
 # httpRoute:
 #   - name: my-route
 #     # What is the name of the Gateway this httpRoute should attach to?
@@ -59,12 +95,35 @@
 #           name: my-service
 #           port: 8080
 
-# # Deploy serviceExport for Multi-Cluster-Ingress
+# ==============================================================================
+# SERVICE EXPORT CONFIGURATION (Multi-Cluster Only)
+# ==============================================================================
+# Deploy ServiceExport for Multi-Cluster-Ingress (ServiceImport)
+#
+# ⚠️  USE THIS ONLY FOR MULTI-CLUSTER SCENARIOS
+# Use this section ONLY when you need to export a service for cross-cluster access
+# via ServiceImport. For single-cluster deployments with regular Kubernetes Services,
+# use the "service" section instead (see below).
+#
+# GKE-SPECIFIC REQUIREMENTS:
+# - BackendPolicy and HealthCheckPolicy MUST be in the same namespace as the ServiceImport
+# - For dependency charts, resources deploy to Release.Namespace (parent chart's namespace)
+# - ServiceImport resources are created by GKE when ServiceExport is deployed
 # serviceExport:
 #   # Name should match the service name that you want to "export". For example, your service name might be my-service. Thats what you want to specify here.
 #   - name: my-service
-#     # Configure your own health checks on this endpoint? See: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_health_check
-#     # The name of this healthcheck policy is derived from the name of the service export. (e.g. my-service-healthcheck)
+#     # Note: Resources deploy to Release.Namespace (the namespace where parent chart is installed)
+#     # Optional: Override targetRef for BackendPolicy and HealthCheckPolicy
+#     # Defaults to group: "net.gke.io", kind: "ServiceImport" if not specified
+#     # Only specify namespace in targetRef if the ServiceImport is in a different namespace
+#     # targetRef:
+#     #   group: net.gke.io  # Optional, defaults to "net.gke.io"
+#     #   kind: ServiceImport  # Optional, defaults to "ServiceImport"
+#     #   namespace: other-namespace  # Only specify if ServiceImport is in different namespace
+#     # Configure custom health checks for this service endpoint
+#     # See: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_health_check
+#     # The healthcheck policy name is derived from the service name (e.g., my-service-healthcheck)
+#     # All fields below are optional and have defaults as shown
 #     healthCheck:
 #       # Optionally configure the below defaults. If not specified, the default values listed will be used.
 #       checkIntervalSec: 15
@@ -72,15 +131,23 @@
 #       healthyThreshold: 1
 #       unhealthyThreshold: 2
 #       logConfigEnabled: true
-#       # What type of healthcheck should it be?
+#       # REQUIRED: Health check type
+#       # Options: HTTP, HTTPS, TCP, GRPC, HTTP2
 #       type: HTTP
-#       # valid keys here are httpHealthCheck, httpsHealthCheck, grpcHealthCheck and http2HealthCheck using healthcheck type HTTP, HTTPS and HTTP2 respectively.
+#       # Configure the health check based on type:
+#       # - HTTP: use httpHealthCheck
+#       # - HTTPS: use httpsHealthCheck
+#       # - TCP: use tcpHealthCheck (or leave empty for default)
+#       # - GRPC: use grpcHealthCheck
+#       # - HTTP2: use http2HealthCheck
 #       httpHealthCheck:
 #         # toYaml
 #         requestPath: "/healthz"
-#     # Specify a backend Policy !Uses GCPBackendPolicy!
+#     # Configure backend policy settings (GCPBackendPolicy resource)
+#     # All fields are optional - only specify what you need to customize
 #     backendPolicy:
-#       # Timeout: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_timeout
+#       # Request timeout in seconds
+#       # See: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#configure_timeout
 #       timeoutSec: 40
 #       # Session Affinity: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#session_affinity
 #       sessionAffinity:
@@ -95,9 +162,41 @@
 #       logging:
 #         enabled: true
 #         sampleRate: 500000
-#       # Configure WAF (Cloud Armor) Security Policy? !Requires Config Connector!
+#         # Optional: Configure optional fields to log (GKE-specific)
+#         # optionalMode: CUSTOM  # CUSTOM or EXCLUDE_ALL_OPTIONAL
+#         # optionalFields:
+#         #   - tls.cipher
+#         #   - orca_load_report.cpu_utilization
+#       # Traffic-based autoscaling: Maximum requests per second per endpoint
+#       # Requires: GKE 1.31.1+
+#       # See: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#traffic-based-autoscaling
+#       # maxRatePerEndpoint: 10
+#       # Backend selection with custom metrics
+#       # Requires: GKE 1.33+
+#       # See: https://cloud.google.com/kubernetes-engine/docs/how-to/configure-gateway-resources#backend-selection
+#       # backends:
+#       #   - location: "*"
+#       #     balancingMode: RATE
+#       #     maxRatePerEndpoint: 9000
+#       #   - location: us-central1-a
+#       #     balancingMode: CUSTOM_METRICS
+#       #     customMetrics:
+#       #       - name: gpu-load
+#       #         maxUtilization: 100
+#       #         dryRun: false
+#       # Identity-Aware Proxy (IAP) configuration
+#       # See: https://cloud.google.com/iap/docs/enabling-kubernetes-howto
+#       # iap:
+#       #   enabled: true
+#       #   clientID: YOUR_CLIENT_ID
+#       #   oauth2ClientSecret:
+#       #     name: iap-secret-name
+#       # Configure WAF (Cloud Armor) Security Policy
+#       # ⚠️  REQUIRES: Config Connector add-on enabled on your GKE cluster
+#       # See: https://cloud.google.com/config-connector/docs/overview
 #       securityPolicy:
-#         # Enable this Policy? (Can disable but leave all the config in place if needed by setting to false)
+#         # Enable/disable this security policy
+#         # Set to false to disable without removing configuration (useful for testing)
 #         enabled: true
 #         # Optional description for the security policy (max 2048 characters)
 #         # If not specified, defaults to "Cloud Armor WAF policy for <service-name>"
@@ -109,7 +208,7 @@
 #         # Should the rules be in preview mode? Meaning that they log but don't take action? Setting preview to false puts all rules in enforcement mode.
 #         # https://cloud.google.com/armor/docs/security-policy-overview#preview_mode
 #         preview: false
-#         # Must specify the GCP project ID:
+#         # REQUIRED: GCP project ID where the security policy will be created
 #         project: my-gcp-project
 #         # WAF Rules are grouped into "waves" to minimize rule quota usage.
 #         # Each wave combines multiple WAF rule sets into a single rule using OR operators.
@@ -192,19 +291,22 @@
 #           requests: 100
 #           # Time interval in seconds
 #           interval: 60
-#           # Use only one of enforceOnKey or enforceOnKeyConfigs
-#           # Optional. Define which key(s) you want to use for rate limiting. Defaults to ALL
+#           # Use only one of enforceOnKey or enforceOnKeyConfigs (not both)
+#           # Optional. Define which key(s) you want to use for rate limiting. Defaults to "ALL"
 #           # See: https://cloud.google.com/armor/docs/rate-limiting-overview#identifying_clients_for_rate_limiting
-#           # enforceOnKey: "XFF_IP"
-#           # Optional. Specify enforceOnKeyConfigs list.
-#           # Note: When using enforceOnKeyConfigs, enforceOnKey must be empty string (handled automatically)
+#           # 
+#           # Option 1: Simple enforceOnKey (single key)
+#           # enforceOnKey: "XFF_IP"  # Options: ALL, IP, XFF_IP, HTTP_HEADER, HTTP_COOKIE
+#           # enforceOnKeyName: "MY_COOKIE"  # Required when using HTTP_HEADER or HTTP_COOKIE
+#           #
+#           # Option 2: Multiple keys using enforceOnKeyConfigs (GKE 1.30+)
+#           # Note: When using enforceOnKeyConfigs, enforceOnKey must be empty (handled automatically)
 #           # enforceOnKeyConfigs:
 #           #   - keyType: "IP"
 #           #   - keyType: "HTTP_COOKIE"
-#           #     # Required when using keyType HTTP_HEADER or HTTP_COOKIE:
-#           #     keyName: "HTTP_COOKIE_NAME"
-#           # Required when using enforceOnKey HTTP_HEADER or HTTP_COOKIE:
-#           # enforceOnKeyName: "MY_COOKIE"
+#           #     keyName: "SESSION_ID"  # Required when keyType is HTTP_HEADER or HTTP_COOKIE
+#           #   - keyType: "HTTP_HEADER"
+#           #     keyName: "X-Forwarded-For"
 #         # Custom Rules. This can be any rule(s) you want to create yourself (passed through as-is):
 #         customRules:
 #           # toYaml
@@ -216,3 +318,76 @@
 #               expr:
 #                 # Specify the expression. Here are some examples: https://cloud.google.com/armor/docs/rules-language-reference#expression-examples
 #                 expression: "inIpRange(origin.ip, '198.51.100.0/24')"
+
+# ==============================================================================
+# SERVICE CONFIGURATION (Primary Use Case - Single Cluster)
+# ==============================================================================
+# Deploy backend policies for regular Kubernetes Services
+#
+# ✅ PRIMARY USE CASE: This is the recommended section for dependency charts.
+# Use this when deploying as a dependency chart where you have a regular Kubernetes
+# Service and want to expose it via Gateway API instead of Ingress.
+#
+# Example: Exposing argo-cd, prometheus, or any standard Kubernetes application
+# that only supports Ingress - include this chart as a dependency to use Gateway API.
+#
+# GKE-SPECIFIC REQUIREMENTS:
+# - BackendPolicy and HealthCheckPolicy MUST be in the same namespace as the Service
+# - For dependency charts, resources deploy to Release.Namespace (parent chart's namespace)
+# - The Service itself must already exist (this chart only creates policies, not the Service)
+# service:
+#   - name: my-service
+#     # Note: Resources deploy to Release.Namespace (the namespace where parent chart is installed)
+#     # Optional: Override targetRef for BackendPolicy and HealthCheckPolicy
+#     # Defaults to group: "" (empty, which means core v1), kind: "Service" if not specified
+#     # Only specify namespace in targetRef if the Service is in a different namespace
+#     # targetRef:
+#     #   group: ""  # Optional, defaults to "" (core v1 API)
+#     #   kind: Service  # Optional, defaults to "Service"
+#     #   namespace: other-namespace  # Only specify if Service is in different namespace
+#     # Configure custom health checks for this service endpoint
+#     # See serviceExport.healthCheck section above for detailed documentation
+#     # All fields are optional with defaults: checkIntervalSec=15, timeoutSec=15, etc.
+#     healthCheck:
+#       type: HTTP  # Options: HTTP, HTTPS, TCP, GRPC, HTTP2
+#       httpHealthCheck:
+#         requestPath: "/healthz"
+#     # Configure backend policy settings (GCPBackendPolicy resource)
+#     # See serviceExport.backendPolicy section above for detailed documentation
+#     # All fields are optional - only specify what you need to customize
+#     backendPolicy:
+#     #   timeoutSec: 40
+#     #   sessionAffinity:
+#     #     type: GENERATED_COOKIE
+#     #     cookieTtlSec: 50
+#     #   connectionDraining:
+#     #     timeoutSec: 60
+#     #   logging:
+#     #     enabled: true
+#     #     sampleRate: 500000
+#     #     # Optional: Configure optional fields to log
+#     #     # optionalMode: CUSTOM
+#     #     # optionalFields:
+#     #     #   - tls.cipher
+#     #   # Traffic-based autoscaling: Maximum requests per second per endpoint (GKE 1.31.1+)
+#     #   # maxRatePerEndpoint: 10
+#     #   # Backend selection with custom metrics (GKE 1.33+)
+#     #   # backends:
+#     #   #   - location: "*"
+#     #   #     balancingMode: RATE
+#     #   #     maxRatePerEndpoint: 9000
+#     #   # Identity-Aware Proxy (IAP) configuration
+#     #   # iap:
+#     #   #   enabled: true
+#     #   #   clientID: YOUR_CLIENT_ID
+#     #   #   oauth2ClientSecret:
+#     #   #     name: iap-secret-name
+#       # Configure WAF (Cloud Armor) Security Policy
+#       # ⚠️  REQUIRES: Config Connector add-on enabled on your GKE cluster
+#       # See serviceExport.backendPolicy.securityPolicy section above for complete documentation
+#       securityPolicy:
+#         enabled: true
+#         project: my-gcp-project  # REQUIRED: GCP project ID
+#         # WAF rule configuration - see serviceExport section for all available options
+#         sqliConfig:
+#           sensitivity: 1
