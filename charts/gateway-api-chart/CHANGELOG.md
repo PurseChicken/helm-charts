@@ -8,7 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed `targetRef` helper outputting `group:` and `kind:` on the same line when both were present, causing YAML parse error: "mapping values are not allowed in this context"
+
 ## [v1.1.7] - 2026-01-23
+
+**⚠️ Do not use:** This release has a `targetRef` helper bug that produces invalid YAML when `group` is set (e.g. serviceExport, or service with targetRef.group), causing "mapping values are not allowed in this context". Use v1.1.8 or later.
 
 ### Fixed
 
@@ -17,7 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [v1.1.6] - 2026-01-23
 
-**⚠️ Do not use:** This release is broken. `.helmignore` excluded `templates/`, so the chart renders no manifests. Use v1.1.7 or later.
+**⚠️ Do not use:** This release is broken. `.helmignore` excluded `templates/`, so the chart renders no manifests. Use v1.1.8 or later.
 
 ### Added
 

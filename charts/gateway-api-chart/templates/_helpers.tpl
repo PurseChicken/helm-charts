@@ -25,12 +25,12 @@ Output: TargetRef YAML block
 {{- $namespace := .namespace | default "" -}}
 {{- if and $group (ne $group "") }}
 group: {{ $group }}
-{{- end -}}
+{{- end }}
 kind: {{ $kind }}
 name: {{ $name }}
 {{- if and $namespace (ne $namespace "") }}
 namespace: {{ $namespace }}
-{{- end -}}
+{{- end }}
 {{- end -}}
 
 {{/*
