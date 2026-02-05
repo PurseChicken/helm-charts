@@ -13,6 +13,9 @@ spec:
       {{- if .gatewayNamespace }}
       namespace: {{ .gatewayNamespace }}
       {{- end }}
+      {{- if .redirectHTTP }}
+      sectionName: https
+      {{- end }}
   rules:
     {{- toYaml .rules | nindent 4 }}
 {{- if .redirectHTTP }}
