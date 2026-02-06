@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- DNS: Records are now nested under each zone (`dns.zone[].record`) instead of a top-level `dns.record` list. The zone reference is derived from the parent zone, so `dnsZone` is no longer required on each record. The previous top-level `dns.record` format (with `dnsZone` on each record) is still supported for backward compatibility.
+
 ## [v1.3.11] - 2026-01-19
 
 ### Added

@@ -559,7 +559,8 @@
 # DNS
 # ============================================================================
 
-# # Create DNS Zones or records in the zone
+# # Create DNS Zones with optional records nested under each zone.
+# # Legacy: top-level dns.record (with dnsZone on each record) is still supported.
 # dns:
 #   zone:
 #     # a dot(.) is automatically appended to the name entered here so no need to add it manually.
@@ -567,32 +568,30 @@
 #       description: "Testing Zone"
 #       visibility: "public"
 #       dnssecConfigState: "on"
-#   record:
-#     # https://cloud.google.com/config-connector/docs/reference/resource-docs/dns/dnsrecordset#spec
-#     # a dot(.) is automatically appended to the name entered here so no need to add it manually.
-#     - name: "myaddress.my.fqdn.com"
-#       type: A
-#       ttl: 300
-#       dnsZone: "my-fqdn-com"
-#       # If computeAddress is populated, the chart automatically creates a ComputeAddress reference
-#       # Use this for static IPs managed by this chart
-#       # Only specify ONE of computeAddress or rrdatas
-#       computeAddress: "my-address"
-#       # Alternatively, use rrdatas for static IPs or external addresses
-#       # rrdatas:
-#       #   - "9.9.9.9"
-#     - name: "myaddress2.my.fqdn.com"
-#       type: A
-#       ttl: 300
-#       dnsZone: "my-fqdn-com"
-#       rrdatas:
-#         - "8.8.8.8"
-#     - name: _mytxt.my.fqdn.com
-#       type: TXT
-#       ttl: "300"
-#       dnsZone: "my-fqdn-com"
-#       rrdatas:
-#         - "somethingtotallyrandomgoeshere,1234567890987654321"
+#       # Records for this zone (optional)
+#       # https://cloud.google.com/config-connector/docs/reference/resource-docs/dns/dnsrecordset#spec
+#       # a dot(.) is automatically appended to the name entered here so no need to add it manually.
+#       record:
+#         - name: "myaddress.my.fqdn.com"
+#           type: A
+#           ttl: 300
+#           # If computeAddress is populated, the chart automatically creates a ComputeAddress reference
+#           # Use this for static IPs managed by this chart
+#           # Only specify ONE of computeAddress or rrdatas
+#           computeAddress: "my-address"
+#           # Alternatively, use rrdatas for static IPs or external addresses
+#           # rrdatas:
+#           #   - "9.9.9.9"
+#         - name: "myaddress2.my.fqdn.com"
+#           type: A
+#           ttl: 300
+#           rrdatas:
+#             - "8.8.8.8"
+#         - name: _mytxt.my.fqdn.com
+#           type: TXT
+#           ttl: "300"
+#           rrdatas:
+#             - "somethingtotallyrandomgoeshere,1234567890987654321"
 
 # ============================================================================
 # GKE HUB (FLEET)

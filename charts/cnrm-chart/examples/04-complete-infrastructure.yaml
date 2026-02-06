@@ -355,23 +355,20 @@ dns:
       description: "Production DNS Zone"
       visibility: "public"
       dnssecConfigState: "on"
-  record:
-    - name: "www.example.com"
-      type: A
-      ttl: 300
-      dnsZone: "example-com"
-      computeAddress: "web-lb-ip"
-    - name: "api.example.com"
-      type: A
-      ttl: 300
-      dnsZone: "example-com"
-      computeAddress: "api-lb-ip"
-    - name: "_dmarc.example.com"
-      type: TXT
-      ttl: 300
-      dnsZone: "example-com"
-      rrdatas:
-        - "v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com"
+      record:
+        - name: "www.example.com"
+          type: A
+          ttl: 300
+          computeAddress: "web-lb-ip"
+        - name: "api.example.com"
+          type: A
+          ttl: 300
+          computeAddress: "api-lb-ip"
+        - name: "_dmarc.example.com"
+          type: TXT
+          ttl: 300
+          rrdatas:
+            - "v=DMARC1; p=quarantine; rua=mailto:dmarc@example.com"
 
 # ============================================================================
 # IAM

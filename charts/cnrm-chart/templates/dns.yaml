@@ -19,6 +19,41 @@ spec:
   dnssecConfig:
     state: {{ .dnssecConfigState | quote }}
   visibility: {{ .visibility }}
+{{- if .record }}
+{{- range .record }}
+{{- $dotsToHyphens := mustRegexReplaceAll "\\W|\\B_" .name "-" }}
+{{- $dkimCleaned := mustRegexReplaceAll "_domainkey" $dotsToHyphens "domainkey" }}
+{{- $k8sName := mustRegexReplaceAll "^_" $dkimCleaned "" }}
+---
+apiVersion: dns.cnrm.cloud.google.com/v1beta1
+kind: DNSRecordSet
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+  name: {{ $projectName }}-{{ $k8sName }}-{{ .type | lower }}
+spec:
+  name: {{ .name }}.
+  type: {{ .type }}
+  ttl: {{ .ttl }}
+  managedZoneRef:
+    name: {{ $metaName }}
+  {{- if .computeAddress }}
+  rrdatasRefs:
+    - name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .computeAddress) }}
+      kind: ComputeAddress
+  {{- else if .rrdatas }}
+  rrdatas:
+    {{- $type := .type }}
+    {{- range .rrdatas }}
+      {{- if eq $type "TXT" }}
+      - "\"{{ . }}\""
+      {{- else }}
+      - {{ . | quote }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- if .Values.dns.record }}
@@ -54,6 +89,6 @@ spec:
       {{- end }}
     {{- end }}
   {{- end }}
-{{- end -}}
-{{- end -}}
-{{- end -}}
+{{- end }}
+{{- end }}
+{{- end }}
