@@ -70,11 +70,17 @@
 #     gatewayName: my-gw
 #     # Is the gateway you are referencing in a different namespace than where this httpRoute will be deployed? If so specify here.
 #     gatewayNamespace: my-different-namespace
-#     # Do you want to automatically add a httpRoute to redirect HTTP requests to HTTP?
-#     # This will add a HTTPRoute which will attach to the gateway that will instruct it to redirect to the HTTPS scheme. An HTTP listener must exist on the gateway.
+#     # Do you want to automatically add a httpRoute to redirect HTTP requests to HTTPS?
+#     # Supports single object (backward compatible) or list for multiple listener pairs.
+#     # The main route will attach to each httpsListenerName when redirects are configured.
 #     redirectHTTP:
-#       # What is the name of the http listener?
-#       httpListenerName: http
+#       # Single object (backward compatible):
+#       #   httpListenerName: http
+#       # List format for multi-hostname gateways:
+#       - httpListenerName: http
+#         httpsListenerName: https    # optional, defaults to "https"
+#       - httpListenerName: http-support
+#         httpsListenerName: https-support
 #     # You can also redirect specific hostnames to other hostnames.
 #     # This creates 1 or more httpRoutes which redirect requests to the listenerName to the redirectHostname.
 #     redirectHost:

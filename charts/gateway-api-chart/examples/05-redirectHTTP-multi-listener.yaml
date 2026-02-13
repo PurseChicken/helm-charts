@@ -1,0 +1,86 @@
+# ============================================================================
+# Example 5: Multiple HTTP→HTTPS Redirect Listener Pairs
+# ============================================================================
+# Use when a gateway has multiple hostname/listener pairs (e.g. app1.example.com
+# and app2.example.com), each needing its own HTTP→HTTPS redirect.
+#
+# Use Case: Multi-hostname gateway with per-hostname redirects
+#
+# Key Features:
+# - Gateway with multiple HTTP and HTTPS listener pairs
+# - HTTPRoute with multiple redirect pairs (redirectHTTP list format)
+# - Main route attaches to each HTTPS listener
+#
+# When used as a DEPENDENCY CHART: Nest everything under "gateway-api-chart:" in
+# your parent chart's values.
+# ============================================================================
+
+gateway:
+  - name: my-multi-gateway
+    issuer:
+      type: cluster-issuer
+      name: my-cluster-issuer
+    gatewayClassName: gke-l7-global-external-managed-mc
+    listeners:
+      - name: http
+        hostname: app1.example.com
+        port: 80
+        protocol: HTTP
+        allowedRoutes:
+          kinds:
+            - kind: HTTPRoute
+      - name: https
+        hostname: app1.example.com
+        port: 443
+        protocol: HTTPS
+        allowedRoutes:
+          kinds:
+            - kind: HTTPRoute
+        tls:
+          mode: Terminate
+          certificateRefs:
+            - name: app1-tls-cert
+      - name: http-support
+        hostname: app2.example.com
+        port: 80
+        protocol: HTTP
+        allowedRoutes:
+          kinds:
+            - kind: HTTPRoute
+      - name: https-support
+        hostname: app2.example.com
+        port: 443
+        protocol: HTTPS
+        allowedRoutes:
+          kinds:
+            - kind: HTTPRoute
+        tls:
+          mode: Terminate
+          certificateRefs:
+            - name: app2-tls-cert
+    gatewayPolicy:
+      allowGlobalAccess: false
+      sslPolicy: modern-policy
+
+httpRoute:
+  - name: my-multi-route
+    gatewayName: my-multi-gateway
+    # Multiple HTTP→HTTPS redirect pairs (list format)
+    redirectHTTP:
+      - httpListenerName: http
+        httpsListenerName: https
+      - httpListenerName: http-support
+        httpsListenerName: https-support
+    rules:
+      - backendRefs:
+          - group: ""
+            kind: Service
+            name: my-service
+            port: 80
+
+service:
+  - name: my-service
+    healthCheck:
+      type: HTTP
+      httpHealthCheck:
+        requestPath: "/healthz"

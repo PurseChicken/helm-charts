@@ -102,6 +102,28 @@ gateway-api-chart:
 
 **Use Case:** Multi-cluster scenarios with cross-cluster service access
 
+---
+
+### 5. Multiple HTTP→HTTPS Redirect Pairs (`05-redirectHTTP-multi-listener.yaml`)
+
+**Use Case:** Gateways with multiple hostname/listener pairs, each needing its own HTTP→HTTPS redirect
+
+**Features:**
+- Gateway with multiple HTTP and HTTPS listener pairs (e.g. app1.example.com and app2.example.com)
+- HTTPRoute with `redirectHTTP` list format for multiple redirect pairs
+- Main route attaches to each HTTPS listener
+
+**When to Use:**
+- Multi-hostname gateways
+- Different hostnames with separate TLS certificates
+- Per-hostname HTTP→HTTPS redirects
+
+**Key Patterns Demonstrated:**
+- `redirectHTTP` list format with `httpListenerName` and `httpsListenerName` per pair
+- Main route with multiple parentRefs (one per HTTPS listener)
+
+---
+
 **Features:**
 - ServiceExport for multi-cluster access
 - ServiceImport target configuration
@@ -176,6 +198,7 @@ helm template test-release . -f examples/01-basic-service.yaml
 helm template test-release . -f examples/02-service-with-waf.yaml
 helm template test-release . -f examples/03-complete-gateway-setup.yaml
 helm template test-release . -f examples/04-multi-cluster-serviceexport.yaml
+helm template test-release . -f examples/05-redirectHTTP-multi-listener.yaml
 ```
 
 ## Customization

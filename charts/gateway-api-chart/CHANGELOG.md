@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **redirectHTTP** – Support multiple HTTP→HTTPS listener pairs. Use list format with `httpListenerName` and `httpsListenerName` per pair; main route attaches to each HTTPS listener. Backward compatible: single object `{ httpListenerName: http }` still works (defaults `httpsListenerName` to `https`).
+- **Examples** – `05-redirectHTTP-multi-listener.yaml` for multi-hostname gateway with multiple redirect pairs.
+
 ## [v1.1.9] - 2026-02-05
 
 ### Fixed

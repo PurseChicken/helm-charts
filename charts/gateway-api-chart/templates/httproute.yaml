@@ -1,48 +1,61 @@
 {{- if .Values.httpRoute }}
 {{- range .Values.httpRoute }}
+{{- $routeName := .name }}
+{{- $gatewayName := .gatewayName }}
+{{- $gatewayNamespace := .gatewayNamespace }}
 ---
 kind: HTTPRoute
 apiVersion: gateway.networking.k8s.io/v1
 metadata:
-  name: {{ .name }}
+  name: {{ $routeName }}
   labels:
-    gateway: {{ .gatewayName }}
+    gateway: {{ $gatewayName }}
 spec:
   parentRefs:
-    - name: {{ .gatewayName }}
-      {{- if .gatewayNamespace }}
-      namespace: {{ .gatewayNamespace }}
+    {{- if .redirectHTTP }}
+    {{- $redirects := .redirectHTTP }}
+    {{- $redirectList := ternary $redirects (list $redirects) (kindIs "slice" $redirects) }}
+    {{- range $redirectList }}
+    - name: {{ $gatewayName }}
+      {{- if $gatewayNamespace }}
+      namespace: {{ $gatewayNamespace }}
       {{- end }}
-      {{- if .redirectHTTP }}
-      sectionName: https
+      sectionName: {{ .httpsListenerName | default "https" }}
+    {{- end }}
+    {{- else }}
+    - name: {{ $gatewayName }}
+      {{- if $gatewayNamespace }}
+      namespace: {{ $gatewayNamespace }}
       {{- end }}
+    {{- end }}
   rules:
     {{- toYaml .rules | nindent 4 }}
 {{- if .redirectHTTP }}
+{{- $redirects := .redirectHTTP }}
+{{- $redirectList := ternary $redirects (list $redirects) (kindIs "slice" $redirects) }}
+{{- range $redirectList }}
 ---
 kind: HTTPRoute
 apiVersion: gateway.networking.k8s.io/v1
 metadata:
-  name: {{ .name }}-{{ .redirectHTTP.httpListenerName | default "http" }}-redirect
+  name: {{ $routeName }}-{{ .httpListenerName | default "http" }}-redirect
   labels:
-    gateway: {{ .gatewayName }}
+    gateway: {{ $gatewayName }}
 spec:
   parentRefs:
-    - name: {{ .gatewayName }}
-      {{- if .gatewayNamespace }}
-      namespace: {{ .gatewayNamespace }}
+    - name: {{ $gatewayName }}
+      {{- if $gatewayNamespace }}
+      namespace: {{ $gatewayNamespace }}
       {{- end }}
-      sectionName: {{ .redirectHTTP.httpListenerName | default "http" }}
+      sectionName: {{ .httpListenerName | default "http" }}
   rules:
     - filters:
       - type: RequestRedirect
         requestRedirect:
           scheme: https
 {{- end }}
+{{- end }}
 {{- if .redirectHost }}
-{{- $routeName := .name }}
-{{- $gatewayName := .gatewayName }}
-{{- $gatewayNamespace := .gatewayNamespace }}
 {{- range .redirectHost }}
 ---
 kind: HTTPRoute
