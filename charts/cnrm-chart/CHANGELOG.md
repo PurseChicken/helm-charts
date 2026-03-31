@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `monitoring[].alertPolicy` / `templates/monitoring.yaml`: `spec.resourceID` is rendered only when `resourceID` is set in values (import/acquisition). When omitted, nothing is forced in YAML—no default to `.name`, so you do not need to track or cross-reference GCP ids in values for normal policies.
+
 ## [v1.5.0] - 2026-03-31
 
 ### Added

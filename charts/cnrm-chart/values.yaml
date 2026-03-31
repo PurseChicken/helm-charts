@@ -799,8 +799,9 @@
 #     # https://cloud.google.com/config-connector/docs/reference/resource-docs/monitoring/monitoringalertpolicy
 #     alertPolicy:
 #       - name: "quotas-alert"
-#         # Optional; defaults to name. CNRM may use for acquisition when importing existing policies.
-#         # resourceID: "quotas-alert"
+#         # Optional; set only when you must pin the GCP alert policy id (e.g. import/acquisition).
+#         # Omit entirely for normal creates—do not need to match or cross-reference cluster state.
+#         # resourceID: "12345678901234567890"
 #         # customAnnotations: {}
 #         # labels:
 #         #   team: "platform"

@@ -47,7 +47,9 @@ metadata:
     {{- toYaml .labels | nindent 4 }}
   {{- end }}
 spec:
-  resourceID: {{ .resourceID | default .name }}
+  {{- if hasKey . "resourceID" }}
+  resourceID: {{ .resourceID | quote }}
+  {{- end }}
   displayName: {{ .displayName | quote }}
   {{- with .documentation }}
   documentation:
