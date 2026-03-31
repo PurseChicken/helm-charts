@@ -1,0 +1,98 @@
+# ============================================================================
+# Example 5: Monitoring (uptime), routes, Cloud NAT, and Compute Instance
+# ============================================================================
+# Self-contained sample that exercises chart paths for:
+#   - monitoring[].uptimeCheckConfig (MonitoringUptimeCheckConfig)
+#   - computeRoute (ComputeRoute)
+#   - computeRouter + computeRouterNat (ComputeRouter + ComputeRouterNAT)
+#   - computeInstance (ComputeInstance; spec matches CNRM — copy from docs as needed)
+#
+# Values are generic placeholders. Replace project_id / hosts / refs for real use.
+# ============================================================================
+
+projectName: "ex05-sample"
+createOrManageProject: false
+allowResourceDeletion: true
+
+apis:
+  - name: compute.googleapis.com
+  - name: monitoring.googleapis.com
+
+# ============================================================================
+# VPC (needed for router, route, NAT, and VM network attachment)
+# ============================================================================
+vpcNetwork:
+  - networkName: "ex05-network"
+    description: "Example network for routing, NAT, and compute instance sample"
+    routingMode: "REGIONAL"
+    subNets:
+      - subnetName: "ex05-subnet"
+        subnetCidr: "10.200.0.0/24"
+        vpcRegion: "us-central1"
+        privateIpGoogleAccess: true
+
+# ============================================================================
+# Cloud Router (required for ComputeRouterNAT in this chart)
+# ============================================================================
+computeRouter:
+  - name: "ex05-router"
+    region: "us-central1"
+    networkRefName: "ex05-network"
+
+# ============================================================================
+# Cloud NAT on the router
+# ============================================================================
+computeRouterNat:
+  - name: "ex05-nat"
+    region: "us-central1"
+    routerRefName: "ex05-router"
+    natIpAllocateOption: "AUTO_ONLY"
+    sourceSubnetworkIpRangesToNat: "ALL_SUBNETWORKS_ALL_IP_RANGES"
+
+# ============================================================================
+# Default route to internet (typical egress path with NAT)
+# ============================================================================
+computeRoute:
+  - name: "ex05-default-internet"
+    destRange: "0.0.0.0/0"
+    networkRefName: "ex05-network"
+    nextHopGateway: "default-internet-gateway"
+
+# ============================================================================
+# Uptime check (HTTP) — projectRef defaults to projects/<projectName> in chart
+# ============================================================================
+monitoring:
+  - name: ""
+    uptimeCheckConfig:
+      - name: "ex05-uptime"
+        displayName: "Example uptime check (non-production)"
+        timeout: "10s"
+        period: "60s"
+        monitoredResource:
+          type: "uptime_url"
+          filterLabels:
+            host: "example.invalid"
+            project_id: "ex05-sample"
+        httpCheck:
+          useSsl: true
+          path: "/"
+
+# ============================================================================
+# Compute instance — full spec under spec: (see CNRM ComputeInstance docs)
+# Kubernetes name for subnetworkRef is project-prefixed: ex05-sample-ex05-subnet
+# ============================================================================
+computeInstance:
+  - name: "ex05-vm"
+    allowStoppingForUpdate: true
+    spec:
+      machineType: e2-micro
+      zone: us-central1-a
+      bootDisk:
+        initializeParams:
+          size: 20
+          type: pd-balanced
+          sourceImageRef:
+            external: debian-cloud/debian-12
+      networkInterface:
+        - subnetworkRef:
+            name: ex05-sample-ex05-subnet

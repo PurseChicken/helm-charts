@@ -145,9 +145,10 @@
 # VPC PEERING
 # ============================================================================
 
-# # VPC Network Peering Configuration
+# # VPC Network Peering Configuration (ComputeNetworkPeering
 # # VPC peering allows you to connect VPC networks across projects or within the same project
 # # https://cloud.google.com/vpc/docs/vpc-peering
+# # Spec reference: https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computenetworkpeering
 # #
 # # Important Notes:
 # # - Peering is bidirectional; you typically need to create peering in both directions
@@ -158,19 +159,20 @@
 #     # add custom annotations to this resource?
 #     customAnnotations:
 #       abc: "1234567890"
-#     # Optional: Whether to export custom routes to the peer network. Defaults to false if not specified
+#     # Optional; defaults to name (GCP peering name)
+#     # resourceID: "my-net-to-peer-net"
+#     # Optional booleans — set explicitly to emit false (omit = API defaults)
 #     exportCustomRoutes: false
-#     # Optional: Whether to import custom routes from the peer network. Defaults to false if not specified
 #     importCustomRoutes: false
-#     # Optional: Export subnet routes with public IP (Immutable). Defaults to false if not specified
-#     # exportSubnetRoutesWithPublicIp: true
-#     # Optional: Import subnet routes with public IP (Immutable). Defaults to false if not specified
-#     # importSubnetRoutesWithPublicIp: true
-#     # Optional: IP version(s) of traffic and routes allowed. Possible values: "IPV4_ONLY" (default), "IPV4_IPV6"
+#     # exportSubnetRoutesWithPublicIp: false
+#     # importSubnetRoutesWithPublicIp: false
+#     # Optional: IPV4_ONLY (default) or IPV4_IPV6
 #     # stackType: "IPV4_ONLY"
-#     # Network reference - choose ONE of the following patterns:
-#     # Pattern 1: Local VPC (in this project)
+#     # Local network — ONE of: networkRefName, network (Shared VPC), or networkRef object
 #     networkRefName: "my-net"
+#     # networkRef:
+#     #   external: "https://www.googleapis.com/compute/v1/projects/.../global/networks/..."
+#     #   # name: "my-net"
 #     # Pattern 2: Shared VPC using helper (for peering from a shared VPC network)
 #     # network:
 #     #   network: "shared-network"
@@ -206,21 +208,29 @@
 #     # add custom annotations to this resource?
 #     customAnnotations:
 #       abc: "1234567890"
+#     # Optional; defaults to name (GCP firewall rule name)
+#     # resourceID: "allow-ssh"
 #     # Optional: Description of the firewall rule
 #     description: "Allow SSH from specific ranges"
 #     # Network reference - choose ONE of the following patterns:
 #     # Pattern 1: Local VPC (in this project)
 #     networkRefName: "my-net"
-#     # Pattern 2: Shared VPC using helper
+#     # Pattern 2: Shared VPC using helper (same as top-level sharedVpc.attachToHostProject for host)
 #     # network:
 #     #   network: "shared-network"
 #     #   hostProject: "host-project-id"
+#     # Pattern 3: Raw networkRef (selfLink or K8s name / namespace)
+#     # networkRef:
+#     #   name: "my-net"
+#     #   # external: "https://www.googleapis.com/compute/v1/projects/.../global/networks/..."
 #     # Optional: Direction of traffic. Possible values: "INGRESS" (default), "EGRESS"
 #     direction: "INGRESS"
-#     # Optional: Priority (0-65535, lower = higher precedence). All rules default to 1000 if not specified
+#     # Optional: Priority (0-65535, lower = higher precedence). Omit for GCP default 1000
 #     priority: 1000
-#     # Optional: Disable the firewall rule
+#     # Optional: Disable the firewall rule (use explicit true/false)
 #     # disabled: false
+#     # Deprecated; prefer logConfig. Set explicitly if needed
+#     # enableLogging: true
 #     # Specify either 'allow' or 'deny', not both
 #     allow:
 #       - protocol: tcp
@@ -256,11 +266,12 @@
 #     # Optional: Target service accounts (apply rule to instances with these service accounts)
 #     # targetServiceAccounts:
 #     #   - name: "my-service-account"
-#     #   # OR use external reference
+#     #   # OR use external (IAM service account email per CNRM)
 #     #   - external: "my-sa@my-project.iam.gserviceaccount.com"
-#     # Optional: Enable logging for this rule
+#     #   # namespace: "other-ns"
+#     # Optional: Logging (enableLogging is deprecated in favor of this)
 #     # logConfig:
-#     #   metadata: "INCLUDE_ALL_METADATA"  # Options: "EXCLUDE_ALL_METADATA", "INCLUDE_ALL_METADATA"
+#     #   metadata: "INCLUDE_ALL_METADATA"  # EXCLUDE_ALL_METADATA or INCLUDE_ALL_METADATA
 
 # ============================================================================
 # COMPUTE
@@ -518,28 +529,108 @@
 #       role: roles/container.admin
 #       external: projects/my-unique-global-project
 
-# # Create Compute Addresses (Static IPs)
+# # Create Compute Addresses (Static IPs) — ComputeAddress
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeaddress
 # staticIp:
 #   - name: "my-address"
+#     # Optional; defaults to name (GCP address resource name)
+#     # resourceID: "my-address"
+#     # Optional custom annotations
+#     # customAnnotations:
+#     #   example.com/owner: "team"
+#     # Defaults: addressType EXTERNAL, ipVersion IPV4 (override below)
 #     addressType: "EXTERNAL"
 #     location: global
 #     ipVersion: IPV4
+#     # Optional: reserve a specific IP (immutable once set)
+#     # address: "203.0.113.10"
+#     # Optional description (immutable)
+#     # description: "Edge VIP"
+#     # Optional: VM or NETLB when using external IPv6
+#     # ipv6EndpointType: "VM"
+#     # Optional: PREMIUM or STANDARD (not for internal addresses)
+#     # networkTier: "PREMIUM"
+#     # Optional: GCE_ENDPOINT, SHARED_LOADBALANCER_VIP, VPC_PEERING, IPSEC_INTERCONNECT,
+#     # PRIVATE_SERVICE_CONNECT, DNS_RESOLVER, etc. (see CNRM docs)
+#     # purpose: VPC_PEERING
+#     # Optional: prefix length for IP range reservations (including 0 if ever required)
+#     # prefixLength: 16
+#     # Optional: VPC network (internal / peering / PSC patterns)
+#     networkRef:
+#       name: my-net
+#       # external: "https://www.googleapis.com/compute/v1/projects/.../global/networks/..."
+#       # namespace: other-namespace
+#     # Optional: subnetwork (e.g. internal regional addresses with GCE_ENDPOINT / DNS_RESOLVER)
+#     # subnetworkRef:
+#     #   name: my-subnet
+#     #   # external: "https://www.googleapis.com/compute/v1/projects/.../regions/.../subnetworks/..."
+#     #   # namespace: other-namespace
 #   - name: "private-service-connection"
 #     addressType: "INTERNAL"
 #     location: global
 #     ipVersion: IPV4
-#     # Optional
 #     purpose: VPC_PEERING
-#     # Optional
 #     prefixLength: 16
-#     # Optional. Reference to VPC network
 #     networkRef:
-#       # Use 'name' for resources managed by this chart
 #       name: my-net
-#       # OR use 'external' for resources outside this chart (e.g., "projects/my-project/global/networks/my-network")
-#       # external: "projects/my-project/global/networks/existing-network"
-#       # Optional. Specify namespace if network is in different namespace
-#       # namespace: other-namespace
+
+# # Compute Engine VMs (ComputeInstance)
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeinstance
+# # Pass the full CNRM spec under spec (including optional spec.resourceID). Optional chart
+# # fields: allowStoppingForUpdate (metadata annotation), labels, customAnnotations.
+# # References to other in-cluster CNRM objects must use Kubernetes resource names (typically
+# # "<project>-<name>" from this chart).
+# computeInstance:
+#   - name: "my-vm"
+#     allowStoppingForUpdate: true
+#     # labels: {}
+#     # Optional: spec.resourceID for GCP name / acquisition (defaults per CNRM when omitted)
+#     spec:
+#       machineType: e2-medium
+#       zone: us-central1-a
+#       bootDisk:
+#         initializeParams:
+#           size: 20
+#           type: pd-balanced
+#           sourceImageRef:
+#             external: debian-cloud/debian-12
+#       networkInterface:
+#         - subnetworkRef:
+#             name: my-project-my-subnet
+#       serviceAccount:
+#         serviceAccountRef:
+#           name: my-project-my-sa
+#         scopes:
+#           - cloud-platform
+
+# # VPC static routes (ComputeRoute)
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeroute
+# computeRoute:
+#   - name: "default-internet"
+#     destRange: "0.0.0.0/0"
+#     # Network: use ONE of networkRefName, sharedVpc (see computeRouter), or raw networkRef
+#     networkRefName: "my-net"
+#     # sharedVpc:
+#     #   network: "shared-network"
+#     # networkRef:
+#     #   external: "https://www.googleapis.com/compute/v1/projects/.../global/networks/..."
+#     # Optional; default in GCP is 1000 — set explicitly to use 0–65535 including 0
+#     # priority: 1000
+#     # Exactly one next-hop should match your design (internet gateway, IP, VPN tunnel, etc.)
+#     nextHopGateway: "default-internet-gateway"
+#     # nextHopIp: "10.132.1.5"
+#     # nextHopVpnTunnelRefName: "my-tunnel"
+#     # nextHopVPNTunnelRef:
+#     #   name: "my-tunnel"
+#     # nextHopInstanceRefName: "my-vm"
+#     # nextHopInstanceRef:
+#     #   name: "my-vm"
+#     # nextHopILBRefName: "my-ilb-rule"
+#     # nextHopILBRef:
+#     #   external: "https://www.googleapis.com/compute/v1/projects/.../regions/.../forwardingRules/..."
+#     # Optional instance tags this route applies to
+#     # tags:
+#     #   - "vpn-route"
 
 # # Create a Service Networking Connection
 # snc:
@@ -708,12 +799,24 @@
 #     # https://cloud.google.com/config-connector/docs/reference/resource-docs/monitoring/monitoringalertpolicy
 #     alertPolicy:
 #       - name: "quotas-alert"
+#         # Optional; defaults to name. CNRM may use for acquisition when importing existing policies.
+#         # resourceID: "quotas-alert"
+#         # customAnnotations: {}
+#         # labels:
+#         #   team: "platform"
 #         displayName: "Notify Development Team when quotas exceeded"
+#         # Optional documentation (content, mimeType) — see MonitoringAlertPolicy spec
+#         # documentation:
+#         #   content: "Runbook: https://..."
+#         #   mimeType: "text/markdown"
+#         # Omit enabled for default true; set explicitly for false
 #         enabled: true
-#         # Optional
+#         # Optional: CRITICAL, ERROR, WARNING
+#         # severity: "WARNING"
 #         notificationChannels:
-#           # range
 #           - name: "dev-alerts"
+#           # Or external / namespace per CNRM (name field of MonitoringNotificationChannel)
+#           # - external: "projects/my-project/notificationChannels/1234567890"
 #         combiner: "OR"
 #         # Optional
 #         alertStrategy:
@@ -735,6 +838,29 @@
 #               duration: "0s"
 #               trigger:
 #                 count: 1
+#     # Uptime checks (HTTP / TCP)
+#     # https://docs.cloud.google.com/config-connector/docs/reference/resource-docs/monitoring/monitoringuptimecheckconfig
+#     uptimeCheckConfig:
+#       - name: "api-https"
+#         displayName: "API HTTPS uptime"
+#         timeout: "10s"
+#         # period: "60s"
+#         # Optional; defaults to projectRef for this release (external: projects/<projectID>)
+#         # projectRef:
+#         #   external: "projects/other-project"
+#         monitoredResource:
+#           type: "uptime_url"
+#           filterLabels:
+#             host: "api.example.com"
+#             project_id: "my-gcp-project-id"
+#         httpCheck:
+#           useSsl: true
+#           path: "/health"
+#         # resourceID: "..."  # acquisition / import only
+#         # contentMatchers: []
+#         # selectedRegions: ["USA", "EUROPE"]
+#         # tcpCheck: { port: 443 }
+#         # resourceGroup: { groupRef: { name: "my-group" }, resourceType: "INSTANCE" }
 
 # # Cloud Logging
 # logging:
@@ -1147,3 +1273,70 @@
 #         secretKeyRef:
 #           name: vpn-shared-secret
 #           key: tunnel-2-secret
+
+# # Cloud NAT (ComputeRouterNAT) — egress NAT on a Cloud Router
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computerouternat
+# computeRouterNat:
+#   - name: "my-nat"
+#     customAnnotations:
+#       abc: "1234567890"
+#     # Optional; defaults to name (GCP NAT name)
+#     # resourceID: "my-nat"
+#     region: "us-central1"
+#     # Reference the router: same-project name (prefix applied) OR full routerRef object
+#     routerRefName: "my-router"
+#     # Alternative: routerRef with external (GCP/API name or selfLink per CNRM) and/or namespace
+#     # routerRef:
+#     #   name: "my-router"
+#     # routerRef:
+#     #   external: "projects/my-project/regions/us-central1/routers/my-router"
+#     # routerRef:
+#     #   name: "my-router"
+#     #   namespace: "other-namespace"
+#     natIpAllocateOption: "AUTO_ONLY" # or MANUAL_ONLY
+#     sourceSubnetworkIpRangesToNat: "ALL_SUBNETWORKS_ALL_IP_RANGES"
+#     # Other options: ALL_SUBNETWORKS_ALL_PRIMARY_IP_RANGES, LIST_OF_SUBNETWORKS
+#     #
+#     # --- Optional fields (set only what you need) ---
+#     # enableDynamicPortAllocation: true   # mutually exclusive with enableEndpointIndependentMapping in GCP
+#     # enableEndpointIndependentMapping: false
+#     # icmpIdleTimeoutSec: 30
+#     # logConfig:
+#     #   enable: true
+#     #   filter: "ERRORS_ONLY" # ERRORS_ONLY, TRANSLATIONS_ONLY, ALL
+#     # minPortsPerVm: 64
+#     # maxPortsPerVm: 128
+#     # tcpEstablishedIdleTimeoutSec: 1200
+#     # tcpTimeWaitTimeoutSec: 120
+#     # tcpTransitoryIdleTimeoutSec: 30
+#     # udpIdleTimeoutSec: 30
+#     #
+#     # MANUAL_ONLY: static ComputeAddress resources (name = values name; prefix applied) or external selfLink
+#     # natIps:
+#     #   - name: "nat-ip-a"
+#     #   - external: "https://www.googleapis.com/compute/v1/projects/.../regions/.../addresses/..."
+#     # Drain previously attached NAT IPs (same shape as natIps)
+#     # drainNatIps:
+#     #   - name: "old-nat-ip"
+#     #
+#     # LIST_OF_SUBNETWORKS: narrow which subnets/ranges use NAT
+#     # subnetwork:
+#     #   - subnetworkRefName: "my-subnet"
+#     #     # or subnetworkRef: { name: "my-subnet" } or external selfLink
+#     #     sourceIpRangesToNat:
+#     #       - "ALL_IP_RANGES" # and/or PRIMARY_IP_RANGE, LIST_OF_SECONDARY_IP_RANGES
+#     #     secondaryIpRangeNames:
+#     #       - "pods"
+#     #
+#     # Public NAT rules (CEL match; manual NAT IP pools per rule)
+#     # rules:
+#     #   - ruleNumber: 100
+#     #     description: "example"
+#     #     match: "inIpRange(destination.ip, '198.51.100.0/24')"
+#     #     action:
+#     #       sourceNatActiveIpsRefs:
+#     #         - name: "nat-ip-a"
+#     #         - name: "nat-ip-b"
+#     #           namespace: "other-ns"
+#     #       sourceNatDrainIpsRefs:
+#     #         - name: "nat-ip-old"

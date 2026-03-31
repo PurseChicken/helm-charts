@@ -24,8 +24,12 @@ spec:
   sensitiveLabels:
     {{- toYaml .sensitiveLabels | nindent 4 }}
   {{- end }}
+  {{- if hasKey . "description" }}
   description: {{ .description | quote }}
+  {{- end }}
+  {{- if hasKey . "enabled" }}
   enabled: {{ .enabled }}
+  {{- end }}
 {{- end }}
 {{- end }}
 {{- if .alertPolicy }}
@@ -36,14 +40,32 @@ kind: MonitoringAlertPolicy
 metadata:
   annotations:
     {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
   name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+  {{- if .labels }}
+  labels:
+    {{- toYaml .labels | nindent 4 }}
+  {{- end }}
 spec:
+  resourceID: {{ .resourceID | default .name }}
   displayName: {{ .displayName | quote }}
+  {{- with .documentation }}
+  documentation:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if hasKey . "enabled" }}
   enabled: {{ .enabled }}
+  {{- else }}
+  enabled: true
+  {{- end }}
+  {{- if .severity }}
+  severity: {{ .severity }}
+  {{- end }}
   {{- if .notificationChannels }}
   notificationChannels:
     {{- range .notificationChannels }}
-    - name: {{ $projectName }}-{{ .name }}
+    -
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .) | trim | indent 6 }}
     {{- end }}
   {{- end }}
   combiner: {{ .combiner }}
@@ -53,6 +75,70 @@ spec:
   {{- end }}
   conditions:
     {{- toYaml .conditions | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- if .uptimeCheckConfig }}
+{{- range .uptimeCheckConfig }}
+---
+apiVersion: monitoring.cnrm.cloud.google.com/v1beta1
+kind: MonitoringUptimeCheckConfig
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+  {{- if .labels }}
+  labels:
+    {{- toYaml .labels | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .projectRef }}
+  projectRef:
+    {{- if .projectRef.external }}
+    external: {{ .projectRef.external | quote }}
+    {{- end }}
+    {{- if .projectRef.name }}
+    name: {{ .projectRef.name | quote }}
+    {{- end }}
+    {{- if .projectRef.namespace }}
+    namespace: {{ .projectRef.namespace | quote }}
+    {{- end }}
+  {{- else }}
+  projectRef:
+    external: projects/{{ $projectName }}
+  {{- end }}
+  displayName: {{ .displayName | quote }}
+  timeout: {{ .timeout | quote }}
+  {{- if .resourceID }}
+  resourceID: {{ .resourceID | quote }}
+  {{- end }}
+  {{- if .period }}
+  period: {{ .period | quote }}
+  {{- end }}
+  {{- with .contentMatchers }}
+  contentMatchers:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .selectedRegions }}
+  selectedRegions:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .monitoredResource }}
+  monitoredResource:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .httpCheck }}
+  httpCheck:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .tcpCheck }}
+  tcpCheck:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .resourceGroup }}
+  resourceGroup:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 {{- end }}
 {{- end }}
 {{- if .monitoredProject }}

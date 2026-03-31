@@ -1,0 +1,26 @@
+{{- if .Values.computeInstance }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.computeInstance }}
+{{- if not .spec }}
+{{- fail "cnrm-chart: computeInstance requires spec (see https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeinstance)" }}
+{{- end }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeInstance
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- if hasKey . "allowStoppingForUpdate" }}
+    cnrm.cloud.google.com/allow-stopping-for-update: {{ .allowStoppingForUpdate | quote }}
+    {{- end }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+  {{- if .labels }}
+  labels:
+    {{- toYaml .labels | nindent 4 }}
+  {{- end }}
+spec:
+{{ toYaml .spec | trim | indent 2 }}
+{{- end }}
+{{- end }}

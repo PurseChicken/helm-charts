@@ -2,6 +2,14 @@
 {{- $allowResourceDeletion := .Values.allowResourceDeletion }}
 {{- $projectName := include "cnrm-chart.projectID" . }}
 {{- range .Values.firewall }}
+{{- if not (or .networkRef .networkRefName .network) }}
+{{- fail "cnrm-chart: firewall requires networkRef, networkRefName, or network (Shared VPC)" }}
+{{- end }}
+{{- if .networkRef }}
+{{- if and (not .networkRef.external) (not .networkRef.name) }}
+{{- fail "cnrm-chart: firewall.networkRef requires external or name" }}
+{{- end }}
+{{- end }}
 ---
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
 kind: ComputeFirewall
@@ -11,7 +19,7 @@ metadata:
     {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
   name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
 spec:
-  resourceID: {{ .name }}
+  resourceID: {{ .resourceID | default .name }}
   {{- if .allow }}
   allow:
     {{- range .allow }}
@@ -48,15 +56,23 @@ spec:
   {{- if .direction }}
   direction: {{ .direction }}
   {{- end }}
-  {{- if .disabled }}
+  {{- if hasKey . "disabled" }}
   disabled: {{ .disabled }}
+  {{- end }}
+  {{- if hasKey . "enableLogging" }}
+  enableLogging: {{ .enableLogging }}
   {{- end }}
   {{- with .logConfig }}
   logConfig:
     metadata: {{ .metadata }}
   {{- end }}
-  {{- include "cnrm-chart.networkRef" (dict "context" $ "projectName" $projectName "networkRefName" .networkRefName "sharedVpc" .network) | nindent 2 }}
-  {{- if .priority }}
+  {{- if .networkRef }}
+  networkRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .networkRef) | trim | indent 4 }}
+  {{- else }}
+{{ include "cnrm-chart.networkRef" (dict "context" $ "projectName" $projectName "networkRefName" .networkRefName "sharedVpc" .network) | nindent 2 }}
+  {{- end }}
+  {{- if hasKey . "priority" }}
   priority: {{ .priority }}
   {{- end }}
   {{- if .sourceRanges }}
@@ -68,14 +84,8 @@ spec:
   {{- if .sourceServiceAccounts }}
   sourceServiceAccounts:
     {{- range .sourceServiceAccounts }}
-    {{- if .external }}
-    - external: {{ .external }}
-    {{- else if .name }}
-    - name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
-      {{- if .namespace }}
-      namespace: {{ .namespace }}
-      {{- end }}
-    {{- end }}
+    -
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .) | trim | indent 6 }}
     {{- end }}
   {{- end }}
   {{- if .sourceTags }}
@@ -87,14 +97,8 @@ spec:
   {{- if .targetServiceAccounts }}
   targetServiceAccounts:
     {{- range .targetServiceAccounts }}
-    {{- if .external }}
-    - external: {{ .external }}
-    {{- else if .name }}
-    - name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
-      {{- if .namespace }}
-      namespace: {{ .namespace }}
-      {{- end }}
-    {{- end }}
+    -
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .) | trim | indent 6 }}
     {{- end }}
   {{- end }}
   {{- if .targetTags }}

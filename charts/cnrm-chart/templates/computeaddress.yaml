@@ -8,20 +8,44 @@ kind: ComputeAddress
 metadata:
   annotations:
     {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
   name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
 spec:
-  resourceID: {{ .name }}
-  addressType: {{ .addressType }}
+  resourceID: {{ .resourceID | default .name }}
   location: {{ .location }}
-  ipVersion: {{ .ipVersion }}
+  addressType: {{ .addressType | default "EXTERNAL" }}
+  ipVersion: {{ .ipVersion | default "IPV4" }}
+  {{- if .address }}
+  address: {{ .address | quote }}
+  {{- end }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if .ipv6EndpointType }}
+  ipv6EndpointType: {{ .ipv6EndpointType }}
+  {{- end }}
+  {{- if .networkTier }}
+  networkTier: {{ .networkTier }}
+  {{- end }}
   {{- if .purpose }}
   purpose: {{ .purpose }}
   {{- end }}
-  {{- if .prefixLength }}
+  {{- if hasKey . "prefixLength" }}
   prefixLength: {{ .prefixLength }}
   {{- end }}
   {{- with .networkRef }}
   networkRef:
+    {{- if .external }}
+    external: {{ .external }}
+    {{- else if .name }}
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+    {{- end }}
+    {{- if .namespace }}
+    namespace: {{ .namespace }}
+    {{- end }}
+  {{- end }}
+  {{- with .subnetworkRef }}
+  subnetworkRef:
     {{- if .external }}
     external: {{ .external }}
     {{- else if .name }}

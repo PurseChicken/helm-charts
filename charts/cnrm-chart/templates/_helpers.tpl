@@ -217,3 +217,33 @@ networkRef:
   name: {{ include "cnrm-chart.resourceName" (dict "projectName" .projectName "name" .networkRefName) }}
 {{- end }}
 {{- end }}
+
+{{/*
+Render a Config Connector object reference (external selfLink/name, or Kubernetes name with project prefix)
+Used by templates/computerouternat.yaml (natIps, drainNatIps, rules, subnetworkRef), ComputeRoute (network and next-hop refs), computefirewall (sourceServiceAccounts, targetServiceAccounts), monitoring alert policy notificationChannels, and similar patterns.
+Input: dict with "projectName" and "ref" keys; ref may contain external, name, and/or namespace
+See: https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computerouternat
+*/}}
+{{- define "cnrm-chart.gcpObjectRef" -}}
+{{- if .ref.external }}
+external: {{ .ref.external }}
+{{- else if .ref.name }}
+name: {{ include "cnrm-chart.resourceName" (dict "projectName" .projectName "name" .ref.name) }}
+{{- end }}
+{{- if .ref.namespace }}
+namespace: {{ .ref.namespace }}
+{{- end }}
+{{- end }}
+
+{{/*
+Single-line / flow-style ref for YAML list items (avoids blank lines from block indentation).
+*/}}
+{{- define "cnrm-chart.gcpObjectRefFlow" -}}
+{{- if .ref.namespace -}}
+{ {{- if .ref.external }} external: {{ .ref.external | quote }}{{ else }} name: {{ include "cnrm-chart.resourceName" (dict "projectName" .projectName "name" .ref.name) | quote }}{{ end }}, namespace: {{ .ref.namespace | quote }} }
+{{- else if .ref.external -}}
+external: {{ .ref.external | quote }}
+{{- else -}}
+name: {{ include "cnrm-chart.resourceName" (dict "projectName" .projectName "name" .ref.name) }}
+{{- end -}}
+{{- end }}

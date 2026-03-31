@@ -120,6 +120,26 @@ This directory contains example values files demonstrating different deployment 
 
 ---
 
+### 5. Monitoring, routing, NAT, and compute (`05-monitoring-routing-and-compute.yaml`)
+
+**Use Case:** Smaller self-contained sample for **uptime checks**, **VPC routes**, **Cloud NAT**, and a **Compute Engine VM** (no GKE).
+
+**Features:**
+- `monitoring[].uptimeCheckConfig` — [`MonitoringUptimeCheckConfig`](https://cloud.google.com/config-connector/docs/reference/resource-docs/monitoring/monitoringuptimecheckconfig) (HTTP example; `projectRef` uses chart defaults)
+- `computeRoute` — default internet route via `nextHopGateway`
+- `computeRouter` + `computeRouterNat` — NAT on a regional Cloud Router
+- `computeInstance` — full CNRM [`spec`](https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeinstance) under `spec:` (boot disk from image, NIC on chart-created subnet)
+
+**When to Use:**
+- Regression testing / `helm template -f examples/...` coverage for these value paths
+- Copy-paste starting points for uptime + egress + standalone VMs
+
+**Key Patterns Demonstrated:**
+- Prefixed Kubernetes names for refs (e.g. subnetwork `ex05-sample-ex05-subnet` for `subnetworkRef.name`)
+- Generic placeholders (`example.invalid`, `ex05-sample`) — replace for real endpoints and projects
+
+---
+
 ## Common Patterns Across Examples
 
 ### Resource Naming
@@ -160,6 +180,9 @@ helm template test-release . -f examples/03-shared-vpc-service-project.yaml
 
 # Test example 4
 helm template test-release . -f examples/04-complete-infrastructure.yaml
+
+# Test example 5 (uptime checks, routes, NAT, ComputeInstance)
+helm template test-release . -f examples/05-monitoring-routing-and-compute.yaml
 ```
 
 ## Customization

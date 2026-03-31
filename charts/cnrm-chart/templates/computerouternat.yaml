@@ -1,0 +1,129 @@
+{{- if .Values.computeRouterNat }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.computeRouterNat }}
+{{- if not (or .routerRefName .routerRef) }}
+{{- fail "cnrm-chart: computeRouterNat requires routerRefName or routerRef" }}
+{{- end }}
+{{- if .routerRef }}
+{{- if and (not .routerRef.external) (not .routerRef.name) }}
+{{- fail "cnrm-chart: computeRouterNat.routerRef requires external or name" }}
+{{- end }}
+{{- end }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeRouterNAT
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .resourceID | default .name }}
+  region: {{ .region }}
+  natIpAllocateOption: {{ .natIpAllocateOption }}
+  sourceSubnetworkIpRangesToNat: {{ .sourceSubnetworkIpRangesToNat }}
+  {{- if .routerRef }}
+  routerRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .routerRef) | trim | indent 4 }}
+  {{- else }}
+  routerRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .routerRefName) }}
+  {{- end }}
+  {{- if .drainNatIps }}
+  drainNatIps:
+    {{- range .drainNatIps }}
+    - {{ include "cnrm-chart.gcpObjectRefFlow" (dict "projectName" $projectName "ref" .) }}
+    {{- end }}
+  {{- end }}
+  {{- if hasKey . "enableDynamicPortAllocation" }}
+  enableDynamicPortAllocation: {{ .enableDynamicPortAllocation }}
+  {{- end }}
+  {{- if hasKey . "enableEndpointIndependentMapping" }}
+  enableEndpointIndependentMapping: {{ .enableEndpointIndependentMapping }}
+  {{- end }}
+  {{- if .icmpIdleTimeoutSec }}
+  icmpIdleTimeoutSec: {{ .icmpIdleTimeoutSec }}
+  {{- end }}
+  {{- with .logConfig }}
+  logConfig:
+    enable: {{ .enable }}
+    filter: {{ .filter }}
+  {{- end }}
+  {{- if .maxPortsPerVm }}
+  maxPortsPerVm: {{ .maxPortsPerVm }}
+  {{- end }}
+  {{- if .minPortsPerVm }}
+  minPortsPerVm: {{ .minPortsPerVm }}
+  {{- end }}
+  {{- if .natIps }}
+  natIps:
+    {{- range .natIps }}
+    - {{ include "cnrm-chart.gcpObjectRefFlow" (dict "projectName" $projectName "ref" .) }}
+    {{- end }}
+  {{- end }}
+  {{- with .rules }}
+  rules:
+    {{- range . }}
+    - ruleNumber: {{ .ruleNumber }}
+      {{- if .description }}
+      description: {{ .description | quote }}
+      {{- end }}
+      match: {{ .match | quote }}
+      {{- with .action }}
+      action:
+        {{- with .sourceNatActiveIpsRefs }}
+        sourceNatActiveIpsRefs:
+          {{- range . }}
+          - {{ include "cnrm-chart.gcpObjectRefFlow" (dict "projectName" $projectName "ref" .) }}
+          {{- end }}
+        {{- end }}
+        {{- with .sourceNatDrainIpsRefs }}
+        sourceNatDrainIpsRefs:
+          {{- range . }}
+          - {{ include "cnrm-chart.gcpObjectRefFlow" (dict "projectName" $projectName "ref" .) }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- with .subnetwork }}
+  subnetwork:
+    {{- range . }}
+    {{- if not (or .subnetworkRef .subnetworkRefName) }}
+    {{- fail "cnrm-chart: computeRouterNat.subnetwork[] requires subnetworkRef or subnetworkRefName" }}
+    {{- end }}
+    -
+      {{- if .subnetworkRef }}
+      subnetworkRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .subnetworkRef) | trim | indent 8 }}
+      {{- else if .subnetworkRefName }}
+      subnetworkRef:
+        name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .subnetworkRefName) }}
+      {{- end }}
+      sourceIpRangesToNat:
+        {{- range .sourceIpRangesToNat }}
+        - {{ . }}
+        {{- end }}
+      {{- with .secondaryIpRangeNames }}
+      secondaryIpRangeNames:
+        {{- range . }}
+        - {{ . | quote }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if .tcpEstablishedIdleTimeoutSec }}
+  tcpEstablishedIdleTimeoutSec: {{ .tcpEstablishedIdleTimeoutSec }}
+  {{- end }}
+  {{- if .tcpTimeWaitTimeoutSec }}
+  tcpTimeWaitTimeoutSec: {{ .tcpTimeWaitTimeoutSec }}
+  {{- end }}
+  {{- if .tcpTransitoryIdleTimeoutSec }}
+  tcpTransitoryIdleTimeoutSec: {{ .tcpTransitoryIdleTimeoutSec }}
+  {{- end }}
+  {{- if .udpIdleTimeoutSec }}
+  udpIdleTimeoutSec: {{ .udpIdleTimeoutSec }}
+  {{- end }}
+{{- end -}}
+{{- end -}}

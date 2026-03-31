@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `computeInstance` / `templates/computeinstance.yaml`: [`ComputeInstance`](https://docs.cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeinstance) — required `spec` (full CNRM shape via YAML, including optional `resourceID` inside `spec`), optional `allowStoppingForUpdate` (metadata annotation `cnrm.cloud.google.com/allow-stopping-for-update`), metadata `labels` / `customAnnotations`, standard CNRM annotations.
+- `monitoring[].uptimeCheckConfig` / `templates/monitoring.yaml`: [`MonitoringUptimeCheckConfig`](https://docs.cloud.google.com/config-connector/docs/reference/resource-docs/monitoring/monitoringuptimecheckconfig) — optional `projectRef` (defaults to `external: projects/<projectID>`), `displayName`, `timeout`, optional `resourceID`, `period`, `contentMatchers`, `selectedRegions`, `monitoredResource`, `httpCheck`, `tcpCheck`, `resourceGroup`, metadata `labels` / `customAnnotations`.
+- `ComputeRouterNAT` support via `computeRouterNat` in `templates/computerouternat.yaml` (Cloud NAT on a Cloud Router), including optional rules, subnetwork lists, manual NAT IPs, logging, timeouts, and dynamic port settings per [Config Connector](https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computerouternat).
+- `ComputeRoute` support via `computeRoute` in `templates/computeroute.yaml` (VPC routes), including `networkRef` / `networkRefName` / `sharedVpc`, next hops (gateway, IP, VPN tunnel, instance, ILB), `priority`, and `tags` per [Config Connector](https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeroute).
+
+### Changed
+
+- `monitoring[].notificationChannel` / `templates/monitoring.yaml`: `description` and `enabled` are emitted only when set in values (`hasKey`), avoiding null/empty YAML when omitted.
+- `staticIp` / `templates/computeaddress.yaml`: full [`ComputeAddress`](https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeaddress) spec support (`address`, `description`, `ipv6EndpointType`, `networkTier`, `subnetworkRef`, optional `resourceID`, `customAnnotations`). `addressType` and `ipVersion` default to `EXTERNAL` and `IPV4` when omitted. `prefixLength` can be set to `0` when provided explicitly.
+- `firewall` / `templates/computefirewall.yaml`: aligned with full [`ComputeFirewall`](https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computefirewall) spec — optional `resourceID`, raw `networkRef`, deprecated `enableLogging`, `priority`/`disabled` with explicit `0`/`false`, and corrected service account ref lists.
+- `vpcPeering` / `templates/computenetworkpeering.yaml`: aligned with full [`ComputeNetworkPeering`](https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computenetworkpeering) spec — optional `resourceID`, raw `networkRef`, `hasKey` for all boolean and `stackType` fields (explicit `false` / `IPV4_ONLY`), validation for required `peerNetworkRef` and network selection, `peerNetworkRef` name path uses `gcpObjectRef` for consistent `namespace` handling.
+- `monitoring[].alertPolicy` / `templates/monitoring.yaml`: aligned with [`MonitoringAlertPolicy`](https://docs.cloud.google.com/config-connector/docs/reference/resource-docs/monitoring/monitoringalertpolicy) — optional `resourceID`, `documentation`, `severity`, metadata `labels` / `customAnnotations`, `enabled` defaulting when omitted, `notificationChannels` via `gcpObjectRef` (`name` with prefix, `external`, `namespace`). `alertStrategy` and `conditions` remain structured via YAML (full nested condition types).
+
 ## [v1.4.0] - 2026-02-06
 
 ### Changed
