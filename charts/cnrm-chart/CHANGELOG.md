@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.5.0] - 2026-03-31
+
 ### Added
 
 - `computeInstance` / `templates/computeinstance.yaml`: [`ComputeInstance`](https://docs.cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeinstance) — required `spec` (full CNRM shape via YAML, including optional `resourceID` inside `spec`), optional `allowStoppingForUpdate` (metadata annotation `cnrm.cloud.google.com/allow-stopping-for-update`), metadata `labels` / `customAnnotations`, standard CNRM annotations.
