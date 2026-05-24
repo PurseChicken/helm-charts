@@ -220,7 +220,7 @@ networkRef:
 
 {{/*
 Render a Config Connector object reference (external selfLink/name, or Kubernetes name with project prefix)
-Used by templates/computerouternat.yaml (natIps, drainNatIps, rules, subnetworkRef), ComputeRoute (network and next-hop refs), computefirewall (sourceServiceAccounts, targetServiceAccounts), monitoring alert policy notificationChannels, and similar patterns.
+Used by templates/computerouternat.yaml (natIps, drainNatIps, rules, subnetworkRef), computedisk.yaml (imageRef, snapshotRef, sourceDiskRef, resourcePolicies, asyncPrimaryDisk), ComputeRoute (network and next-hop refs), computefirewall (sourceServiceAccounts, targetServiceAccounts), monitoring alert policy notificationChannels, and similar patterns.
 Input: dict with "projectName" and "ref" keys; ref may contain external, name, and/or namespace
 See: https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computerouternat
 */}}

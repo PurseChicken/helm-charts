@@ -1341,3 +1341,132 @@
 #     #           namespace: "other-ns"
 #     #       sourceNatDrainIpsRefs:
 #     #         - name: "nat-ip-old"
+
+# # Persistent disks (ComputeDisk)
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computedisk
+# # location is required — use a zone (zonal disk) or region (regional disk).
+# computeDisk:
+#   - name: "my-data-disk"
+#     customAnnotations:
+#       abc: "1234567890"
+#     # Optional; defaults to name (GCP disk name)
+#     # resourceID: "my-data-disk"
+#     # Optional Kubernetes metadata labels
+#     # labels:
+#     #   tier: "data"
+#     location: "us-central1-a"
+#     description: "Blank zonal SSD"
+#     size: 100
+#     type: "pd-ssd"
+#     # Optional booleans / performance (set explicitly to emit false or 0)
+#     # multiWriter: false
+#     # enableConfidentialCompute: false
+#     # physicalBlockSizeBytes: 4096
+#     # provisionedIops: 3000
+#     # provisionedThroughput: 140
+#     # interface: "SCSI"  # deprecated in GCP; omit unless required
+#     #
+#     # Source — use ONE creation path as appropriate (image, snapshot, source disk, or blank size/type)
+#     # imageRefName: "my-image"
+#     # imageRef:
+#     #   external: "https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/..."
+#     # snapshotRefName: "my-snapshot"
+#     # snapshotRef:
+#     #   name: "my-snapshot"
+#     # sourceDiskRefName: "source-disk"
+#     # sourceDiskRef:
+#     #   external: "https://www.googleapis.com/compute/v1/projects/.../zones/.../disks/..."
+#     #
+#     # Regional disks (location = region name)
+#     # location: "us-central1"
+#     # replicaZones:
+#     #   - "https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-a"
+#     #   - "https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-f"
+#     #
+#     # Async replication primary disk
+#     # asyncPrimaryDiskDiskRefName: "primary-disk"
+#     # asyncPrimaryDiskDiskRef:
+#     #   name: "primary-disk"
+#     # asyncPrimaryDisk:
+#     #   diskRef:
+#     #     name: "primary-disk"
+#     #
+#     # Customer-managed / supplied encryption (pass full CNRM shape)
+#     # diskEncryptionKey:
+#     #   kmsKeyRef:
+#     #     name: "my-kms-key"
+#     #   rawKey:
+#     #     valueFrom:
+#     #       secretKeyRef:
+#     #         name: disk-encryption-secret
+#     #         key: rawKey
+#     # sourceImageEncryptionKey: { ... }
+#     # sourceSnapshotEncryptionKey: { ... }
+#     #
+#     # guestOsFeatures:
+#     #   - type: "UEFI_COMPATIBLE"
+#     # licenses:
+#     #   - "https://www.googleapis.com/compute/v1/projects/.../global/licenses/..."
+#     #
+#     # Zonal disks only — attach snapshot schedule policies (ComputeResourcePolicy)
+#     # resourcePolicies:
+#     #   - name: "daily-snapshots"
+#     #   - external: "https://www.googleapis.com/compute/v1/projects/.../regions/.../resourcePolicies/..."
+#     #
+#     # Optional cross-project ownership
+#     # projectRef:
+#     #   external: "my-other-project"
+
+# # Compute resource policies (ComputeResourcePolicy)
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeresourcepolicy
+# # Use for snapshot schedules, instance start/stop schedules, placement groups, or disk consistency groups.
+# computeResourcePolicy:
+#   - name: "daily-snapshots"
+#     customAnnotations:
+#       abc: "1234567890"
+#     # Optional; defaults to name (GCP policy name)
+#     # resourceID: "daily-snapshots"
+#     region: "us-central1"
+#     description: "Daily disk snapshots with 7-day retention"
+#     snapshotSchedulePolicy:
+#       schedule:
+#         # Use ONE of dailySchedule, hourlySchedule, or weeklySchedule
+#         dailySchedule:
+#           daysInCycle: 1
+#           startTime: "04:00"
+#         # hourlySchedule:
+#         #   hoursInCycle: 4
+#         #   startTime: "13:00"
+#         # weeklySchedule:
+#         #   dayOfWeeks:
+#         #     - day: "MONDAY"
+#         #       startTime: "08:00"
+#       retentionPolicy:
+#         maxRetentionDays: 7
+#         onSourceDiskDelete: "KEEP_AUTO_SNAPSHOTS"  # or APPLY_RETENTION_POLICY
+#       snapshotProperties:
+#         guestFlush: true
+#         storageLocations:
+#           - "us-central1"
+#         labels:
+#           autodeleted: "false"
+#   # Instance schedule example (requires timeZone; vmStartSchedule and/or vmStopSchedule)
+#   # - name: "nightly-stop"
+#   #   region: "us-central1"
+#   #   instanceSchedulePolicy:
+#   #     timeZone: "America/Los_Angeles"
+#   #     vmStopSchedule:
+#   #       schedule: "0 22 * * *"
+#   #     vmStartSchedule:
+#   #       schedule: "0 6 * * *"
+#   # Group placement example
+#   # - name: "compact-placement"
+#   #   region: "us-central1"
+#   #   groupPlacementPolicy:
+#   #     collocation: "COLLOCATED"
+#   #     vmCount: 2
+#   # Disk consistency group (async replication)
+#   # - name: "consistency-group"
+#   #   region: "us-central1"
+#   #   diskConsistencyGroupPolicy:
+#   #     enabled: true

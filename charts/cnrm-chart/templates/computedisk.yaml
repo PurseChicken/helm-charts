@@ -1,0 +1,137 @@
+{{- if .Values.computeDisk }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.computeDisk }}
+{{- if not .location }}
+{{- fail "cnrm-chart: computeDisk requires location (zone or region per https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computedisk)" }}
+{{- end }}
+{{- if .imageRef }}
+{{- if and (not .imageRef.external) (not .imageRef.name) }}
+{{- fail "cnrm-chart: computeDisk.imageRef requires external or name" }}
+{{- end }}
+{{- end }}
+{{- if .snapshotRef }}
+{{- if and (not .snapshotRef.external) (not .snapshotRef.name) }}
+{{- fail "cnrm-chart: computeDisk.snapshotRef requires external or name" }}
+{{- end }}
+{{- end }}
+{{- if .sourceDiskRef }}
+{{- if and (not .sourceDiskRef.external) (not .sourceDiskRef.name) }}
+{{- fail "cnrm-chart: computeDisk.sourceDiskRef requires external or name" }}
+{{- end }}
+{{- end }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeDisk
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+  {{- if .labels }}
+  labels:
+    {{- toYaml .labels | nindent 4 }}
+  {{- end }}
+spec:
+  resourceID: {{ .resourceID | default .name }}
+  location: {{ .location | quote }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if hasKey . "size" }}
+  size: {{ .size }}
+  {{- end }}
+  {{- if .type }}
+  type: {{ .type | quote }}
+  {{- end }}
+  {{- if hasKey . "multiWriter" }}
+  multiWriter: {{ .multiWriter }}
+  {{- end }}
+  {{- if hasKey . "enableConfidentialCompute" }}
+  enableConfidentialCompute: {{ .enableConfidentialCompute }}
+  {{- end }}
+  {{- if hasKey . "physicalBlockSizeBytes" }}
+  physicalBlockSizeBytes: {{ .physicalBlockSizeBytes }}
+  {{- end }}
+  {{- if hasKey . "provisionedIops" }}
+  provisionedIops: {{ .provisionedIops }}
+  {{- end }}
+  {{- if hasKey . "provisionedThroughput" }}
+  provisionedThroughput: {{ .provisionedThroughput }}
+  {{- end }}
+  {{- if .interface }}
+  interface: {{ .interface | quote }}
+  {{- end }}
+  {{- with .licenses }}
+  licenses:
+    {{- range . }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  {{- with .replicaZones }}
+  replicaZones:
+    {{- range . }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  {{- with .guestOsFeatures }}
+  guestOsFeatures:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if .asyncPrimaryDisk }}
+  asyncPrimaryDisk:
+    {{- toYaml .asyncPrimaryDisk | nindent 4 }}
+  {{- else if .asyncPrimaryDiskDiskRef }}
+  asyncPrimaryDisk:
+    diskRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .asyncPrimaryDiskDiskRef) | trim | indent 6 }}
+  {{- else if .asyncPrimaryDiskDiskRefName }}
+  asyncPrimaryDisk:
+    diskRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .asyncPrimaryDiskDiskRefName) }}
+  {{- end }}
+  {{- with .diskEncryptionKey }}
+  diskEncryptionKey:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if .imageRef }}
+  imageRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .imageRef) | trim | indent 4 }}
+  {{- else if .imageRefName }}
+  imageRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .imageRefName) }}
+  {{- end }}
+  {{- if .snapshotRef }}
+  snapshotRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .snapshotRef) | trim | indent 4 }}
+  {{- else if .snapshotRefName }}
+  snapshotRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .snapshotRefName) }}
+  {{- end }}
+  {{- if .sourceDiskRef }}
+  sourceDiskRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .sourceDiskRef) | trim | indent 4 }}
+  {{- else if .sourceDiskRefName }}
+  sourceDiskRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .sourceDiskRefName) }}
+  {{- end }}
+  {{- with .sourceImageEncryptionKey }}
+  sourceImageEncryptionKey:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .sourceSnapshotEncryptionKey }}
+  sourceSnapshotEncryptionKey:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .projectRef }}
+  projectRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .) | trim | indent 4 }}
+  {{- end }}
+  {{- with .resourcePolicies }}
+  resourcePolicies:
+    {{- range . }}
+    - {{ include "cnrm-chart.gcpObjectRefFlow" (dict "projectName" $projectName "ref" .) }}
+    {{- end }}
+  {{- end }}
+{{- end -}}
+{{- end -}}

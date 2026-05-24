@@ -120,14 +120,15 @@ This directory contains example values files demonstrating different deployment 
 
 ---
 
-### 5. Monitoring, routing, NAT, and compute (`05-monitoring-routing-and-compute.yaml`)
+### 5. Monitoring, routing, NAT, disks, and compute (`05-monitoring-routing-and-compute.yaml`)
 
-**Use Case:** Smaller self-contained sample for **uptime checks**, **VPC routes**, **Cloud NAT**, and a **Compute Engine VM** (no GKE).
+**Use Case:** Smaller self-contained sample for **uptime checks**, **VPC routes**, **Cloud NAT**, **snapshot policies**, **persistent disks**, and a **Compute Engine VM** (no GKE).
 
 **Features:**
 - `monitoring[].uptimeCheckConfig` — [`MonitoringUptimeCheckConfig`](https://cloud.google.com/config-connector/docs/reference/resource-docs/monitoring/monitoringuptimecheckconfig) (HTTP example; `projectRef` uses chart defaults)
 - `computeRoute` — default internet route via `nextHopGateway`
 - `computeRouter` + `computeRouterNat` — NAT on a regional Cloud Router
+- `computeResourcePolicy` + `computeDisk` — daily snapshot schedule attached to a zonal disk
 - `computeInstance` — full CNRM [`spec`](https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeinstance) under `spec:` (boot disk from image, NIC on chart-created subnet)
 
 **When to Use:**

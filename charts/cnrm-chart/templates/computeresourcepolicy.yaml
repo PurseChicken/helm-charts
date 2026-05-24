@@ -1,0 +1,127 @@
+{{- if .Values.computeResourcePolicy }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.computeResourcePolicy }}
+{{- if not .region }}
+{{- fail "cnrm-chart: computeResourcePolicy requires region (https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeresourcepolicy)" }}
+{{- end }}
+{{- if .snapshotSchedulePolicy }}
+{{- if not .snapshotSchedulePolicy.schedule }}
+{{- fail "cnrm-chart: computeResourcePolicy.snapshotSchedulePolicy requires schedule" }}
+{{- end }}
+{{- $schedule := .snapshotSchedulePolicy.schedule }}
+{{- if not (or $schedule.dailySchedule $schedule.hourlySchedule $schedule.weeklySchedule) }}
+{{- fail "cnrm-chart: computeResourcePolicy.snapshotSchedulePolicy.schedule requires one of dailySchedule, hourlySchedule, or weeklySchedule" }}
+{{- end }}
+{{- end }}
+{{- if .instanceSchedulePolicy }}
+{{- if not .instanceSchedulePolicy.timeZone }}
+{{- fail "cnrm-chart: computeResourcePolicy.instanceSchedulePolicy requires timeZone" }}
+{{- end }}
+{{- end }}
+{{- if .diskConsistencyGroupPolicy }}
+{{- if not (hasKey .diskConsistencyGroupPolicy "enabled") }}
+{{- fail "cnrm-chart: computeResourcePolicy.diskConsistencyGroupPolicy requires enabled" }}
+{{- end }}
+{{- end }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeResourcePolicy
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .resourceID | default .name }}
+  region: {{ .region | quote }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- with .diskConsistencyGroupPolicy }}
+  diskConsistencyGroupPolicy:
+    enabled: {{ .enabled }}
+  {{- end }}
+  {{- with .groupPlacementPolicy }}
+  groupPlacementPolicy:
+    {{- if hasKey . "availabilityDomainCount" }}
+    availabilityDomainCount: {{ .availabilityDomainCount }}
+    {{- end }}
+    {{- if .collocation }}
+    collocation: {{ .collocation | quote }}
+    {{- end }}
+    {{- if hasKey . "maxDistance" }}
+    maxDistance: {{ .maxDistance }}
+    {{- end }}
+    {{- if hasKey . "vmCount" }}
+    vmCount: {{ .vmCount }}
+    {{- end }}
+  {{- end }}
+  {{- with .instanceSchedulePolicy }}
+  instanceSchedulePolicy:
+    timeZone: {{ .timeZone | quote }}
+    {{- if .expirationTime }}
+    expirationTime: {{ .expirationTime | quote }}
+    {{- end }}
+    {{- if .startTime }}
+    startTime: {{ .startTime | quote }}
+    {{- end }}
+    {{- with .vmStartSchedule }}
+    vmStartSchedule:
+      schedule: {{ .schedule | quote }}
+    {{- end }}
+    {{- with .vmStopSchedule }}
+    vmStopSchedule:
+      schedule: {{ .schedule | quote }}
+    {{- end }}
+  {{- end }}
+  {{- with .snapshotSchedulePolicy }}
+  snapshotSchedulePolicy:
+    {{- with .retentionPolicy }}
+    retentionPolicy:
+      maxRetentionDays: {{ .maxRetentionDays }}
+      {{- if .onSourceDiskDelete }}
+      onSourceDiskDelete: {{ .onSourceDiskDelete | quote }}
+      {{- end }}
+    {{- end }}
+    schedule:
+      {{- with .schedule.dailySchedule }}
+      dailySchedule:
+        daysInCycle: {{ .daysInCycle }}
+        startTime: {{ .startTime | quote }}
+      {{- end }}
+      {{- with .schedule.hourlySchedule }}
+      hourlySchedule:
+        hoursInCycle: {{ .hoursInCycle }}
+        startTime: {{ .startTime | quote }}
+      {{- end }}
+      {{- with .schedule.weeklySchedule }}
+      weeklySchedule:
+        dayOfWeeks:
+          {{- range .dayOfWeeks }}
+          - day: {{ .day | quote }}
+            startTime: {{ .startTime | quote }}
+          {{- end }}
+      {{- end }}
+    {{- with .snapshotProperties }}
+    snapshotProperties:
+      {{- if .chainName }}
+      chainName: {{ .chainName | quote }}
+      {{- end }}
+      {{- if hasKey . "guestFlush" }}
+      guestFlush: {{ .guestFlush }}
+      {{- end }}
+      {{- with .labels }}
+      labels:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .storageLocations }}
+      storageLocations:
+        {{- range . }}
+        - {{ . | quote }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end -}}
+{{- end -}}

@@ -5,6 +5,7 @@
 #   - monitoring[].uptimeCheckConfig (MonitoringUptimeCheckConfig)
 #   - computeRoute (ComputeRoute)
 #   - computeRouter + computeRouterNat (ComputeRouter + ComputeRouterNAT)
+#   - computeResourcePolicy + computeDisk (snapshot schedule policy on a zonal disk)
 #   - computeInstance (ComputeInstance; spec matches CNRM — copy from docs as needed)
 #
 # Values are generic placeholders. Replace project_id / hosts / refs for real use.
@@ -76,6 +77,37 @@ monitoring:
         httpCheck:
           useSsl: true
           path: "/"
+
+# ============================================================================
+# Snapshot schedule policy and zonal data disk
+# ============================================================================
+computeResourcePolicy:
+  - name: "ex05-daily-snapshots"
+    region: "us-central1"
+    description: "Example daily snapshot schedule for ex05 data disk"
+    snapshotSchedulePolicy:
+      schedule:
+        dailySchedule:
+          daysInCycle: 1
+          startTime: "04:00"
+      retentionPolicy:
+        maxRetentionDays: 7
+        onSourceDiskDelete: "KEEP_AUTO_SNAPSHOTS"
+      snapshotProperties:
+        guestFlush: true
+        storageLocations:
+          - "us-central1"
+        labels:
+          example: "ex05"
+
+computeDisk:
+  - name: "ex05-data"
+    location: "us-central1-a"
+    description: "Example zonal data disk with snapshot policy"
+    size: 50
+    type: "pd-balanced"
+    resourcePolicies:
+      - name: "ex05-daily-snapshots"
 
 # ============================================================================
 # Compute instance — full spec under spec: (see CNRM ComputeInstance docs)

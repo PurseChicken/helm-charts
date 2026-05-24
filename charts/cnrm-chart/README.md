@@ -65,6 +65,11 @@ Before using this chart, ensure you have:
 - Security Policies
 - Cloud IDS
 - Cloud VPN (Compute Router, VPN Gateway, External VPN Gateway, VPN Tunnel)
+- Cloud NAT (ComputeRouterNAT)
+- VPC Routes (ComputeRoute)
+- Compute Instances (ComputeInstance)
+- Persistent Disks (ComputeDisk)
+- Compute Resource Policies (ComputeResourcePolicy)
 
 ## Quick Start
 

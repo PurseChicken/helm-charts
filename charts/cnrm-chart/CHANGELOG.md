@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `computeDisk` / `templates/computedisk.yaml`: [`ComputeDisk`](https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computedisk) — zonal and regional persistent disks with `location`, sizing/type, image/snapshot/source disk refs (`*RefName` or `*Ref`), encryption keys, guest OS features, replica zones, async primary disk, and zonal `resourcePolicies` attachment per CNRM spec.
+- `computeResourcePolicy` / `templates/computeresourcepolicy.yaml`: [`ComputeResourcePolicy`](https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeresourcepolicy) — snapshot schedule policies (daily/hourly/weekly), instance schedule policies, group placement policies, and disk consistency group policies.
+
 ## [v1.5.1] - 2026-03-31
 
 ### Fixed
