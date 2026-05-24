@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.6.0] - 2026-05-24
+
 ### Added
 
 - `computeDisk` / `templates/computedisk.yaml`: [`ComputeDisk`](https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computedisk) — zonal and regional persistent disks with `location`, sizing/type, image/snapshot/source disk refs (`*RefName` or `*Ref`), encryption keys, guest OS features, replica zones, async primary disk, and zonal `resourcePolicies` attachment per CNRM spec.
