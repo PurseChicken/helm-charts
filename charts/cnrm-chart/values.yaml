@@ -1470,3 +1470,116 @@
 #   #   region: "us-central1"
 #   #   diskConsistencyGroupPolicy:
 #   #     enabled: true
+
+# # Health checks (ComputeHealthCheck)
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computehealthcheck
+# # location is required — use "global" or a region name.
+# computeHealthCheck:
+#   - name: "app-health"
+#     customAnnotations:
+#       abc: "1234567890"
+#     # Optional; defaults to name (GCP health check name)
+#     # resourceID: "app-health"
+#     location: "global"
+#     description: "HTTP health check for app backends"
+#     checkIntervalSec: 10
+#     timeoutSec: 5
+#     healthyThreshold: 2
+#     unhealthyThreshold: 3
+#     httpHealthCheck:
+#       port: 80
+#       requestPath: "/health"
+#     # httpsHealthCheck: { port: 443, requestPath: "/health" }
+#     # tcpHealthCheck: { port: 8080 }
+#     # sslHealthCheck: { port: 443 }
+#     # http2HealthCheck: { port: 443, requestPath: "/" }
+#     # grpcHealthCheck: { port: 50051, grpcServiceName: "my.service.Health" }
+#     # logConfig:
+#     #   enable: true
+
+# # Instance templates (ComputeInstanceTemplate)
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeinstancetemplate
+# computeInstanceTemplate:
+#   - name: "app-template"
+#     customAnnotations:
+#       abc: "1234567890"
+#     # Optional; defaults to name (GCP template name)
+#     # resourceID: "app-template"
+#     machineType: "e2-medium"
+#     region: "us-central1"
+#     description: "Template for app tier VMs"
+#     tags:
+#       - "app"
+#     disk:
+#       - boot: true
+#         autoDelete: true
+#         sourceImageRef:
+#           external: debian-cloud/debian-12
+#       # Attach a chart-created persistent disk as non-boot data disk
+#       - deviceName: "data"
+#         autoDelete: false
+#         boot: false
+#         sourceDiskRefName: "my-data-disk"
+#     networkInterface:
+#       - networkRefName: "my-net"
+#         subnetworkRefName: "my-subnet"
+#         accessConfig:
+#           - natIpRefName: "my-static-ip"
+#             networkTier: "PREMIUM"
+#     metadataStartupScript: |
+#       #!/bin/bash
+#       echo "hello" > /tmp/started
+#     scheduling:
+#       automaticRestart: true
+#       onHostMaintenance: "MIGRATE"
+#     serviceAccount:
+#       serviceAccountRefName: "my-sa"
+#       scopes:
+#         - "cloud-platform"
+
+# # Managed instance groups (ComputeInstanceGroupManager)
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeinstancegroupmanager
+# computeInstanceGroupManager:
+#   - name: "app-mig"
+#     customAnnotations:
+#       abc: "1234567890"
+#     # Optional; defaults to name (GCP MIG name)
+#     # resourceID: "app-mig"
+#     # projectRef defaults to external: projects/<projectID>
+#     location: "us-central1-a"  # zone (zonal MIG) or region (regional MIG)
+#     baseInstanceName: "app"
+#     targetSize: 3
+#     instanceTemplateRefName: "app-template"
+#     autoHealingPolicies:
+#       - healthCheckRefName: "app-health"
+#         initialDelaySec: 300
+#     updatePolicy:
+#       type: "PROACTIVE"
+#       minimalAction: "RESTART"
+#       maxSurge:
+#         fixed: 3
+#       maxUnavailable:
+#         fixed: 3
+#     # Regional MIG distribution (optional)
+#     # distributionPolicy:
+#     #   targetShape: "BALANCED"
+#     #   zones:
+#     #     - zone: "us-central1-a"
+#     #     - zone: "us-central1-b"
+#     # Canary / multi-version rollout (optional; overrides top-level instanceTemplateRef)
+#     # versions:
+#     #   - name: "canary"
+#     #     instanceTemplateRefName: "app-template-canary"
+#     #     targetSize:
+#     #       fixed: 1
+#     #   - name: "stable"
+#     #     instanceTemplateRefName: "app-template"
+#     # Stateful MIG — preserve disks/IPs across recreates (optional)
+#     # statefulPolicy:
+#     #   preservedState:
+#     #     disks:
+#     #       data:
+#     #         autoDelete: "NEVER"
+#     #     externalIps:
+#     #       nic0:
+#     #         autoDelete: "NEVER"

@@ -1,0 +1,271 @@
+{{- if .Values.computeInstanceTemplate }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- $root := . }}
+{{- range .Values.computeInstanceTemplate }}
+{{- if not .machineType }}
+{{- fail "cnrm-chart: computeInstanceTemplate requires machineType (https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeinstancetemplate)" }}
+{{- end }}
+{{- if not .disk }}
+{{- fail "cnrm-chart: computeInstanceTemplate requires disk (at least one disk entry)" }}
+{{- end }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeInstanceTemplate
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+  {{- if .labels }}
+  labels:
+    {{- toYaml .labels | nindent 4 }}
+  {{- end }}
+spec:
+  resourceID: {{ .resourceID | default .name }}
+  machineType: {{ .machineType | quote }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if .instanceDescription }}
+  instanceDescription: {{ .instanceDescription | quote }}
+  {{- end }}
+  {{- if .region }}
+  region: {{ .region | quote }}
+  {{- end }}
+  {{- if .namePrefix }}
+  namePrefix: {{ .namePrefix | quote }}
+  {{- end }}
+  {{- if hasKey . "canIpForward" }}
+  canIpForward: {{ .canIpForward }}
+  {{- end }}
+  {{- if hasKey . "enableDisplay" }}
+  enableDisplay: {{ .enableDisplay }}
+  {{- end }}
+  {{- if .metadataStartupScript }}
+  metadataStartupScript: {{ .metadataStartupScript | quote }}
+  {{- end }}
+  {{- if .minCpuPlatform }}
+  minCpuPlatform: {{ .minCpuPlatform | quote }}
+  {{- end }}
+  disk:
+    {{- range .disk }}
+    -
+      {{- if hasKey . "autoDelete" }}
+      autoDelete: {{ .autoDelete }}
+      {{- end }}
+      {{- if hasKey . "boot" }}
+      boot: {{ .boot }}
+      {{- end }}
+      {{- if .deviceName }}
+      deviceName: {{ .deviceName | quote }}
+      {{- end }}
+      {{- if .diskName }}
+      diskName: {{ .diskName | quote }}
+      {{- end }}
+      {{- if hasKey . "diskSizeGb" }}
+      diskSizeGb: {{ .diskSizeGb }}
+      {{- end }}
+      {{- if .diskType }}
+      diskType: {{ .diskType | quote }}
+      {{- end }}
+      {{- if .interface }}
+      interface: {{ .interface | quote }}
+      {{- end }}
+      {{- with .labels }}
+      labels:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .mode }}
+      mode: {{ .mode | quote }}
+      {{- end }}
+      {{- if hasKey . "provisionedIops" }}
+      provisionedIops: {{ .provisionedIops }}
+      {{- end }}
+      {{- if .type }}
+      type: {{ .type | quote }}
+      {{- end }}
+      {{- if .sourceDiskRef }}
+      sourceDiskRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .sourceDiskRef) | trim | indent 8 }}
+      {{- else if .sourceDiskRefName }}
+      sourceDiskRef:
+        name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .sourceDiskRefName) }}
+      {{- end }}
+      {{- if .sourceImageRef }}
+      sourceImageRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .sourceImageRef) | trim | indent 8 }}
+      {{- else if .sourceImageRefName }}
+      sourceImageRef:
+        name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .sourceImageRefName) }}
+      {{- end }}
+      {{- if .sourceSnapshotRef }}
+      sourceSnapshotRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .sourceSnapshotRef) | trim | indent 8 }}
+      {{- else if .sourceSnapshotRefName }}
+      sourceSnapshotRef:
+        name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .sourceSnapshotRefName) }}
+      {{- end }}
+      {{- with .diskEncryptionKey }}
+      diskEncryptionKey:
+        {{- if .kmsKeyRef }}
+        kmsKeyRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .kmsKeyRef) | trim | indent 10 }}
+        {{- end }}
+      {{- end }}
+      {{- with .sourceImageEncryptionKey }}
+      sourceImageEncryptionKey:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .sourceSnapshotEncryptionKey }}
+      sourceSnapshotEncryptionKey:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .resourcePolicies }}
+      resourcePolicies:
+        {{- range . }}
+        - {{ include "cnrm-chart.gcpObjectRefFlow" (dict "projectName" $projectName "ref" .) }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- with .networkInterface }}
+  networkInterface:
+    {{- range . }}
+    -
+      {{- if .name }}
+      name: {{ .name | quote }}
+      {{- end }}
+      {{- if .networkIp }}
+      networkIp: {{ .networkIp | quote }}
+      {{- end }}
+      {{- if .networkAttachment }}
+      networkAttachment: {{ .networkAttachment | quote }}
+      {{- end }}
+      {{- if .nicType }}
+      nicType: {{ .nicType | quote }}
+      {{- end }}
+      {{- if .stackType }}
+      stackType: {{ .stackType | quote }}
+      {{- end }}
+      {{- if hasKey . "queueCount" }}
+      queueCount: {{ .queueCount }}
+      {{- end }}
+      {{- if hasKey . "internalIpv6PrefixLength" }}
+      internalIpv6PrefixLength: {{ .internalIpv6PrefixLength }}
+      {{- end }}
+      {{- if .ipv6Address }}
+      ipv6Address: {{ .ipv6Address | quote }}
+      {{- end }}
+      {{- if .ipv6AccessType }}
+      ipv6AccessType: {{ .ipv6AccessType | quote }}
+      {{- end }}
+      {{- if .subnetworkProject }}
+      subnetworkProject: {{ .subnetworkProject | quote }}
+      {{- end }}
+      {{- if .networkRef }}
+      networkRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .networkRef) | trim | indent 8 }}
+      {{- else if .networkRefName }}
+      networkRef:
+        name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .networkRefName) }}
+      {{- else if .sharedVpc }}
+{{ include "cnrm-chart.networkRef" (dict "context" $root "projectName" $projectName "networkRefName" nil "sharedVpc" .sharedVpc) | nindent 6 }}
+      {{- end }}
+      {{- if .subnetworkRef }}
+      subnetworkRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .subnetworkRef) | trim | indent 8 }}
+      {{- else if .subnetworkRefName }}
+      subnetworkRef:
+        name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .subnetworkRefName) }}
+      {{- end }}
+      {{- with .aliasIpRange }}
+      aliasIpRange:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .ipv6AccessConfig }}
+      ipv6AccessConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .accessConfig }}
+      accessConfig:
+        {{- range . }}
+        -
+          {{- if .natIpRef }}
+          natIpRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .natIpRef) | trim | indent 12 }}
+          {{- else if .natIpRefName }}
+          natIpRef:
+            name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .natIpRefName) }}
+          {{- end }}
+          {{- if .networkTier }}
+          networkTier: {{ .networkTier | quote }}
+          {{- end }}
+          {{- if .publicPtrDomainName }}
+          publicPtrDomainName: {{ .publicPtrDomainName | quote }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- with .metadata }}
+  metadata:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .scheduling }}
+  scheduling:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .serviceAccount }}
+  serviceAccount:
+    {{- with .scopes }}
+    scopes:
+      {{- range . }}
+      - {{ . | quote }}
+      {{- end }}
+    {{- end }}
+    {{- if .serviceAccountRef }}
+    serviceAccountRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .serviceAccountRef) | trim | indent 6 }}
+    {{- else if .serviceAccountRefName }}
+    serviceAccountRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .serviceAccountRefName) }}
+    {{- end }}
+  {{- end }}
+  {{- with .guestAccelerator }}
+  guestAccelerator:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .advancedMachineFeatures }}
+  advancedMachineFeatures:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .confidentialInstanceConfig }}
+  confidentialInstanceConfig:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .shieldedInstanceConfig }}
+  shieldedInstanceConfig:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .networkPerformanceConfig }}
+  networkPerformanceConfig:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .reservationAffinity }}
+  reservationAffinity:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .resourcePolicies }}
+  resourcePolicies:
+    {{- range . }}
+    - {{ include "cnrm-chart.gcpObjectRefFlow" (dict "projectName" $projectName "ref" .) }}
+    {{- end }}
+  {{- end }}
+  {{- with .tags }}
+  tags:
+    {{- range . }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+{{- end -}}
+{{- end -}}

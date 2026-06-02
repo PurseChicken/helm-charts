@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `computeHealthCheck` / `templates/computehealthcheck.yaml`: [`ComputeHealthCheck`](https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computehealthcheck) — global or regional health checks with HTTP/HTTPS/HTTP2/TCP/SSL/gRPC probe types, thresholds, logging, and optional `resourceID` / `customAnnotations`.
+- `computeInstanceTemplate` / `templates/computeinstancetemplate.yaml`: [`ComputeInstanceTemplate`](https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeinstancetemplate) — instance templates with disk sources (`sourceDiskRefName` / `sourceImageRefName` / `sourceSnapshotRefName` or raw refs), network interfaces (`networkRefName` / `subnetworkRefName` / `sharedVpc`, `natIpRefName` for `ComputeAddress`), scheduling, service accounts, shielded VM, and related CNRM fields.
+- `computeInstanceGroupManager` / `templates/computeinstancegroupmanager.yaml`: [`ComputeInstanceGroupManager`](https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeinstancegroupmanager) — zonal or regional MIGs with `instanceTemplateRefName`, `healthCheckRefName` (auto-healing), canary `versions`, `updatePolicy`, `statefulPolicy`, `distributionPolicy`, and default `projectRef` to `projects/<projectID>`.
+
 ## [v1.6.0] - 2026-05-24
 
 ### Added

@@ -70,6 +70,9 @@ Before using this chart, ensure you have:
 - Compute Instances (ComputeInstance)
 - Persistent Disks (ComputeDisk)
 - Compute Resource Policies (ComputeResourcePolicy)
+- Health Checks (ComputeHealthCheck)
+- Instance Templates (ComputeInstanceTemplate)
+- Managed Instance Groups (ComputeInstanceGroupManager)
 
 ## Quick Start
 

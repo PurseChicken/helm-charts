@@ -1,0 +1,175 @@
+{{- if .Values.computeInstanceGroupManager }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.computeInstanceGroupManager }}
+{{- if not .location }}
+{{- fail "cnrm-chart: computeInstanceGroupManager requires location (zone or region — https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeinstancegroupmanager)" }}
+{{- end }}
+{{- if not (hasKey . "targetSize") }}
+{{- fail "cnrm-chart: computeInstanceGroupManager requires targetSize" }}
+{{- end }}
+{{- if not (or .instanceTemplateRef .instanceTemplateRefName .versions) }}
+{{- fail "cnrm-chart: computeInstanceGroupManager requires instanceTemplateRef, instanceTemplateRefName, or versions" }}
+{{- end }}
+{{- if .instanceTemplateRef }}
+{{- if and (not .instanceTemplateRef.external) (not .instanceTemplateRef.name) }}
+{{- fail "cnrm-chart: computeInstanceGroupManager.instanceTemplateRef requires external or name" }}
+{{- end }}
+{{- end }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeInstanceGroupManager
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+  {{- if .labels }}
+  labels:
+    {{- toYaml .labels | nindent 4 }}
+  {{- end }}
+spec:
+  resourceID: {{ .resourceID | default .name }}
+  location: {{ .location | quote }}
+  targetSize: {{ .targetSize }}
+  {{- if .projectRef }}
+  projectRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .projectRef) | trim | indent 4 }}
+  {{- else }}
+  projectRef:
+    external: projects/{{ $projectName }}
+  {{- end }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if .baseInstanceName }}
+  baseInstanceName: {{ .baseInstanceName | quote }}
+  {{- end }}
+  {{- if .failoverAction }}
+  failoverAction: {{ .failoverAction | quote }}
+  {{- end }}
+  {{- if .instanceTemplateRef }}
+  instanceTemplateRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .instanceTemplateRef) | trim | indent 4 }}
+  {{- else if .instanceTemplateRefName }}
+  instanceTemplateRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .instanceTemplateRefName) }}
+  {{- end }}
+  {{- with .autoHealingPolicies }}
+  autoHealingPolicies:
+    {{- range . }}
+    -
+      {{- if .healthCheckRef }}
+      healthCheckRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .healthCheckRef) | trim | indent 8 }}
+      {{- else if .healthCheckRefName }}
+      healthCheckRef:
+        name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .healthCheckRefName) }}
+      {{- end }}
+      {{- if hasKey . "initialDelaySec" }}
+      initialDelaySec: {{ .initialDelaySec }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- with .distributionPolicy }}
+  distributionPolicy:
+    {{- if .targetShape }}
+    targetShape: {{ .targetShape | quote }}
+    {{- end }}
+    {{- with .zones }}
+    zones:
+      {{- range . }}
+      - zone: {{ .zone | quote }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- with .namedPorts }}
+  namedPorts:
+    {{- range . }}
+    - name: {{ .name | quote }}
+      port: {{ .port }}
+    {{- end }}
+  {{- end }}
+  {{- if .serviceAccountRef }}
+  serviceAccountRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .serviceAccountRef) | trim | indent 4 }}
+  {{- else if .serviceAccountRefName }}
+  serviceAccountRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .serviceAccountRefName) }}
+  {{- end }}
+  {{- with .statefulPolicy }}
+  statefulPolicy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .targetPools }}
+  targetPools:
+    {{- range . }}
+    - {{ include "cnrm-chart.gcpObjectRefFlow" (dict "projectName" $projectName "ref" .) }}
+    {{- end }}
+  {{- end }}
+  {{- with .updatePolicy }}
+  updatePolicy:
+    {{- if .type }}
+    type: {{ .type | quote }}
+    {{- end }}
+    {{- if .instanceRedistributionType }}
+    instanceRedistributionType: {{ .instanceRedistributionType | quote }}
+    {{- end }}
+    {{- if .minimalAction }}
+    minimalAction: {{ .minimalAction | quote }}
+    {{- end }}
+    {{- if .mostDisruptiveAllowedAction }}
+    mostDisruptiveAllowedAction: {{ .mostDisruptiveAllowedAction | quote }}
+    {{- end }}
+    {{- if .replacementMethod }}
+    replacementMethod: {{ .replacementMethod | quote }}
+    {{- end }}
+    {{- if hasKey . "minReadySec" }}
+    minReadySec: {{ .minReadySec }}
+    {{- end }}
+    {{- with .maxSurge }}
+    maxSurge:
+      {{- if hasKey . "fixed" }}
+      fixed: {{ .fixed }}
+      {{- end }}
+      {{- if hasKey . "percent" }}
+      percent: {{ .percent }}
+      {{- end }}
+    {{- end }}
+    {{- with .maxUnavailable }}
+    maxUnavailable:
+      {{- if hasKey . "fixed" }}
+      fixed: {{ .fixed }}
+      {{- end }}
+      {{- if hasKey . "percent" }}
+      percent: {{ .percent }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- with .versions }}
+  versions:
+    {{- range . }}
+    -
+      {{- if .name }}
+      name: {{ .name | quote }}
+      {{- end }}
+      {{- if .instanceTemplateRef }}
+      instanceTemplateRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .instanceTemplateRef) | trim | indent 8 }}
+      {{- else if .instanceTemplateRefName }}
+      instanceTemplateRef:
+        name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .instanceTemplateRefName) }}
+      {{- end }}
+      {{- with .targetSize }}
+      targetSize:
+        {{- if hasKey . "fixed" }}
+        fixed: {{ .fixed }}
+        {{- end }}
+        {{- if hasKey . "percent" }}
+        percent: {{ .percent }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end -}}
+{{- end -}}

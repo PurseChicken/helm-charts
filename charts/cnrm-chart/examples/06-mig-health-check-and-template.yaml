@@ -1,0 +1,110 @@
+# ============================================================================
+# Example 6: Health checks, instance templates, and managed instance groups
+# ============================================================================
+# Self-contained sample that exercises chart paths for:
+#   - computeHealthCheck (ComputeHealthCheck)
+#   - computeInstanceTemplate (ComputeInstanceTemplate; refs ComputeDisk + ComputeAddress)
+#   - computeInstanceGroupManager (ComputeInstanceGroupManager; refs health check + template)
+#
+# Values are generic placeholders. Replace project_id / image / sizing for real use.
+# ============================================================================
+
+projectName: "ex06-sample"
+createOrManageProject: false
+allowResourceDeletion: true
+
+apis:
+  - name: compute.googleapis.com
+
+# ============================================================================
+# VPC (needed for instance template network attachment)
+# ============================================================================
+vpcNetwork:
+  - networkName: "ex06-network"
+    description: "Example network for MIG sample"
+    routingMode: "REGIONAL"
+    subNets:
+      - subnetName: "ex06-subnet"
+        subnetCidr: "10.210.0.0/24"
+        vpcRegion: "us-central1"
+        privateIpGoogleAccess: true
+
+# ============================================================================
+# Static IP referenced by instance template accessConfig.natIpRefName
+# ============================================================================
+staticIp:
+  - name: "ex06-nat-ip"
+    location: "us-central1"
+    addressType: "EXTERNAL"
+
+# ============================================================================
+# Data disk referenced by instance template disk.sourceDiskRefName
+# ============================================================================
+computeDisk:
+  - name: "ex06-data"
+    location: "us-central1-a"
+    description: "Example data disk for MIG template"
+    size: 50
+    type: "pd-balanced"
+
+# ============================================================================
+# HTTP health check (standalone)
+# ============================================================================
+computeHealthCheck:
+  - name: "ex06-health"
+    location: "global"
+    description: "HTTP health check for ex06 MIG"
+    checkIntervalSec: 10
+    httpHealthCheck:
+      port: 80
+      requestPath: "/"
+
+# ============================================================================
+# Instance template (standalone) — boot image + attached data disk + static NAT IP
+# ============================================================================
+computeInstanceTemplate:
+  - name: "ex06-template"
+    machineType: "e2-medium"
+    region: "us-central1"
+    description: "Example template for ex06 MIG"
+    disk:
+      - boot: true
+        autoDelete: true
+        sourceImageRef:
+          external: debian-cloud/debian-12
+      - deviceName: "data"
+        boot: false
+        autoDelete: false
+        sourceDiskRefName: "ex06-data"
+    networkInterface:
+      - networkRefName: "ex06-network"
+        subnetworkRefName: "ex06-subnet"
+        accessConfig:
+          - natIpRefName: "ex06-nat-ip"
+            networkTier: "PREMIUM"
+    metadataStartupScript: |
+      #!/bin/bash
+      apt-get update && apt-get install -y nginx
+      systemctl enable nginx && systemctl start nginx
+    scheduling:
+      automaticRestart: true
+      onHostMaintenance: "MIGRATE"
+
+# ============================================================================
+# Zonal managed instance group — refs chart-created health check + template
+# ============================================================================
+computeInstanceGroupManager:
+  - name: "ex06-mig"
+    location: "us-central1-a"
+    baseInstanceName: "ex06-app"
+    targetSize: 2
+    instanceTemplateRefName: "ex06-template"
+    autoHealingPolicies:
+      - healthCheckRefName: "ex06-health"
+        initialDelaySec: 300
+    updatePolicy:
+      minimalAction: "RESTART"
+      maxSurge:
+        fixed: 2
+      maxUnavailable:
+        fixed: 1

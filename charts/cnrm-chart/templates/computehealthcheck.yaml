@@ -1,0 +1,72 @@
+{{- if .Values.computeHealthCheck }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.computeHealthCheck }}
+{{- if not .location }}
+{{- fail "cnrm-chart: computeHealthCheck requires location (region name or global — https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computehealthcheck)" }}
+{{- end }}
+{{- if not (or .httpHealthCheck .httpsHealthCheck .http2HealthCheck .tcpHealthCheck .sslHealthCheck .grpcHealthCheck) }}
+{{- fail "cnrm-chart: computeHealthCheck requires one of httpHealthCheck, httpsHealthCheck, http2HealthCheck, tcpHealthCheck, sslHealthCheck, or grpcHealthCheck" }}
+{{- end }}
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeHealthCheck
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $allowResourceDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+  {{- if .labels }}
+  labels:
+    {{- toYaml .labels | nindent 4 }}
+  {{- end }}
+spec:
+  resourceID: {{ .resourceID | default .name }}
+  location: {{ .location | quote }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if hasKey . "checkIntervalSec" }}
+  checkIntervalSec: {{ .checkIntervalSec }}
+  {{- end }}
+  {{- if hasKey . "timeoutSec" }}
+  timeoutSec: {{ .timeoutSec }}
+  {{- end }}
+  {{- if hasKey . "healthyThreshold" }}
+  healthyThreshold: {{ .healthyThreshold }}
+  {{- end }}
+  {{- if hasKey . "unhealthyThreshold" }}
+  unhealthyThreshold: {{ .unhealthyThreshold }}
+  {{- end }}
+  {{- with .logConfig }}
+  logConfig:
+    {{- if hasKey . "enable" }}
+    enable: {{ .enable }}
+    {{- end }}
+  {{- end }}
+  {{- with .httpHealthCheck }}
+  httpHealthCheck:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .httpsHealthCheck }}
+  httpsHealthCheck:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .http2HealthCheck }}
+  http2HealthCheck:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .tcpHealthCheck }}
+  tcpHealthCheck:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .sslHealthCheck }}
+  sslHealthCheck:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .grpcHealthCheck }}
+  grpcHealthCheck:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end -}}
+{{- end -}}
