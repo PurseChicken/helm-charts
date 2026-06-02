@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.7.0] - 2026-06-02
+
 ### Added
 
 - `computeHealthCheck` / `templates/computehealthcheck.yaml`: [`ComputeHealthCheck`](https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computehealthcheck) — global or regional health checks with HTTP/HTTPS/HTTP2/TCP/SSL/gRPC probe types, thresholds, logging, and optional `resourceID` / `customAnnotations`.
