@@ -13,7 +13,7 @@ jobs:
       charts: ${{ steps.set-matrix.outputs.charts }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       
@@ -146,7 +146,7 @@ jobs:
         chart: ${{ fromJson(needs.discover-charts.outputs.charts) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Helm
         uses: azure/setup-helm@v5.0.0
@@ -188,7 +188,7 @@ jobs:
         chart: ${{ fromJson(needs.discover-charts.outputs.charts) }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         fetch-depth: 0
 
@@ -218,7 +218,7 @@ jobs:
       - bump-versions
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
