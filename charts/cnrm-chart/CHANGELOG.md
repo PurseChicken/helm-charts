@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.8.0] - 2026-07-27
+
 ### Added
 
 - `k8s[].nodePool[].nodeConfig` / `templates/gke.yaml`: full [`ContainerNodePool`](https://cloud.google.com/config-connector/docs/reference/resource-docs/container/containernodepool#spec) `nodeConfig` support, including `spot`, `preemptible` (with validation that both cannot be `true` simultaneously), `advancedMachineFeatures`, `bootDiskKMSCryptoKeyRef`/`bootDiskKMSCryptoKeyRefName`, `confidentialNodes`, `ephemeralStorageConfig`, `ephemeralStorageLocalSsdConfig`, `fastSocket`, `gcfsConfig`, `guestAccelerator`, `gvnic`, `hostMaintenancePolicy`, `kubeletConfig`, `labels`, `linuxNodeConfig`, `localNvmeSsdBlockConfig`, `localSsdCount`, `loggingVariant`, `minCpuPlatform`, `nodeGroupRef`/`nodeGroupRefName`, `reservationAffinity`, `resourceLabels`, `sandboxConfig`, `serviceAccountRef`/`serviceAccountRefName`, `soleTenantConfig`, `taint`, `windowsNodeConfig`, and `workloadMetadataConfig`.
