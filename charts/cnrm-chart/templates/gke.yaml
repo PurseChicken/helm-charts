@@ -95,6 +95,11 @@ spec:
 {{- range .nodePool }}
 {{- $nodePoolName := .name }}
 {{- $nodePoolTags := .tags }}
+{{- if and .nodeConfig (hasKey .nodeConfig "preemptible") (hasKey .nodeConfig "spot") }}
+{{- if and .nodeConfig.preemptible .nodeConfig.spot }}
+{{- fail (printf "cnrm-chart: nodePool %q nodeConfig cannot set both preemptible and spot to true" $nodePoolName) }}
+{{- end }}
+{{- end }}
 ---
 apiVersion: container.cnrm.cloud.google.com/v1beta1
 kind: ContainerNodePool
@@ -104,10 +109,30 @@ metadata:
     {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
   name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
 spec:
+  {{- if .namePrefix }}
+  namePrefix: {{ .namePrefix | quote }}
+  {{- else }}
   resourceID: {{ .name }}
+  {{- end }}
+  {{- if and .autoscaling (or .autoscaling.totalMinNodeCount .autoscaling.totalMaxNodeCount) }}
+  autoscaling:
+    {{- if .autoscaling.totalMinNodeCount }}
+    totalMinNodeCount: {{ .autoscaling.totalMinNodeCount }}
+    {{- end }}
+    {{- if .autoscaling.totalMaxNodeCount }}
+    totalMaxNodeCount: {{ .autoscaling.totalMaxNodeCount }}
+    {{- end }}
+    {{- if .autoscaling.locationPolicy }}
+    locationPolicy: {{ .autoscaling.locationPolicy }}
+    {{- end }}
+  {{- else }}
   autoscaling:
     minNodeCount: {{ .minNodeCount }}
     maxNodeCount: {{ .maxNodeCount }}
+    {{- if and .autoscaling .autoscaling.locationPolicy }}
+    locationPolicy: {{ .autoscaling.locationPolicy }}
+    {{- end }}
+  {{- end }}
   clusterRef:
     name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" $clusterName) }}
   {{- if .initialNodeCount }}
@@ -124,16 +149,116 @@ spec:
   {{- if .maxPodsPerNode }}
   maxPodsPerNode: {{ .maxPodsPerNode }}
   {{- end }}
+  {{- with .networkConfig }}
+  networkConfig:
+    {{- if hasKey . "createPodRange" }}
+    createPodRange: {{ .createPodRange }}
+    {{- end }}
+    {{- if hasKey . "enablePrivateNodes" }}
+    enablePrivateNodes: {{ .enablePrivateNodes }}
+    {{- end }}
+    {{- with .podCidrOverprovisionConfig }}
+    podCidrOverprovisionConfig:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- if .podIpv4CidrBlock }}
+    podIpv4CidrBlock: {{ .podIpv4CidrBlock | quote }}
+    {{- end }}
+    {{- if .podRange }}
+    podRange: {{ .podRange | quote }}
+    {{- end }}
+    {{- if .subnetworkRef }}
+    subnetworkRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .subnetworkRef) | trim | indent 6 }}
+    {{- else if .subnetworkRefName }}
+    subnetworkRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .subnetworkRefName) }}
+    {{- end }}
+    {{- with .additionalNodeNetworkConfigs }}
+    {{/* Multi-NIC configs are rare; pass through raw. Use "external" (selfLink) or an already-prefixed "name" for in-chart refs. */}}
+    additionalNodeNetworkConfigs:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .additionalPodNetworkConfigs }}
+    additionalPodNetworkConfigs:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- end }}
   {{- with .nodeConfig }}
   nodeConfig:
+    {{- with .advancedMachineFeatures }}
+    advancedMachineFeatures:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- if .bootDiskKMSCryptoKeyRef }}
+    bootDiskKMSCryptoKeyRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .bootDiskKMSCryptoKeyRef) | trim | indent 6 }}
+    {{- else if .bootDiskKMSCryptoKeyRefName }}
+    bootDiskKMSCryptoKeyRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .bootDiskKMSCryptoKeyRefName) }}
+    {{- end }}
+    {{- with .confidentialNodes }}
+    confidentialNodes:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     {{- if .diskSizeGb }}
     diskSizeGb: {{ .diskSizeGb }}
     {{- end }}
     {{- if .diskType }}
     diskType: {{ .diskType }}
     {{- end }}
+    {{- with .ephemeralStorageConfig }}
+    ephemeralStorageConfig:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .ephemeralStorageLocalSsdConfig }}
+    ephemeralStorageLocalSsdConfig:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .fastSocket }}
+    fastSocket:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .gcfsConfig }}
+    gcfsConfig:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .guestAccelerator }}
+    guestAccelerator:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .gvnic }}
+    gvnic:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .hostMaintenancePolicy }}
+    hostMaintenancePolicy:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     {{- if .imageType }}
     imageType: {{ .imageType }}
+    {{- end }}
+    {{- with .kubeletConfig }}
+    kubeletConfig:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .labels }}
+    labels:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .linuxNodeConfig }}
+    linuxNodeConfig:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .localNvmeSsdBlockConfig }}
+    localNvmeSsdBlockConfig:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- if .localSsdCount }}
+    localSsdCount: {{ .localSsdCount }}
+    {{- end }}
+    {{- if .loggingVariant }}
+    loggingVariant: {{ .loggingVariant }}
     {{- end }}
     {{- if .machineType }}
     machineType: {{ .machineType }}
@@ -142,24 +267,98 @@ spec:
     metadata:
       {{- toYaml .metadata | nindent 6 }}
     {{- end }}
+    {{- if .minCpuPlatform }}
+    minCpuPlatform: {{ .minCpuPlatform | quote }}
+    {{- end }}
+    {{- if .nodeGroupRef }}
+    nodeGroupRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .nodeGroupRef) | trim | indent 6 }}
+    {{- else if .nodeGroupRefName }}
+    nodeGroupRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .nodeGroupRefName) }}
+    {{- end }}
     {{- if .oauthScopes }}
     oauthScopes:
       {{- toYaml .oauthScopes | nindent 6 }}
+    {{- end }}
+    {{- if hasKey . "preemptible" }}
+    preemptible: {{ .preemptible }}
+    {{- end }}
+    {{- with .reservationAffinity }}
+    reservationAffinity:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .resourceLabels }}
+    resourceLabels:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .sandboxConfig }}
+    sandboxConfig:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- if .serviceAccountRef }}
+    serviceAccountRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .serviceAccountRef) | trim | indent 6 }}
+    {{- else if .serviceAccountRefName }}
+    serviceAccountRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .serviceAccountRefName) }}
     {{- end }}
     {{- with .shieldedInstanceConfig }}
     shieldedInstanceConfig:
       enableSecureBoot: {{ .enableSecureBoot }}
       enableIntegrityMonitoring: {{ .enableIntegrityMonitoring }}
     {{- end }}
+    {{- with .soleTenantConfig }}
+    soleTenantConfig:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- if hasKey . "spot" }}
+    spot: {{ .spot }}
+    {{- end }}
     tags:
       - "{{ $nodePoolName }}-nodes"
     {{- if $nodePoolTags }}
       {{- toYaml $nodePoolTags | nindent 6 }}
     {{- end }}
+    {{- with .taint }}
+    taint:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .windowsNodeConfig }}
+    windowsNodeConfig:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .workloadMetadataConfig }}
+    workloadMetadataConfig:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  {{- with .nodeLocations }}
+  nodeLocations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .placementPolicy }}
+  placementPolicy:
+    {{- if .type }}
+    type: {{ .type }}
+    {{- end }}
+    {{- if .tpuTopology }}
+    tpuTopology: {{ .tpuTopology | quote }}
+    {{- end }}
+    {{- if .policyNameRef }}
+    policyNameRef:
+{{ include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .policyNameRef) | trim | indent 6 }}
+    {{- else if .policyNameRefName }}
+    policyNameRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .policyNameRefName) }}
+    {{- end }}
   {{- end }}
   {{- if .upgradeSettings }}
   upgradeSettings:
     {{- toYaml .upgradeSettings | nindent 4 }}
+  {{- end }}
+  {{- if .version }}
+  version: {{ .version | quote }}
   {{- end }}
 {{- end -}}
 {{- end -}}

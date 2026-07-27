@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `k8s[].nodePool[].nodeConfig` / `templates/gke.yaml`: full [`ContainerNodePool`](https://cloud.google.com/config-connector/docs/reference/resource-docs/container/containernodepool#spec) `nodeConfig` support, including `spot`, `preemptible` (with validation that both cannot be `true` simultaneously), `advancedMachineFeatures`, `bootDiskKMSCryptoKeyRef`/`bootDiskKMSCryptoKeyRefName`, `confidentialNodes`, `ephemeralStorageConfig`, `ephemeralStorageLocalSsdConfig`, `fastSocket`, `gcfsConfig`, `guestAccelerator`, `gvnic`, `hostMaintenancePolicy`, `kubeletConfig`, `labels`, `linuxNodeConfig`, `localNvmeSsdBlockConfig`, `localSsdCount`, `loggingVariant`, `minCpuPlatform`, `nodeGroupRef`/`nodeGroupRefName`, `reservationAffinity`, `resourceLabels`, `sandboxConfig`, `serviceAccountRef`/`serviceAccountRefName`, `soleTenantConfig`, `taint`, `windowsNodeConfig`, and `workloadMetadataConfig`.
+- `k8s[].nodePool[]` / `templates/gke.yaml`: added `namePrefix`, `networkConfig` (with `subnetworkRef`/`subnetworkRefName`), `nodeLocations`, `placementPolicy` (with `policyNameRef`/`policyNameRefName` referencing a `ComputeResourcePolicy`), `version`, and extended `autoscaling` to support `locationPolicy`, `totalMinNodeCount`, and `totalMaxNodeCount` (total limits automatically replace the per-zone `minNodeCount`/`maxNodeCount` when set), covering the remainder of the `ContainerNodePool` spec. All new object-style refs (`nodeGroupRef`, `serviceAccountRef`, `bootDiskKMSCryptoKeyRef`, `subnetworkRef`, `policyNameRef`) follow the chart's existing `*RefName` (project-prefixed) / raw `*Ref` (`external`/`name`/`namespace`) convention for consistency with other resources.
+
 ## [v1.7.0] - 2026-06-02
 
 ### Added

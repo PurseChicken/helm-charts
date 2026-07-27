@@ -352,25 +352,71 @@
 #         startTime: "00:00"
 #     # These node pools will be created in the cluster
 #     # You can specify more than 1 if required.
+#     # Every field from the ContainerNodePool spec is supported.
 #     # https://cloud.google.com/config-connector/docs/reference/resource-docs/container/containernodepool#spec
 #     nodePool:
 #       - name: "central-cluster-pool"
 #         # add custom annotations to this resource?
 #         customAnnotations:
 #           abc: "1234567890"
+#         # Optional. Creates a unique name for the node pool beginning with this prefix instead
+#         # of using resourceID (which defaults to `name` above). Conflicts with resourceID/name.
+#         # namePrefix: "central-cluster-pool-"
 #         initialNodeCount: 1
+#         # minNodeCount/maxNodeCount are used for per-zone autoscaling limits (the common case).
 #         minNodeCount: 1
 #         maxNodeCount: 3
+#         # Optional. Use `autoscaling` for total (cluster-wide) limits or a non-default location
+#         # policy. totalMinNodeCount/totalMaxNodeCount cannot be combined with minNodeCount/
+#         # maxNodeCount above (per-zone limits) - when either total field is set, the chart emits
+#         # totalMinNodeCount/totalMaxNodeCount instead of minNodeCount/maxNodeCount.
+#         # autoscaling:
+#         #   locationPolicy: "BALANCED" # or "ANY"
+#         #   totalMinNodeCount: 1
+#         #   totalMaxNodeCount: 9
 #         nodeLocation: "us-central1"
+#         # Optional. Zones the node pool's nodes should be located in (overrides cluster-level nodeLocations)
+#         # nodeLocations:
+#         #   - "us-central1-a"
+#         #   - "us-central1-b"
 #         management:
 #           autoRepair: true
 #           autoUpgrade: true
 #         maxPodsPerNode: 110
+#         # Optional. Node pool-level networking overrides (private nodes, pod ranges, alternate subnet, etc.)
+#         # networkConfig:
+#         #   enablePrivateNodes: true
+#         #   subnetworkRefName: "my-central-nodes"  # or raw subnetworkRef: { external: "..." }
+#         #   # Multi-NIC (additionalNodeNetworkConfigs/additionalPodNetworkConfigs) is passed through
+#         #   # raw — use "external" (selfLink) or an already-prefixed "name" for in-chart refs.
+#         # Optional. Node placement policy (e.g. for TPU slices or compact placement).
+#         # placementPolicy:
+#         #   type: "COMPACT"
+#         #   policyNameRefName: "my-placement-policy"  # references a computeResourcePolicy by name (or use raw policyNameRef)
+#         # Optional. Pin the node pool to a specific GKE version (defaults to cluster version).
+#         # version: "1.30.5-gke.100"
 #         nodeConfig:
 #           diskSizeGb: 100
 #           diskType: "pd-ssd"
 #           imageType: "COS_CONTAINERD"
 #           machineType: "n2-standard-2"
+#           # Optional. Run nodes as Spot VMs (cheaper, preemptible-style, no maximum runtime).
+#           # Cannot be combined with preemptible: true (the chart fails validation if both are true).
+#           # spot: true
+#           # Optional. Run nodes as (legacy) preemptible VM instances. Mutually exclusive with spot.
+#           # preemptible: false
+#           # Optional. Minimum CPU platform, e.g. "Intel Cascade Lake"
+#           # minCpuPlatform: "Intel Cascade Lake"
+#           # Optional. Number of local SSDs attached to each node.
+#           # localSsdCount: 1
+#           # Optional. DEFAULT or MAX_THROUGHPUT
+#           # loggingVariant: "MAX_THROUGHPUT"
+#           # Optional. Kubernetes node labels
+#           # labels:
+#           #   team: "platform"
+#           # Optional. GCE resource labels applied to the node pool's VMs
+#           # resourceLabels:
+#           #   cost-center: "1234"
 #           # You can leave out metadata if you don't want to configure it.
 #           metadata:
 #             # toYaml
@@ -387,6 +433,26 @@
 #           shieldedInstanceConfig:
 #             enableSecureBoot: true
 #             enableIntegrityMonitoring: true
+#           # Optional. Any remaining nodeConfig fields from the CNRM spec are supported the same way,
+#           # e.g.: advancedMachineFeatures, confidentialNodes, ephemeralStorageConfig,
+#           # ephemeralStorageLocalSsdConfig, fastSocket, gcfsConfig, guestAccelerator, gvnic,
+#           # hostMaintenancePolicy, kubeletConfig, linuxNodeConfig, localNvmeSsdBlockConfig,
+#           # reservationAffinity, sandboxConfig, soleTenantConfig, taint, windowsNodeConfig,
+#           # workloadMetadataConfig — pass them exactly as documented in the spec.
+#           # advancedMachineFeatures:
+#           #   threadsPerCore: 1
+#           # Optional. Encrypt node boot disks with a customer-managed key (KMSCryptoKey)
+#           # bootDiskKMSCryptoKeyRefName: "my-node-boot-key"
+#           # bootDiskKMSCryptoKeyRef:
+#           #   external: "https://cloudkms.googleapis.com/v1/projects/.../cryptoKeys/..."
+#           # Optional. Sole-tenant node group placement (ComputeNodeGroup)
+#           # nodeGroupRefName: "my-node-group"
+#           # nodeGroupRef:
+#           #   external: "my-node-group"
+#           # Optional. Service account used by the node VMs (IAMServiceAccount)
+#           # serviceAccountRefName: "gke-nodes-sa"
+#           # serviceAccountRef:
+#           #   external: "gke-nodes-sa@my-project.iam.gserviceaccount.com"
 #         # You can leave out upgradeSettings if you don't want to configure it.
 #         upgradeSettings:
 #           # toYaml
