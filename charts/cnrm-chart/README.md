@@ -103,7 +103,7 @@ Use the chart as a dependency in your own chart:
 # Chart.yaml
 dependencies:
 - name: cnrm-chart
-  version: "1.3.11"  # Use the latest version
+  version: "1.8.0"  # Match the released chart version in Chart.yaml
   repository: "https://pursechicken.github.io/helm-charts"
 ```
 
@@ -182,7 +182,7 @@ The [values.yaml](./values.yaml) file contains all configurable options with det
 - **By default**, resources use the `"abandon"` deletion policy for safety
 - This means deleting resources from Config Connector **does not delete them in GCP**
 - You can enable deletion by setting `allowResourceDeletion: true` in your values
-- Custom roles, workload identity pools, service identities, Pub/Sub, log sinks, asset feeds, and IAM entries can set `allowResourceDeletion` on that block. That overrides the chart value for those objects only
+- Custom roles, workload identity pools and providers, service identities, Pub/Sub, log sinks, asset feeds, and IAM entries can set `allowResourceDeletion` on that block. That overrides the chart value for those objects only
 - ⚠️ **CAUTION**: Enabling deletion means resources will be permanently deleted in GCP when removed from Config Connector
 
 ### Testing & Compatibility

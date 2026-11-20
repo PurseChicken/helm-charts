@@ -143,7 +143,7 @@ This directory contains example values files demonstrating different deployment 
 
 ### 7. IAM, Pub/Sub, logging, and asset feeds (`07-iam-pubsub-logging-and-assets.yaml`)
 
-**Use Case:** Customer-managed project connection: identities, federation, Pub/Sub push, a log sink, and an asset feed.
+**Use Case:** Customer-managed project connection: identities, federation, Pub/Sub push, log sinks, and asset feeds.
 
 **Features:**
 - `serviceIdentity` for the Pub/Sub and Cloud Asset service agents
@@ -151,12 +151,12 @@ This directory contains example values files demonstrating different deployment 
 - Service accounts whose bindings use `memberFrom` and a non-project `resourceRef`
 - `workloadIdentityPool` with an OIDC provider and an AWS provider
 - Pub/Sub topics and subscriptions: push with OIDC, dead letter, BigQuery, and Cloud Storage
-- `logging.logSink` with `uniqueWriterIdentity` and a writer grant on the destination topic
+- `logging.logSink` with `uniqueWriterIdentity` and writer grants on the destination topic and a storage bucket
 - `assetFeed` for resource updates
 
 **When to Use:**
 - Regression testing for these value paths
-- A starting point for a read-only connection whose names and endpoints come from the vendor
+- A starting point for a connection whose names and endpoints come from the consumer chart
 
 **Key Patterns Demonstrated:**
 - Chart-level `allowResourceDeletion: false` with `true` on the connection objects

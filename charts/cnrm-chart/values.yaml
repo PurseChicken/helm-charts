@@ -552,8 +552,9 @@
 #     # Assign these roles to the account
 #     # If your config connector service account has access to other projects IAM (Project IAM Admin role),
 #     # then you can also use this to add Policy Membership to other projects. Reference that project in "external".
-#     # Kind is statically set to "Project" currently
-#     # external defaults to projects/projectName.
+#     # Without resourceRef, kind is Project and external defaults to projects/<projectID>.
+#     # resourceRef selects another kind. Its name is the short name from values
+#     # and is project-prefixed, except Project, Folder, Organization, and LoggingLogBucket.
 #     iamPolicyMember:
 #       - name: cnrm-system-editor
 #         member: serviceAccount:cnrm-system@my-unique-global-project.iam.gserviceaccount.com
@@ -594,8 +595,9 @@
 #       member: serviceAccount:service-1234567890@gcp-sa-multiclusteringress.iam.gserviceaccount.com
 #       role: roles/container.admin
 #       external: projects/my-unique-global-project
-#     # resourceRef targets something other than this project. name is the chart
-#     # name (project-prefixed). external is a GCP resource name. memberFrom binds
+#     # resourceRef targets something other than this project. name is the short
+#     # chart name and is project-prefixed, except Project, Folder, Organization,
+#     # and LoggingLogBucket. external is a GCP resource name. memberFrom binds
 #     # an identity Config Connector reads off another resource. Set one of member
 #     # or memberFrom. allowResourceDeletion on this entry overrides the chart default
 #     # for the account and, unless a member sets its own, for these bindings.
@@ -626,7 +628,8 @@
 #     permissions:
 #       - iam.serviceAccounts.get
 #       - logging.sinks.get
-#     # Organization role. Omit project-id and set the organization annotation.
+#     # Organization role. Set organizationId and the chart uses the organization-id
+#     # annotation instead of project-id.
 #     # organizationId: "1234567890"
 
 # # Workload identity pools. Providers are created in the pool.
@@ -664,7 +667,7 @@
 #           # stsUri:
 #           #   - https://sts.amazonaws.com
 #         # Same project, a pool other than the one this provider is nested under.
-#         # The chart writes metadata.name {projectID}-{name}.
+#         # The chart writes a project-prefixed, sanitized metadata.name.
 #         # workloadIdentityPoolRef:
 #         #   name: example-pool
 #         # Another project, or a pool with no Config Connector object.
@@ -806,11 +809,12 @@
 # # https://cloud.google.com/config-connector/docs/reference/resource-docs/pubsub/pubsubtopic
 # # https://cloud.google.com/config-connector/docs/reference/resource-docs/pubsub/pubsubsubscription
 # # *RefName is the short name of a Config Connector object in this project.
-# # The chart stores that object's metadata.name as {projectID}-{name} and writes
-# # the reference name in that form. external is the GCP resource name from the
-# # Config Connector reference, for an object this chart does not manage or an
-# # object in another project. KMS and BigQuery table externals also need a
-# # location, key ring, or dataset, so a short name cannot build those strings.
+# # The chart stores that object's metadata.name as the project-prefixed,
+# # sanitized name and writes the reference name in that form. external is the
+# # GCP resource name from the Config Connector reference, for an object this
+# # chart does not manage or an object in another project. KMS and BigQuery
+# # table externals also need a location, key ring, or dataset, so a short name
+# # cannot build those strings.
 # # A subscription sets at most one of pushConfig, bigqueryConfig, or cloudStorageConfig.
 # # expirationPolicy.ttl: "" disables subscription expiration.
 # # labels are Kubernetes metadata labels. This resource has no GCP label field.
@@ -836,7 +840,7 @@
 #       #   schemaRefName: example
 #       # Or a schema with no PubSubSchema object. Do not set both.
 #       # schemaRef:
-#       #     external: projects/other-project/schemas/example
+#       #   external: projects/other-project/schemas/example
 #       iamPolicyMember:
 #         - name: example-events-publisher
 #           role: roles/pubsub.publisher
@@ -1201,7 +1205,7 @@
 #   logSink:
 #     - name: example-activity
 #       # resourceID: example-activity
-#       description: Admin activity for Pub/Sub and Cloud Storage
+#       description: Pub/Sub admin activity
 #       filter: log_id("cloudaudit.googleapis.com/activity") AND protoPayload.serviceName="pubsub.googleapis.com"
 #       uniqueWriterIdentity: true
 #       # disabled: false

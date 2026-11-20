@@ -14,8 +14,8 @@
 # Git change set allowResourceDeletion: true. The organization role inherits
 # the chart default so both annotations are visible in the rendered output.
 #
-# Names are generic placeholders. A vendor verify check wants its own ids,
-# filters, issuer, and push URL in the consumer values, not in this chart.
+# Names, filters, the issuer, and the push URL are placeholders. The consumer
+# chart supplies the real values.
 # ============================================================================
 
 projectName: "ex07-sample"
