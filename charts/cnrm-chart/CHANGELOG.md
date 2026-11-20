@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `iamCustomRole`: project and organization [`IAMCustomRole`](https://cloud.google.com/config-connector/docs/reference/resource-docs/iam/iamcustomrole). `resourceID` keeps the GCP role id, including underscores, while the Kubernetes name is sanitized.
+- `workloadIdentityPool` and nested `provider`: [`IAMWorkloadIdentityPool`](https://cloud.google.com/config-connector/docs/reference/resource-docs/iam/iamworkloadidentitypool) and [`IAMWorkloadIdentityPoolProvider`](https://cloud.google.com/config-connector/docs/reference/resource-docs/iam/iamworkloadidentitypoolprovider), including OIDC and AWS providers.
+- `serviceIdentity`: [`ServiceIdentity`](https://cloud.google.com/config-connector/docs/reference/resource-docs/serviceusage/serviceidentity) for Google-managed service agents.
+- `pubsub.topic` and `pubsub.subscription`: [`PubSubTopic`](https://cloud.google.com/config-connector/docs/reference/resource-docs/pubsub/pubsubtopic) and [`PubSubSubscription`](https://cloud.google.com/config-connector/docs/reference/resource-docs/pubsub/pubsubsubscription), including push with OIDC, retry, dead letter, BigQuery, and Cloud Storage delivery. Same-project Config Connector objects use `*RefName`. `external` keeps the GCP resource name for an unmanaged object or another project.
+- `logging.logSink`: [`LoggingLogSink`](https://cloud.google.com/config-connector/docs/reference/resource-docs/logging/logginglogsink) for project, folder, and organization sinks. `writerIdentity` grants the sink's unique writer on a Pub/Sub topic or log bucket destination, or on an explicit `resourceRef`. Log bucket references keep the unsanitized bucket name used by `logging.logBucket`.
+- `assetFeed`: [`AssetFeed`](https://cloud.google.com/config-connector/docs/reference/resource-docs/asset/assetfeed).
+- `iam[].iamPolicyMember`: `resourceRef` for non-project resources and `memberFrom` for log sink writers, service identities, service accounts, SQL instances, and BigQuery connections. Existing project bindings are unchanged.
+- Per-resource `allowResourceDeletion` on these new resources and on `iam` entries, so one set of objects can be deleted while the rest of the project stays on abandon.
+
 ## [v1.8.0] - 2026-07-27
 
 ### Added

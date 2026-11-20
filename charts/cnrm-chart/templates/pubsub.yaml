@@ -1,0 +1,273 @@
+{{- if .Values.pubsub }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- with .Values.pubsub }}
+{{- range .topic }}
+{{- if not .name }}
+{{- fail "cnrm-chart: pubsub.topic requires name" }}
+{{- end }}
+{{- $topic := . }}
+{{- $deletion := $allowResourceDeletion }}
+{{- if hasKey . "allowResourceDeletion" }}
+{{- $deletion = .allowResourceDeletion }}
+{{- end }}
+---
+apiVersion: pubsub.cnrm.cloud.google.com/v1beta1
+kind: PubSubTopic
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $deletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+  {{- if .labels }}
+  labels:
+    {{- toYaml .labels | nindent 4 }}
+  {{- end }}
+spec:
+  resourceID: {{ .resourceID | default .name | quote }}
+  {{- if .messageRetentionDuration }}
+  messageRetentionDuration: {{ .messageRetentionDuration | quote }}
+  {{- end }}
+  {{- if .messageStoragePolicy }}
+  messageStoragePolicy:
+    {{- toYaml .messageStoragePolicy | nindent 4 }}
+  {{- end }}
+  {{- if and .kmsKeyRefName .kmsKeyRef }}
+  {{- fail (printf "cnrm-chart: pubsub topic %s accepts kmsKeyRefName or kmsKeyRef, not both" .name) }}
+  {{- end }}
+  {{- if .kmsKeyRefName }}
+  kmsKeyRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .kmsKeyRefName) }}
+  {{- else if .kmsKeyRef }}
+  {{- if not (or .kmsKeyRef.external .kmsKeyRef.name) }}
+  {{- fail (printf "cnrm-chart: pubsub topic %s kmsKeyRef requires external or name" .name) }}
+  {{- end }}
+  kmsKeyRef:
+    {{- include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .kmsKeyRef) | trim | nindent 4 }}
+  {{- end }}
+  {{- if .schemaSettings }}
+  {{- if and .schemaSettings.schemaRefName .schemaSettings.schemaRef }}
+  {{- fail (printf "cnrm-chart: pubsub topic %s accepts schemaSettings.schemaRefName or schemaRef, not both" .name) }}
+  {{- end }}
+  {{- if not (or .schemaSettings.schemaRefName .schemaSettings.schemaRef) }}
+  {{- fail (printf "cnrm-chart: pubsub topic %s schemaSettings.schemaRefName or schemaRef is required" .name) }}
+  {{- end }}
+  {{- if and .schemaSettings.schemaRef (not (or .schemaSettings.schemaRef.external .schemaSettings.schemaRef.name)) }}
+  {{- fail (printf "cnrm-chart: pubsub topic %s schemaSettings.schemaRef requires external or name" .name) }}
+  {{- end }}
+  schemaSettings:
+    {{- if .schemaSettings.encoding }}
+    encoding: {{ .schemaSettings.encoding }}
+    {{- end }}
+    schemaRef:
+      {{- if .schemaSettings.schemaRefName }}
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .schemaSettings.schemaRefName) }}
+      {{- else }}
+      {{- include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .schemaSettings.schemaRef) | trim | nindent 6 }}
+      {{- end }}
+  {{- end }}
+{{- range .iamPolicyMember }}
+---
+{{ include "cnrm-chart.iamPolicyMember" (dict "projectName" $projectName "allowResourceDeletion" $deletion "member" . "defaultResourceRef" (dict "apiVersion" "pubsub.cnrm.cloud.google.com/v1beta1" "kind" "PubSubTopic" "name" $topic.name)) }}
+{{- end }}
+{{- end }}
+{{- range .subscription }}
+{{- if not .name }}
+{{- fail "cnrm-chart: pubsub.subscription requires name" }}
+{{- end }}
+{{- if and .topicRefName .topicRef }}
+{{- fail (printf "cnrm-chart: pubsub subscription %s accepts topicRefName or topicRef, not both" .name) }}
+{{- end }}
+{{- if not (or .topicRefName .topicRef) }}
+{{- fail (printf "cnrm-chart: pubsub subscription %s requires topicRefName or topicRef" .name) }}
+{{- end }}
+{{- if and .topicRef (not (or .topicRef.external .topicRef.name)) }}
+{{- fail (printf "cnrm-chart: pubsub subscription %s topicRef requires external or name" .name) }}
+{{- end }}
+{{- $modes := 0 }}
+{{- if .pushConfig }}{{ $modes = add $modes 1 }}{{ end }}
+{{- if .bigqueryConfig }}{{ $modes = add $modes 1 }}{{ end }}
+{{- if .cloudStorageConfig }}{{ $modes = add $modes 1 }}{{ end }}
+{{- if gt $modes 1 }}
+{{- fail (printf "cnrm-chart: pubsub subscription %s accepts only one of pushConfig, bigqueryConfig, or cloudStorageConfig" .name) }}
+{{- end }}
+{{- if and .pushConfig .pushConfig.oidcToken (not .pushConfig.oidcToken.serviceAccountEmail) }}
+{{- fail (printf "cnrm-chart: pubsub subscription %s pushConfig.oidcToken.serviceAccountEmail is required" .name) }}
+{{- end }}
+{{- if and .pushConfig (not .pushConfig.pushEndpoint) }}
+{{- fail (printf "cnrm-chart: pubsub subscription %s pushConfig.pushEndpoint is required" .name) }}
+{{- end }}
+{{- if and .bigqueryConfig .bigqueryConfig.tableRefName .bigqueryConfig.tableRef }}
+{{- fail (printf "cnrm-chart: pubsub subscription %s accepts bigqueryConfig.tableRefName or tableRef, not both" .name) }}
+{{- end }}
+{{- if and .bigqueryConfig (not (or .bigqueryConfig.tableRefName .bigqueryConfig.tableRef.external .bigqueryConfig.tableRef.name)) }}
+{{- fail (printf "cnrm-chart: pubsub subscription %s bigqueryConfig.tableRefName or tableRef is required" .name) }}
+{{- end }}
+{{- if and .cloudStorageConfig .cloudStorageConfig.bucketRefName .cloudStorageConfig.bucketRef }}
+{{- fail (printf "cnrm-chart: pubsub subscription %s accepts cloudStorageConfig.bucketRefName or bucketRef, not both" .name) }}
+{{- end }}
+{{- if and .cloudStorageConfig (not (or .cloudStorageConfig.bucketRefName .cloudStorageConfig.bucketRef.external .cloudStorageConfig.bucketRef.name)) }}
+{{- fail (printf "cnrm-chart: pubsub subscription %s cloudStorageConfig.bucketRefName or bucketRef is required" .name) }}
+{{- end }}
+{{- if and .deadLetterPolicy (not (or .deadLetterPolicy.deadLetterTopicRefName .deadLetterPolicy.deadLetterTopicRef)) }}
+{{- fail (printf "cnrm-chart: pubsub subscription %s deadLetterPolicy requires deadLetterTopicRefName or deadLetterTopicRef" .name) }}
+{{- end }}
+{{- if and .deadLetterPolicy .deadLetterPolicy.deadLetterTopicRefName .deadLetterPolicy.deadLetterTopicRef }}
+{{- fail (printf "cnrm-chart: pubsub subscription %s deadLetterPolicy accepts deadLetterTopicRefName or deadLetterTopicRef, not both" .name) }}
+{{- end }}
+{{- if and .deadLetterPolicy (hasKey .deadLetterPolicy "maxDeliveryAttempts") }}
+{{- if or (lt (.deadLetterPolicy.maxDeliveryAttempts | int) 5) (gt (.deadLetterPolicy.maxDeliveryAttempts | int) 100) }}
+{{- fail (printf "cnrm-chart: pubsub subscription %s deadLetterPolicy.maxDeliveryAttempts must be between 5 and 100" .name) }}
+{{- end }}
+{{- end }}
+{{- $sub := . }}
+{{- $deletion := $allowResourceDeletion }}
+{{- if hasKey . "allowResourceDeletion" }}
+{{- $deletion = .allowResourceDeletion }}
+{{- end }}
+---
+apiVersion: pubsub.cnrm.cloud.google.com/v1beta1
+kind: PubSubSubscription
+metadata:
+  annotations:
+    {{- include "cnrm-chart.cnrmAnnotations" (dict "projectName" $projectName "allowResourceDeletion" $deletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+  {{- if .labels }}
+  labels:
+    {{- toYaml .labels | nindent 4 }}
+  {{- end }}
+spec:
+  resourceID: {{ .resourceID | default .name | quote }}
+  {{- if .topicRefName }}
+  topicRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .topicRefName) }}
+  {{- else }}
+  topicRef:
+    {{- include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .topicRef) | trim | nindent 4 }}
+  {{- end }}
+  {{- if hasKey . "ackDeadlineSeconds" }}
+  ackDeadlineSeconds: {{ .ackDeadlineSeconds | int }}
+  {{- end }}
+  {{- if .messageRetentionDuration }}
+  messageRetentionDuration: {{ .messageRetentionDuration | quote }}
+  {{- end }}
+  {{- if hasKey . "retainAckedMessages" }}
+  retainAckedMessages: {{ .retainAckedMessages }}
+  {{- end }}
+  {{- if hasKey . "enableExactlyOnceDelivery" }}
+  enableExactlyOnceDelivery: {{ .enableExactlyOnceDelivery }}
+  {{- end }}
+  {{- if hasKey . "enableMessageOrdering" }}
+  enableMessageOrdering: {{ .enableMessageOrdering }}
+  {{- end }}
+  {{- if .filter }}
+  filter: {{ .filter | quote }}
+  {{- end }}
+  {{- if hasKey . "expirationPolicy" }}
+  {{- if or (not .expirationPolicy) (not (hasKey .expirationPolicy "ttl")) }}
+  {{- fail (printf "cnrm-chart: pubsub subscription %s expirationPolicy.ttl is required (use \"\" to disable expiration)" .name) }}
+  {{- end }}
+  expirationPolicy:
+    ttl: {{ .expirationPolicy.ttl | quote }}
+  {{- end }}
+  {{- with .pushConfig }}
+  pushConfig:
+    pushEndpoint: {{ .pushEndpoint | quote }}
+    {{- if .attributes }}
+    attributes:
+      {{- toYaml .attributes | nindent 6 }}
+    {{- end }}
+    {{- if .oidcToken }}
+    oidcToken:
+      serviceAccountEmail: {{ .oidcToken.serviceAccountEmail | quote }}
+      {{- if .oidcToken.audience }}
+      audience: {{ .oidcToken.audience | quote }}
+      {{- end }}
+    {{- end }}
+    {{- if .noWrapper }}
+    {{- if not (hasKey .noWrapper "writeMetadata") }}
+    {{- fail "cnrm-chart: pubsub pushConfig.noWrapper.writeMetadata is required" }}
+    {{- end }}
+    noWrapper:
+      writeMetadata: {{ .noWrapper.writeMetadata }}
+    {{- end }}
+  {{- end }}
+  {{- with .retryPolicy }}
+  retryPolicy:
+    {{- if .minimumBackoff }}
+    minimumBackoff: {{ .minimumBackoff | quote }}
+    {{- end }}
+    {{- if .maximumBackoff }}
+    maximumBackoff: {{ .maximumBackoff | quote }}
+    {{- end }}
+  {{- end }}
+  {{- with .deadLetterPolicy }}
+  deadLetterPolicy:
+    {{- if .deadLetterTopicRefName }}
+    deadLetterTopicRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .deadLetterTopicRefName) }}
+    {{- else }}
+    {{- if not (or .deadLetterTopicRef.external .deadLetterTopicRef.name) }}
+    {{- fail "cnrm-chart: deadLetterTopicRef requires external or name" }}
+    {{- end }}
+    deadLetterTopicRef:
+      {{- include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .deadLetterTopicRef) | trim | nindent 6 }}
+    {{- end }}
+    {{- if hasKey . "maxDeliveryAttempts" }}
+    maxDeliveryAttempts: {{ .maxDeliveryAttempts | int }}
+    {{- end }}
+  {{- end }}
+  {{- with .bigqueryConfig }}
+  bigqueryConfig:
+    tableRef:
+      {{- if .tableRefName }}
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .tableRefName) }}
+      {{- else }}
+      {{- include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .tableRef) | trim | nindent 6 }}
+      {{- end }}
+    {{- if hasKey . "dropUnknownFields" }}
+    dropUnknownFields: {{ .dropUnknownFields }}
+    {{- end }}
+    {{- if hasKey . "useTopicSchema" }}
+    useTopicSchema: {{ .useTopicSchema }}
+    {{- end }}
+    {{- if hasKey . "writeMetadata" }}
+    writeMetadata: {{ .writeMetadata }}
+    {{- end }}
+  {{- end }}
+  {{- with .cloudStorageConfig }}
+  cloudStorageConfig:
+    bucketRef:
+      {{- if .bucketRefName }}
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .bucketRefName) }}
+      {{- else }}
+      {{- include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .bucketRef) | trim | nindent 6 }}
+      {{- end }}
+    {{- if .filenamePrefix }}
+    filenamePrefix: {{ .filenamePrefix | quote }}
+    {{- end }}
+    {{- if .filenameSuffix }}
+    filenameSuffix: {{ .filenameSuffix | quote }}
+    {{- end }}
+    {{- if hasKey . "maxBytes" }}
+    maxBytes: {{ .maxBytes | int }}
+    {{- end }}
+    {{- if .maxDuration }}
+    maxDuration: {{ .maxDuration | quote }}
+    {{- end }}
+    {{- if .avroConfig }}
+    {{- if not (hasKey .avroConfig "writeMetadata") }}
+    {{- fail "cnrm-chart: pubsub cloudStorageConfig.avroConfig.writeMetadata is required" }}
+    {{- end }}
+    avroConfig:
+      writeMetadata: {{ .avroConfig.writeMetadata }}
+    {{- end }}
+  {{- end }}
+{{- range .iamPolicyMember }}
+---
+{{ include "cnrm-chart.iamPolicyMember" (dict "projectName" $projectName "allowResourceDeletion" $deletion "member" . "defaultResourceRef" (dict "apiVersion" "pubsub.cnrm.cloud.google.com/v1beta1" "kind" "PubSubSubscription" "name" $sub.name)) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

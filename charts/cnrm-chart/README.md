@@ -54,6 +54,10 @@ Before using this chart, ensure you have:
 - Kubernetes Node Pools
 - IAM Service Accounts
 - IAM Policies
+- IAM Custom Roles
+- Workload Identity Pools and Providers
+- Service Identities
+- Pub/Sub Topics and Subscriptions
 - Compute Addresses
 - Service Networking Connections
 - Cloud DNS
@@ -62,6 +66,8 @@ Before using this chart, ensure you have:
 - Cloud Monitoring
 - Cloud SQL
 - Logging Buckets
+- Log Sinks
+- Asset Feeds
 - Security Policies
 - Cloud IDS
 - Cloud VPN (Compute Router, VPN Gateway, External VPN Gateway, VPN Tunnel)
@@ -116,9 +122,10 @@ Specify your configuration in a values file. The included [values.yaml](./values
 - VPC networks and subnets
 - GKE clusters and node pools
 - Cloud SQL instances
-- IAM service accounts and policies
+- IAM service accounts, custom roles, workload identity, and policies
+- Pub/Sub topics and subscriptions
 - DNS zones and records
-- Monitoring and logging
+- Monitoring, logging, and asset feeds
 - Security policies
 
 See the [Examples](#examples) section for ready-to-use configurations.
@@ -131,6 +138,7 @@ The chart includes example values files demonstrating different deployment scena
 - **[Production Multi-Region](./examples/02-production-multi-region.yaml)** - Production setup with high availability across regions
 - **[Shared VPC Service Project](./examples/03-shared-vpc-service-project.yaml)** - Service project using Shared VPC from a host project
 - **[Complete Infrastructure](./examples/04-complete-infrastructure.yaml)** - Comprehensive reference implementation with all major features
+- **[IAM, Pub/Sub, logging, and asset feeds](./examples/07-iam-pubsub-logging-and-assets.yaml)** - Custom roles, workload identity, Pub/Sub push, log sinks, and asset feeds
 
 See the [examples README](./examples/README.md) for detailed documentation on each example, use cases, and patterns demonstrated.
 
@@ -150,9 +158,10 @@ The [values.yaml](./values.yaml) file contains all configurable options with det
 - **VPC Networks** - Network and subnet configuration
 - **GKE Clusters** - Kubernetes cluster and node pool settings
 - **Cloud SQL** - Database instance configuration
-- **IAM** - Service accounts and policy bindings
+- **IAM** - Service accounts, custom roles, workload identity pools, and policy bindings
+- **Pub/Sub** - Topics and subscriptions, including push, dead letter, and IAM
 - **DNS** - Managed zones and record sets
-- **Monitoring & Logging** - Alert policies and log buckets
+- **Monitoring & Logging** - Alert policies, log buckets, log sinks, and asset feeds
 - **Security** - Firewall rules, security policies, SSL policies
 
 ## Important Notes
@@ -173,6 +182,7 @@ The [values.yaml](./values.yaml) file contains all configurable options with det
 - **By default**, resources use the `"abandon"` deletion policy for safety
 - This means deleting resources from Config Connector **does not delete them in GCP**
 - You can enable deletion by setting `allowResourceDeletion: true` in your values
+- Custom roles, workload identity pools, service identities, Pub/Sub, log sinks, asset feeds, and IAM entries can set `allowResourceDeletion` on that block. That overrides the chart value for those objects only
 - ⚠️ **CAUTION**: Enabling deletion means resources will be permanently deleted in GCP when removed from Config Connector
 
 ### Testing & Compatibility

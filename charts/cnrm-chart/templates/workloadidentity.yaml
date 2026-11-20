@@ -1,0 +1,121 @@
+{{- if .Values.workloadIdentityPool }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.workloadIdentityPool }}
+{{- if not .name }}
+{{- fail "cnrm-chart: workloadIdentityPool requires name" }}
+{{- end }}
+{{- $pool := . }}
+{{- $deletion := $allowResourceDeletion }}
+{{- if hasKey . "allowResourceDeletion" }}
+{{- $deletion = .allowResourceDeletion }}
+{{- end }}
+{{- $location := .location | default "global" }}
+---
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMWorkloadIdentityPool
+metadata:
+  annotations:
+    {{- include "cnrm-chart.deletionPolicy" (dict "allowResourceDeletion" $deletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .resourceID | default .name | quote }}
+  location: {{ $location | quote }}
+  {{- include "cnrm-chart.projectRef" (dict "projectName" $projectName "projectRef" .projectRef "format" "projects") | nindent 2 }}
+  {{- if .displayName }}
+  displayName: {{ .displayName | quote }}
+  {{- end }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if hasKey . "disabled" }}
+  disabled: {{ .disabled }}
+  {{- end }}
+{{- range .provider }}
+{{- if not .name }}
+{{- fail (printf "cnrm-chart: workloadIdentityPool %s provider requires name" $pool.name) }}
+{{- end }}
+{{- if and .oidc .aws }}
+{{- fail (printf "cnrm-chart: workloadIdentityPool %s provider %s accepts oidc or aws, not both" $pool.name .name) }}
+{{- end }}
+{{- if not (or .oidc .aws) }}
+{{- fail (printf "cnrm-chart: workloadIdentityPool %s provider %s requires oidc or aws" $pool.name .name) }}
+{{- end }}
+{{- if and .oidc (not .oidc.issuerUri) }}
+{{- fail (printf "cnrm-chart: workloadIdentityPool %s provider %s oidc.issuerUri is required" $pool.name .name) }}
+{{- end }}
+{{- if and .oidc (not .attributeMapping) }}
+{{- fail (printf "cnrm-chart: workloadIdentityPool %s provider %s attributeMapping is required for oidc" $pool.name .name) }}
+{{- end }}
+{{- if and .aws (not .aws.accountId) }}
+{{- fail (printf "cnrm-chart: workloadIdentityPool %s provider %s aws.accountId is required" $pool.name .name) }}
+{{- end }}
+{{- $providerDeletion := $deletion }}
+{{- if hasKey . "allowResourceDeletion" }}
+{{- $providerDeletion = .allowResourceDeletion }}
+{{- end }}
+---
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMWorkloadIdentityPoolProvider
+metadata:
+  annotations:
+    {{- include "cnrm-chart.deletionPolicy" (dict "allowResourceDeletion" $providerDeletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .resourceID | default .name | quote }}
+  location: {{ (.location | default $location) | quote }}
+  {{- include "cnrm-chart.projectRef" (dict "projectName" $projectName "projectRef" (.projectRef | default $pool.projectRef) "format" "projects") | nindent 2 }}
+  {{- if .workloadIdentityPoolRef }}
+  {{- if not (or .workloadIdentityPoolRef.external .workloadIdentityPoolRef.name) }}
+  {{- fail (printf "cnrm-chart: workloadIdentityPool %s provider %s workloadIdentityPoolRef requires external or name" $pool.name .name) }}
+  {{- end }}
+  workloadIdentityPoolRef:
+    {{- if .workloadIdentityPoolRef.external }}
+    external: {{ .workloadIdentityPoolRef.external | quote }}
+    {{- else }}
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .workloadIdentityPoolRef.name) }}
+    {{- end }}
+    {{- if .workloadIdentityPoolRef.namespace }}
+    namespace: {{ .workloadIdentityPoolRef.namespace }}
+    {{- end }}
+  {{- else }}
+  workloadIdentityPoolRef:
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" $pool.name) }}
+  {{- end }}
+  {{- if .displayName }}
+  displayName: {{ .displayName | quote }}
+  {{- end }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if hasKey . "disabled" }}
+  disabled: {{ .disabled }}
+  {{- end }}
+  {{- if .attributeMapping }}
+  attributeMapping:
+    {{- toYaml .attributeMapping | nindent 4 }}
+  {{- end }}
+  {{- if .attributeCondition }}
+  attributeCondition: {{ .attributeCondition | quote }}
+  {{- end }}
+  {{- if .oidc }}
+  oidc:
+    issuerUri: {{ .oidc.issuerUri | quote }}
+    {{- if .oidc.allowedAudiences }}
+    allowedAudiences:
+      {{- toYaml .oidc.allowedAudiences | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  {{- if .aws }}
+  aws:
+    accountId: {{ .aws.accountId | quote }}
+    {{- if .aws.stsUri }}
+    stsUri:
+      {{- toYaml .aws.stsUri | nindent 6 }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

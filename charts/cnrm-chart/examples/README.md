@@ -141,6 +141,31 @@ This directory contains example values files demonstrating different deployment 
 
 ---
 
+### 7. IAM, Pub/Sub, logging, and asset feeds (`07-iam-pubsub-logging-and-assets.yaml`)
+
+**Use Case:** Customer-managed project connection: identities, federation, Pub/Sub push, a log sink, and an asset feed.
+
+**Features:**
+- `serviceIdentity` for the Pub/Sub and Cloud Asset service agents
+- `iamCustomRole`, including an organization role that inherits the chart deletion policy
+- Service accounts whose bindings use `memberFrom` and a non-project `resourceRef`
+- `workloadIdentityPool` with an OIDC provider and an AWS provider
+- Pub/Sub topics and subscriptions: push with OIDC, dead letter, BigQuery, and Cloud Storage
+- `logging.logSink` with `uniqueWriterIdentity` and a writer grant on the destination topic
+- `assetFeed` for resource updates
+
+**When to Use:**
+- Regression testing for these value paths
+- A starting point for a read-only connection whose names and endpoints come from the vendor
+
+**Key Patterns Demonstrated:**
+- Chart-level `allowResourceDeletion: false` with `true` on the connection objects
+- `resourceID` preserving a custom-role id that contains an underscore
+- `expirationPolicy.ttl: ""` so a push subscription does not expire
+- `memberFrom.logSinkRef` and `memberFrom.serviceIdentityRef`
+
+---
+
 ## Common Patterns Across Examples
 
 ### Resource Naming
@@ -184,6 +209,9 @@ helm template test-release . -f examples/04-complete-infrastructure.yaml
 
 # Test example 5 (uptime checks, routes, NAT, ComputeInstance)
 helm template test-release . -f examples/05-monitoring-routing-and-compute.yaml
+
+# Test example 7 (IAM, Pub/Sub, log sinks, asset feeds)
+helm template test-release . -f examples/07-iam-pubsub-logging-and-assets.yaml
 ```
 
 ## Customization

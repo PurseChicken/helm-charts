@@ -1,0 +1,309 @@
+# ============================================================================
+# Example 7: IAM, Pub/Sub, log sinks, and asset feeds
+# ============================================================================
+# Self-contained sample for a customer-managed project connection:
+#   - ServiceIdentity for the Pub/Sub and Cloud Asset service agents
+#   - IAMCustomRole, including an organization role
+#   - IAMServiceAccount bindings, including memberFrom and non-project resourceRef
+#   - IAMWorkloadIdentityPool and IAMWorkloadIdentityPoolProvider (OIDC and AWS)
+#   - PubSubTopic and PubSubSubscription (push + OIDC, dead letter, BigQuery, Cloud Storage)
+#   - LoggingLogSink, including the unique writer identity grant
+#   - AssetFeed
+#
+# Chart-level deletion stays abandon. Resources that should disappear with the
+# Git change set allowResourceDeletion: true. The organization role inherits
+# the chart default so both annotations are visible in the rendered output.
+#
+# Names are generic placeholders. A vendor verify check wants its own ids,
+# filters, issuer, and push URL in the consumer values, not in this chart.
+# ============================================================================
+
+projectName: "ex07-sample"
+createOrManageProject: false
+allowResourceDeletion: false
+
+apis:
+  - name: cloudasset.googleapis.com
+  - name: iam.googleapis.com
+  - name: iamcredentials.googleapis.com
+  - name: logging.googleapis.com
+  - name: pubsub.googleapis.com
+  - name: sts.googleapis.com
+
+serviceIdentity:
+  - name: pubsub.googleapis.com
+    allowResourceDeletion: true
+  - name: cloudasset.googleapis.com
+    allowResourceDeletion: true
+
+iamCustomRole:
+  - name: example_metadata
+    title: Example connection metadata
+    description: Metadata reads that predefined roles do not cover
+    stage: GA
+    allowResourceDeletion: true
+    permissions:
+      - iam.serviceAccounts.get
+      - logging.sinks.get
+      - cloudasset.feeds.get
+  - name: org-example-role
+    organizationId: "1234567890"
+    title: Example organization role
+    permissions:
+      - iam.roles.get
+
+iam:
+  - name: example-read
+    displayName: Example runtime reader
+    description: Read-only identity for a customer-managed connection
+    allowResourceDeletion: true
+    iamPolicyMember:
+      - name: example-read-asset-viewer
+        member: serviceAccount:example-read@ex07-sample.iam.gserviceaccount.com
+        role: roles/cloudasset.viewer
+      - name: example-read-metadata
+        member: serviceAccount:example-read@ex07-sample.iam.gserviceaccount.com
+        role: projects/ex07-sample/roles/example_metadata
+        condition:
+          title: Metadata only
+          description: Sample condition
+          expression: request.time < timestamp("2027-01-01T00:00:00Z")
+  - name: example-push
+    displayName: Example Pub/Sub delivery
+    allowResourceDeletion: true
+    iamPolicyMember:
+      - name: example-push-token-creator
+        role: roles/iam.serviceAccountTokenCreator
+        memberFrom:
+          serviceIdentityRef:
+            name: pubsub.googleapis.com
+        resourceRef:
+          kind: IAMServiceAccount
+          name: example-push
+      - name: example-push-deployer
+        role: roles/iam.serviceAccountUser
+        member: serviceAccount:cnrm-system@ex07-sample.iam.gserviceaccount.com
+        resourceRef:
+          apiVersion: iam.cnrm.cloud.google.com/v1beta1
+          kind: IAMServiceAccount
+          name: example-push
+
+workloadIdentityPool:
+  - name: example-pool
+    displayName: Example connection
+    description: OIDC federation for one external reader
+    disabled: false
+    allowResourceDeletion: true
+    provider:
+      - name: example-oidc
+        displayName: Example OIDC
+        disabled: false
+        attributeMapping:
+          google.subject: assertion.sub
+          attribute.connection_id: assertion.connection_id
+        attributeCondition: assertion.sub == 'example-subject' && assertion.connection_id == 'example-request'
+        oidc:
+          issuerUri: https://example.invalid/federation/example
+          allowedAudiences:
+            - example-audience
+  - name: example-aws-pool
+    displayName: Example AWS pool
+    allowResourceDeletion: true
+    provider:
+      - name: example-aws
+        attributeMapping:
+          google.subject: assertion.arn
+        aws:
+          accountId: "999999999999"
+          stsUri:
+            - https://sts.amazonaws.com
+
+pubsub:
+  topic:
+    - name: example-assets
+      labels:
+        purpose: example-connection
+      allowResourceDeletion: true
+      iamPolicyMember:
+        - name: example-asset-publisher
+          role: roles/pubsub.publisher
+          memberFrom:
+            serviceIdentityRef:
+              name: cloudasset.googleapis.com
+    - name: example-logs
+      allowResourceDeletion: true
+    - name: example-dead-letters
+      messageRetentionDuration: 86400s
+      allowResourceDeletion: true
+      iamPolicyMember:
+        - name: example-dead-letter-publisher
+          role: roles/pubsub.publisher
+          memberFrom:
+            serviceIdentityRef:
+              name: pubsub.googleapis.com
+    - name: example-schema
+      messageRetentionDuration: 86400s
+      messageStoragePolicy:
+        allowedPersistenceRegions:
+          - us-central1
+        enforceInTransit: false
+      kmsKeyRef:
+        # Not a KMSCryptoKey object in this chart. Official external format:
+        # projects/{{projectID}}/locations/{{location}}/keyRings/{{keyring}}/cryptoKeys/{{cryptokey}}
+        external: projects/ex07-sample/locations/us-central1/keyRings/example/cryptoKeys/example
+      schemaSettings:
+        encoding: JSON
+        schemaRef:
+          # Not a PubSubSchema object in this chart. Official external format:
+          # projects/{{projectID}}/schemas/{{schemaID}}
+          external: projects/ex07-sample/schemas/example
+      allowResourceDeletion: true
+  subscription:
+    - name: example-assets
+      topicRefName: example-assets
+      ackDeadlineSeconds: 30
+      messageRetentionDuration: 86400s
+      retainAckedMessages: false
+      expirationPolicy:
+        ttl: ""
+      pushConfig:
+        pushEndpoint: https://example.invalid/events
+        oidcToken:
+          serviceAccountEmail: example-push@ex07-sample.iam.gserviceaccount.com
+          audience: https://example.invalid/events
+      retryPolicy:
+        minimumBackoff: 10s
+        maximumBackoff: 600s
+      deadLetterPolicy:
+        deadLetterTopicRefName: example-dead-letters
+        maxDeliveryAttempts: 100
+      allowResourceDeletion: true
+      iamPolicyMember:
+        - name: example-assets-subscriber
+          role: roles/pubsub.subscriber
+          memberFrom:
+            serviceIdentityRef:
+              name: pubsub.googleapis.com
+    - name: example-logs
+      topicRefName: example-logs
+      ackDeadlineSeconds: 30
+      messageRetentionDuration: 86400s
+      expirationPolicy:
+        ttl: ""
+      pushConfig:
+        pushEndpoint: https://example.invalid/events
+        attributes:
+          x-goog-version: v1
+        noWrapper:
+          writeMetadata: false
+        oidcToken:
+          serviceAccountEmail: example-push@ex07-sample.iam.gserviceaccount.com
+          audience: https://example.invalid/events
+      retryPolicy:
+        minimumBackoff: 10s
+        maximumBackoff: 600s
+      deadLetterPolicy:
+        deadLetterTopicRefName: example-dead-letters
+        maxDeliveryAttempts: 100
+      allowResourceDeletion: true
+    - name: example-dead-letters
+      topicRefName: example-dead-letters
+      messageRetentionDuration: 86400s
+      expirationPolicy:
+        ttl: ""
+      allowResourceDeletion: true
+    - name: example-bq
+      # Topic is not created by this chart, so the reference is the GCP resource name.
+      topicRef:
+        external: projects/other-project/topics/external-topic
+      bigqueryConfig:
+        # BigQuery table external also includes the dataset. A short name cannot build it.
+        tableRef:
+          external: projects/ex07-sample/datasets/example/tables/events
+        writeMetadata: true
+        dropUnknownFields: false
+        useTopicSchema: false
+      enableMessageOrdering: false
+      enableExactlyOnceDelivery: false
+      filter: attributes.route = "archive"
+      allowResourceDeletion: true
+    - name: example-gcs
+      topicRefName: example-schema
+      cloudStorageConfig:
+        # Storage bucket is not created by this chart.
+        # Official external format: projects/{{projectID}}/buckets/{{bucketID}}
+        bucketRef:
+          external: projects/ex07-sample/buckets/example-events
+        filenamePrefix: events-
+        filenameSuffix: .avro
+        maxBytes: 1000000
+        maxDuration: 300s
+        avroConfig:
+          writeMetadata: true
+      allowResourceDeletion: true
+
+logging:
+  logSink:
+    - name: example-activity
+      filter: log_id("cloudaudit.googleapis.com/activity") AND protoPayload.serviceName="pubsub.googleapis.com"
+      uniqueWriterIdentity: true
+      disabled: false
+      allowResourceDeletion: true
+      destination:
+        pubSubTopicRefName: example-logs
+      exclusions:
+        - name: exclude-debug
+          description: Drop debug entries
+          filter: severity="DEBUG"
+          disabled: false
+      writerIdentity:
+        - name: example-log-publisher
+          role: roles/pubsub.publisher
+    - name: example-bucket-sink
+      uniqueWriterIdentity: true
+      allowResourceDeletion: true
+      destination:
+        # LoggingLogSink storage external format is projects/{{projectID}}/buckets/{{bucketID}}.
+        # IAMPolicyMember on a StorageBucket uses the bucket id alone.
+        storageBucketRef:
+          external: projects/ex07-sample/buckets/example-log-bucket
+      writerIdentity:
+        - name: example-bucket-writer
+          role: roles/storage.objectCreator
+          resourceRef:
+            kind: StorageBucket
+            external: example-log-bucket
+    - name: example-folder-sink
+      folderRef:
+        external: folders/8675309
+      includeChildren: true
+      allowResourceDeletion: true
+      bigqueryOptions:
+        usePartitionedTables: true
+      destination:
+        bigQueryDatasetRef:
+          external: projects/ex07-sample/datasets/folder_logs
+
+assetFeed:
+  - name: example-feed
+    contentType: RESOURCE
+    assetTypes:
+      - ".*"
+    allowResourceDeletion: true
+    feedOutputConfig:
+      pubsubDestination:
+        topicRefName: example-assets
+  - name: example-deletes
+    contentType: RESOURCE
+    assetNames:
+      - //compute.googleapis.com/projects/ex07-sample/zones/us-central1-a/instances/example
+    condition:
+      expression: temporal_asset.deleted == true
+      title: Deletions only
+      description: Publish deleted assets
+      location: example
+    allowResourceDeletion: true
+    feedOutputConfig:
+      pubsubDestination:
+        topicRef:
+          external: projects/other-project/topics/example-assets

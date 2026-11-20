@@ -594,6 +594,92 @@
 #       member: serviceAccount:service-1234567890@gcp-sa-multiclusteringress.iam.gserviceaccount.com
 #       role: roles/container.admin
 #       external: projects/my-unique-global-project
+#     # resourceRef targets something other than this project. name is the chart
+#     # name (project-prefixed). external is a GCP resource name. memberFrom binds
+#     # an identity Config Connector reads off another resource. Set one of member
+#     # or memberFrom. allowResourceDeletion on this entry overrides the chart default
+#     # for the account and, unless a member sets its own, for these bindings.
+#     # - name: push-token-creator
+#     #   role: roles/iam.serviceAccountTokenCreator
+#     #   allowResourceDeletion: true
+#     #   memberFrom:
+#     #     serviceIdentityRef:
+#     #       name: pubsub.googleapis.com
+#     #   resourceRef:
+#     #     kind: IAMServiceAccount
+#     #     name: push-account
+
+# # Project or organization custom roles.
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/iam/iamcustomrole
+# # metadata.name is project-prefixed and sanitized. spec.resourceID defaults to name
+# # and keeps characters Kubernetes names cannot, such as underscores.
+# # Bind the role with iam.iamPolicyMember.role set to
+# # projects/<projectID>/roles/<resourceID> or organizations/<org>/roles/<resourceID>.
+# iamCustomRole:
+#   - name: example_metadata
+#     # resourceID: example_metadata
+#     title: Example connection metadata
+#     description: Metadata reads that predefined roles do not cover
+#     # stage: GA
+#     # allowResourceDeletion: true
+#     # customAnnotations: {}
+#     permissions:
+#       - iam.serviceAccounts.get
+#       - logging.sinks.get
+#     # Organization role. Omit project-id and set the organization annotation.
+#     # organizationId: "1234567890"
+
+# # Workload identity pools. Providers are created in the pool.
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/iam/iamworkloadidentitypool
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/iam/iamworkloadidentitypoolprovider
+# # location defaults to global. projectRef.external defaults to projects/<projectID>.
+# workloadIdentityPool:
+#   - name: example-pool
+#     # resourceID: example-pool
+#     displayName: Example connection
+#     description: OIDC federation for one external reader
+#     # disabled: false
+#     # allowResourceDeletion: true
+#     # projectRef:
+#     #   external: projects/other-project
+#     provider:
+#       - name: example-oidc
+#         # resourceID: example-oidc
+#         displayName: Example OIDC
+#         # A provider is oidc or aws, not both.
+#         attributeMapping:
+#           google.subject: assertion.sub
+#           attribute.connection_id: assertion.connection_id
+#         attributeCondition: assertion.sub == 'example-subject'
+#         oidc:
+#           issuerUri: https://example.invalid/federation/example
+#           # Omit allowedAudiences to leave the provider's default audience.
+#           # allowedAudiences:
+#           #   - example-audience
+#       - name: example-aws
+#         attributeMapping:
+#           google.subject: assertion.arn
+#         aws:
+#           accountId: "999999999999"
+#           # stsUri:
+#           #   - https://sts.amazonaws.com
+#         # Same project, a pool other than the one this provider is nested under.
+#         # The chart writes metadata.name {projectID}-{name}.
+#         # workloadIdentityPoolRef:
+#         #   name: example-pool
+#         # Another project, or a pool with no Config Connector object.
+#         # Official external: projects/{{project}}/locations/{{location}}/workloadIdentityPools/{{name}}
+#         # https://cloud.google.com/config-connector/docs/reference/resource-docs/iam/iamworkloadidentitypoolprovider
+#         # workloadIdentityPoolRef:
+#         #   external: projects/other/locations/global/workloadIdentityPools/other-pool
+
+# # Google-managed service agents. resourceID defaults to name, so name can be the
+# # API, for example pubsub.googleapis.com. status.email is the agent address.
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/serviceusage/serviceidentity
+# serviceIdentity:
+#   - name: pubsub.googleapis.com
+#     allowResourceDeletion: true
+#   - name: cloudasset.googleapis.com
 
 # # Create Compute Addresses (Static IPs) — ComputeAddress
 # # https://cloud.google.com/config-connector/docs/reference/resource-docs/compute/computeaddress
@@ -711,6 +797,105 @@
 #       # range
 #       - name: "private-service-connection"
 #     service: "servicenetworking.googleapis.com"
+
+# ============================================================================
+# MESSAGING
+# ============================================================================
+
+# # Pub/Sub topics and subscriptions.
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/pubsub/pubsubtopic
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/pubsub/pubsubsubscription
+# # *RefName is the short name of a Config Connector object in this project.
+# # The chart stores that object's metadata.name as {projectID}-{name} and writes
+# # the reference name in that form. external is the GCP resource name from the
+# # Config Connector reference, for an object this chart does not manage or an
+# # object in another project. KMS and BigQuery table externals also need a
+# # location, key ring, or dataset, so a short name cannot build those strings.
+# # A subscription sets at most one of pushConfig, bigqueryConfig, or cloudStorageConfig.
+# # expirationPolicy.ttl: "" disables subscription expiration.
+# # labels are Kubernetes metadata labels. This resource has no GCP label field.
+# # iamPolicyMember on a topic or subscription defaults resourceRef to that resource.
+# pubsub:
+#   topic:
+#     - name: example-events
+#       # resourceID: example-events
+#       # allowResourceDeletion: true
+#       # labels:
+#       #   purpose: example
+#       # messageRetentionDuration: 86400s
+#       # messageStoragePolicy:
+#       #   allowedPersistenceRegions:
+#       #     - us-central1
+#       #   enforceInTransit: false
+#       # kmsKeyRefName: example-key
+#       # Or a key with no KMSCryptoKey object. Do not set both.
+#       # kmsKeyRef:
+#       #   external: projects/other-project/locations/us-central1/keyRings/example/cryptoKeys/example
+#       # schemaSettings:
+#       #   encoding: JSON
+#       #   schemaRefName: example
+#       # Or a schema with no PubSubSchema object. Do not set both.
+#       # schemaRef:
+#       #     external: projects/other-project/schemas/example
+#       iamPolicyMember:
+#         - name: example-events-publisher
+#           role: roles/pubsub.publisher
+#           memberFrom:
+#             serviceIdentityRef:
+#               name: pubsub.googleapis.com
+#   subscription:
+#     - name: example-events
+#       topicRefName: example-events
+#       ackDeadlineSeconds: 30
+#       messageRetentionDuration: 86400s
+#       # retainAckedMessages: false
+#       # enableExactlyOnceDelivery: false
+#       # enableMessageOrdering: false
+#       # filter: attributes.route = "archive"
+#       expirationPolicy:
+#         ttl: ""
+#       pushConfig:
+#         pushEndpoint: https://example.invalid/events
+#         # attributes:
+#         #   x-goog-version: v1
+#         oidcToken:
+#           serviceAccountEmail: push@my-unique-global-project.iam.gserviceaccount.com
+#           audience: https://example.invalid/events
+#         # noWrapper:
+#         #   writeMetadata: false
+#       retryPolicy:
+#         minimumBackoff: 10s
+#         maximumBackoff: 600s
+#       deadLetterPolicy:
+#         deadLetterTopicRefName: example-dead-letters
+#         maxDeliveryAttempts: 100
+#       iamPolicyMember:
+#         - name: example-events-subscriber
+#           role: roles/pubsub.subscriber
+#           member: serviceAccount:service-1234567890@gcp-sa-pubsub.iam.gserviceaccount.com
+#     # - name: example-bq
+#     #   topicRefName: example-events
+#     #   # topicRef:
+#     #   #   external: projects/other-project/topics/example-events
+#     #   bigqueryConfig:
+#     #     tableRefName: events
+#     #     # tableRef:
+#     #     #   external: projects/other-project/datasets/example/tables/events
+#     #     writeMetadata: true
+#     #     dropUnknownFields: false
+#     #     useTopicSchema: false
+#     # - name: example-gcs
+#     #   topicRefName: example-events
+#     #   cloudStorageConfig:
+#     #     bucketRefName: example-events
+#     #     # bucketRef:
+#     #     #   external: projects/other-project/buckets/example-events
+#     #     filenamePrefix: events-
+#     #     filenameSuffix: .avro
+#     #     maxBytes: 1000000
+#     #     maxDuration: 300s
+#     #     avroConfig:
+#     #       writeMetadata: true
 
 # ============================================================================
 # DNS
@@ -1002,6 +1187,74 @@
 #           numFiniteBuckets: 64
 #           growthFactor: 2.0
 #           scale: 0.01
+#   # Project, folder, or organization log sink. Set only one parent; the default
+#   # is this project. LoggingLogSink projectRef.external is the bare project ID,
+#   # not projects/<id>. The chart default uses that form.
+#   # https://cloud.google.com/config-connector/docs/reference/resource-docs/logging/logginglogsink
+#   # *RefName uses this chart's Kubernetes name. loggingLogBucketRefName matches
+#   # the log bucket name in this chart, including case. Other *RefName values are
+#   # sanitized. external is the GCP resource name for a destination this chart
+#   # does not manage, or a destination in another project.
+#   # writerIdentity grants the sink's status.writerIdentity. When the
+#   # destination is a Pub/Sub topic or log bucket and resourceRef is omitted, the
+#   # grant targets that destination. Log bucket names are not sanitized.
+#   logSink:
+#     - name: example-activity
+#       # resourceID: example-activity
+#       description: Admin activity for Pub/Sub and Cloud Storage
+#       filter: log_id("cloudaudit.googleapis.com/activity") AND protoPayload.serviceName="pubsub.googleapis.com"
+#       uniqueWriterIdentity: true
+#       # disabled: false
+#       # includeChildren: false
+#       # allowResourceDeletion: true
+#       # folderRef:
+#       #   external: folders/8675309
+#       # organizationRef:
+#       #   external: organizations/1234567890
+#       # bigqueryOptions:
+#       #   usePartitionedTables: true
+#       # exclusions:
+#       #   - name: exclude-debug
+#       #     description: Drop debug entries
+#       #     filter: severity="DEBUG"
+#       #     disabled: false
+#       destination:
+#         pubSubTopicRefName: example-logs
+#         # pubSubTopicRef:
+#         #   external: projects/other-project/topics/example-logs
+#         # loggingLogBucketRefName: My-Cool-Bucket
+#         # storageBucketRefName: example-log-bucket
+#         # storageBucketRef:
+#         #   external: projects/other-project/buckets/example-log-bucket
+#         # bigQueryDatasetRefName: example
+#         # bigQueryDatasetRef:
+#         #   external: projects/other-project/datasets/example
+#       writerIdentity:
+#         - name: example-log-publisher
+#           role: roles/pubsub.publisher
+
+# # Cloud Asset Inventory feed.
+# # https://cloud.google.com/config-connector/docs/reference/resource-docs/asset/assetfeed
+# # Requires assetTypes or assetNames. projectRef.external defaults to
+# # projects/<projectID>. Set only one of projectRef, folderRef, or organizationRef.
+# # relationshipTypes requires contentType RELATIONSHIP.
+# assetFeed:
+#   - name: example-feed
+#     # resourceID: example-feed
+#     contentType: RESOURCE
+#     assetTypes:
+#       - ".*"
+#     # assetNames:
+#     #   - //compute.googleapis.com/projects/my-project/zones/us-central1-a/instances/example
+#     # condition:
+#     #   expression: temporal_asset.deleted == true
+#     #   title: Deletions only
+#     # allowResourceDeletion: true
+#     feedOutputConfig:
+#       pubsubDestination:
+#         topicRefName: example-assets
+#         # topicRef:
+#         #   external: projects/other-project/topics/example-assets
 
 # ============================================================================
 # DATABASES

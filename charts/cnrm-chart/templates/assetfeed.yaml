@@ -1,0 +1,89 @@
+{{- if .Values.assetFeed }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.assetFeed }}
+{{- if not .name }}
+{{- fail "cnrm-chart: assetFeed requires name" }}
+{{- end }}
+{{- if not (or .assetTypes .assetNames) }}
+{{- fail (printf "cnrm-chart: assetFeed %s requires assetTypes or assetNames" .name) }}
+{{- end }}
+{{- if not .feedOutputConfig }}
+{{- fail (printf "cnrm-chart: assetFeed %s requires feedOutputConfig" .name) }}
+{{- end }}
+{{- $topicName := .feedOutputConfig.pubsubDestination.topicRefName }}
+{{- $topicRef := .feedOutputConfig.pubsubDestination.topicRef }}
+{{- if and $topicName $topicRef }}
+{{- fail (printf "cnrm-chart: assetFeed %s accepts topicRefName or topicRef, not both" .name) }}
+{{- end }}
+{{- if not (or $topicName $topicRef) }}
+{{- fail (printf "cnrm-chart: assetFeed %s requires feedOutputConfig.pubsubDestination.topicRefName or topicRef" .name) }}
+{{- end }}
+{{- if and $topicRef (not (or $topicRef.external $topicRef.name)) }}
+{{- fail (printf "cnrm-chart: assetFeed %s topicRef requires external or name" .name) }}
+{{- end }}
+{{- if and .relationshipTypes (ne .contentType "RELATIONSHIP") }}
+{{- fail (printf "cnrm-chart: assetFeed %s relationshipTypes requires contentType RELATIONSHIP" .name) }}
+{{- end }}
+{{- $deletion := $allowResourceDeletion }}
+{{- if hasKey . "allowResourceDeletion" }}
+{{- $deletion = .allowResourceDeletion }}
+{{- end }}
+---
+apiVersion: asset.cnrm.cloud.google.com/v1beta1
+kind: AssetFeed
+metadata:
+  annotations:
+    {{- include "cnrm-chart.deletionPolicy" (dict "allowResourceDeletion" $deletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .resourceID | default .name | quote }}
+  {{- include "cnrm-chart.parentRef" (dict "label" (printf "assetFeed %s" .name) "projectName" $projectName "projectRef" .projectRef "folderRef" .folderRef "organizationRef" .organizationRef "format" "projects") | nindent 2 }}
+  {{- if .contentType }}
+  contentType: {{ .contentType | quote }}
+  {{- end }}
+  {{- if .assetTypes }}
+  assetTypes:
+    {{- range .assetTypes }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if .assetNames }}
+  assetNames:
+    {{- range .assetNames }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  {{- if .relationshipTypes }}
+  relationshipTypes:
+    {{- range .relationshipTypes }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  {{- with .condition }}
+  {{- if not .expression }}
+  {{- fail "cnrm-chart: assetFeed condition.expression is required when condition is set" }}
+  {{- end }}
+  condition:
+    expression: {{ .expression | quote }}
+    {{- if .title }}
+    title: {{ .title | quote }}
+    {{- end }}
+    {{- if .description }}
+    description: {{ .description | quote }}
+    {{- end }}
+    {{- if .location }}
+    location: {{ .location | quote }}
+    {{- end }}
+  {{- end }}
+  feedOutputConfig:
+    pubsubDestination:
+      topicRef:
+        {{- if $topicName }}
+        name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" $topicName) }}
+        {{- else }}
+        {{- include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" $topicRef) | trim | nindent 8 }}
+        {{- end }}
+{{- end }}
+{{- end }}

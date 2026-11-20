@@ -128,7 +128,160 @@ spec:
   {{- if .retentionDays }}
   retentionDays: {{ .retentionDays }}
   {{- end }}
-{{- end -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}
+{{- end }}
+{{- end }}
+{{- if .logSink }}
+{{- range .logSink }}
+{{- if not .name }}
+{{- fail "cnrm-chart: logging.logSink requires name" }}
+{{- end }}
+{{- if not .destination }}
+{{- fail (printf "cnrm-chart: log sink %s requires destination" .name) }}
+{{- end }}
+{{- $destKeys := list "pubSubTopicRef" "pubSubTopicRefName" "loggingLogBucketRef" "loggingLogBucketRefName" "storageBucketRef" "storageBucketRefName" "bigQueryDatasetRef" "bigQueryDatasetRefName" }}
+{{- $destCount := 0 }}
+{{- $dest := .destination }}
+{{- range $destKeys }}
+{{- if hasKey $dest . }}{{ $destCount = add $destCount 1 }}{{ end }}
+{{- end }}
+{{- if ne $destCount 1 }}
+{{- fail (printf "cnrm-chart: log sink %s destination requires exactly one of pubSubTopicRef, pubSubTopicRefName, loggingLogBucketRef, loggingLogBucketRefName, storageBucketRef, storageBucketRefName, bigQueryDatasetRef, or bigQueryDatasetRefName" .name) }}
+{{- end }}
+{{- $sink := . }}
+{{- $deletion := $allowResourceDeletion }}
+{{- if hasKey . "allowResourceDeletion" }}
+{{- $deletion = .allowResourceDeletion }}
+{{- end }}
+---
+apiVersion: logging.cnrm.cloud.google.com/v1beta1
+kind: LoggingLogSink
+metadata:
+  annotations:
+    {{- include "cnrm-chart.deletionPolicy" (dict "allowResourceDeletion" $deletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .resourceID | default .name | quote }}
+  {{- include "cnrm-chart.parentRef" (dict "label" (printf "log sink %s" .name) "projectName" $projectName "projectRef" .projectRef "folderRef" .folderRef "organizationRef" .organizationRef "format" "id") | nindent 2 }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if .filter }}
+  filter: {{ .filter | quote }}
+  {{- end }}
+  {{- if hasKey . "disabled" }}
+  disabled: {{ .disabled }}
+  {{- end }}
+  {{- if hasKey . "uniqueWriterIdentity" }}
+  uniqueWriterIdentity: {{ .uniqueWriterIdentity }}
+  {{- end }}
+  {{- if hasKey . "includeChildren" }}
+  includeChildren: {{ .includeChildren }}
+  {{- end }}
+  {{- if .bigqueryOptions }}
+  {{- if not (hasKey .bigqueryOptions "usePartitionedTables") }}
+  {{- fail (printf "cnrm-chart: log sink %s bigqueryOptions.usePartitionedTables is required" .name) }}
+  {{- end }}
+  bigqueryOptions:
+    usePartitionedTables: {{ .bigqueryOptions.usePartitionedTables }}
+  {{- end }}
+  {{- if .exclusions }}
+  exclusions:
+    {{- range .exclusions }}
+    {{- if or (not .name) (not .filter) }}
+    {{- fail (printf "cnrm-chart: log sink %s exclusions require name and filter" $sink.name) }}
+    {{- end }}
+    - name: {{ .name | quote }}
+      filter: {{ .filter | quote }}
+      {{- if .description }}
+      description: {{ .description | quote }}
+      {{- end }}
+      {{- if hasKey . "disabled" }}
+      disabled: {{ .disabled }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  destination:
+    {{- if .destination.pubSubTopicRefName }}
+    pubSubTopicRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .destination.pubSubTopicRefName) }}
+    {{- else if .destination.pubSubTopicRef }}
+    {{- if not (or .destination.pubSubTopicRef.external .destination.pubSubTopicRef.name) }}
+    {{- fail (printf "cnrm-chart: log sink %s pubSubTopicRef requires external or name" .name) }}
+    {{- end }}
+    pubSubTopicRef:
+      {{- include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .destination.pubSubTopicRef) | trim | nindent 6 }}
+    {{- else if .destination.loggingLogBucketRefName }}
+    loggingLogBucketRef:
+      name: {{ $projectName }}-{{ .destination.loggingLogBucketRefName }}
+    {{- else if .destination.loggingLogBucketRef }}
+    {{- if not (or .destination.loggingLogBucketRef.external .destination.loggingLogBucketRef.name) }}
+    {{- fail (printf "cnrm-chart: log sink %s loggingLogBucketRef requires external or name" .name) }}
+    {{- end }}
+    loggingLogBucketRef:
+      {{- if .destination.loggingLogBucketRef.external }}
+      external: {{ .destination.loggingLogBucketRef.external | quote }}
+      {{- else }}
+      name: {{ $projectName }}-{{ .destination.loggingLogBucketRef.name }}
+      {{- end }}
+      {{- if .destination.loggingLogBucketRef.namespace }}
+      namespace: {{ .destination.loggingLogBucketRef.namespace }}
+      {{- end }}
+      {{- if .destination.loggingLogBucketRef.kind }}
+      kind: {{ .destination.loggingLogBucketRef.kind | quote }}
+      {{- end }}
+    {{- else if .destination.storageBucketRefName }}
+    storageBucketRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .destination.storageBucketRefName) }}
+    {{- else if .destination.storageBucketRef }}
+    {{- if not (or .destination.storageBucketRef.external .destination.storageBucketRef.name) }}
+    {{- fail (printf "cnrm-chart: log sink %s storageBucketRef requires external or name" .name) }}
+    {{- end }}
+    storageBucketRef:
+      {{- include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .destination.storageBucketRef) | trim | nindent 6 }}
+    {{- else if .destination.bigQueryDatasetRefName }}
+    bigQueryDatasetRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .destination.bigQueryDatasetRefName) }}
+    {{- else if .destination.bigQueryDatasetRef }}
+    {{- if not (or .destination.bigQueryDatasetRef.external .destination.bigQueryDatasetRef.name) }}
+    {{- fail (printf "cnrm-chart: log sink %s bigQueryDatasetRef requires external or name" .name) }}
+    {{- end }}
+    bigQueryDatasetRef:
+      {{- include "cnrm-chart.gcpObjectRef" (dict "projectName" $projectName "ref" .destination.bigQueryDatasetRef) | trim | nindent 6 }}
+    {{- end }}
+{{- $writerDefault := dict }}
+{{- if .destination.pubSubTopicRefName }}
+{{- $writerDefault = dict "apiVersion" "pubsub.cnrm.cloud.google.com/v1beta1" "kind" "PubSubTopic" "name" .destination.pubSubTopicRefName }}
+{{- else if .destination.pubSubTopicRef }}
+{{- $writerDefault = dict "apiVersion" "pubsub.cnrm.cloud.google.com/v1beta1" "kind" "PubSubTopic" }}
+{{- if .destination.pubSubTopicRef.external }}{{ $_ := set $writerDefault "external" .destination.pubSubTopicRef.external }}{{ end }}
+{{- if .destination.pubSubTopicRef.name }}{{ $_ := set $writerDefault "name" .destination.pubSubTopicRef.name }}{{ end }}
+{{- if .destination.pubSubTopicRef.namespace }}{{ $_ := set $writerDefault "namespace" .destination.pubSubTopicRef.namespace }}{{ end }}
+{{- else if .destination.loggingLogBucketRefName }}
+{{- $writerDefault = dict "apiVersion" "logging.cnrm.cloud.google.com/v1beta1" "kind" "LoggingLogBucket" "name" .destination.loggingLogBucketRefName }}
+{{- else if .destination.loggingLogBucketRef }}
+{{- $writerDefault = dict "apiVersion" "logging.cnrm.cloud.google.com/v1beta1" "kind" "LoggingLogBucket" }}
+{{- if .destination.loggingLogBucketRef.external }}{{ $_ := set $writerDefault "external" .destination.loggingLogBucketRef.external }}{{ end }}
+{{- if .destination.loggingLogBucketRef.name }}{{ $_ := set $writerDefault "name" .destination.loggingLogBucketRef.name }}{{ end }}
+{{- if .destination.loggingLogBucketRef.namespace }}{{ $_ := set $writerDefault "namespace" .destination.loggingLogBucketRef.namespace }}{{ end }}
+{{- end }}
+{{- range .writerIdentity }}
+{{- if or .member .memberFrom }}
+{{- fail (printf "cnrm-chart: log sink %s writerIdentity %s is bound to the sink writer; do not set member or memberFrom" $sink.name .name) }}
+{{- end }}
+{{- if and (not .resourceRef) (not $writerDefault.kind) }}
+{{- fail (printf "cnrm-chart: log sink %s writerIdentity %s requires resourceRef when the destination is not a Pub/Sub topic or log bucket" $sink.name .name) }}
+{{- end }}
+{{- $grant := dict "name" .name "role" .role "memberFrom" (dict "logSinkRef" (dict "name" $sink.name)) }}
+{{- if .resourceRef }}{{ $_ := set $grant "resourceRef" .resourceRef }}{{ end }}
+{{- if hasKey . "allowResourceDeletion" }}{{ $_ := set $grant "allowResourceDeletion" .allowResourceDeletion }}{{ end }}
+{{- if .condition }}{{ $_ := set $grant "condition" .condition }}{{ end }}
+{{- $grantArgs := dict "projectName" $projectName "allowResourceDeletion" $deletion "member" $grant "requireResourceRef" true }}
+{{- if $writerDefault.kind }}{{ $_ := set $grantArgs "defaultResourceRef" $writerDefault }}{{ end }}
+---
+{{ include "cnrm-chart.iamPolicyMember" $grantArgs }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

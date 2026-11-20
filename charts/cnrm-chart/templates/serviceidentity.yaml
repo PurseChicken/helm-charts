@@ -1,0 +1,24 @@
+{{- if .Values.serviceIdentity }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.serviceIdentity }}
+{{- if not .name }}
+{{- fail "cnrm-chart: serviceIdentity requires name" }}
+{{- end }}
+{{- $deletion := $allowResourceDeletion }}
+{{- if hasKey . "allowResourceDeletion" }}
+{{- $deletion = .allowResourceDeletion }}
+{{- end }}
+---
+apiVersion: serviceusage.cnrm.cloud.google.com/v1beta1
+kind: ServiceIdentity
+metadata:
+  annotations:
+    {{- include "cnrm-chart.deletionPolicy" (dict "allowResourceDeletion" $deletion) | nindent 4 }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .resourceID | default .name | quote }}
+  {{- include "cnrm-chart.projectRef" (dict "projectName" $projectName "projectRef" .projectRef "format" "projects") | nindent 2 }}
+{{- end }}
+{{- end }}

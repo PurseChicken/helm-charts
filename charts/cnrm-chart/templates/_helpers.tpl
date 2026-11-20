@@ -247,3 +247,231 @@ external: {{ .ref.external | quote }}
 name: {{ include "cnrm-chart.resourceName" (dict "projectName" .projectName "name" .ref.name) }}
 {{- end -}}
 {{- end }}
+
+{{/*
+Project reference.
+format "projects" (default) emits external: "projects/<projectID>".
+format "id" emits the bare project ID. LoggingLogSink requires the bare ID.
+An explicit projectRef is written as given. projectRef.name is the Project
+resource's Kubernetes name, which this chart sets to the project ID.
+*/}}
+{{- define "cnrm-chart.projectRef" -}}
+{{- if .projectRef -}}
+{{- if and .projectRef.external .projectRef.name -}}
+{{- fail "cnrm-chart: projectRef accepts external or name, not both" -}}
+{{- end -}}
+{{- if not (or .projectRef.external .projectRef.name) -}}
+{{- fail "cnrm-chart: projectRef requires external or name" -}}
+{{- end -}}
+projectRef:
+  {{- if .projectRef.external }}
+  external: {{ .projectRef.external | quote }}
+  {{- else }}
+  name: {{ .projectRef.name }}
+  {{- end }}
+  {{- if .projectRef.namespace }}
+  namespace: {{ .projectRef.namespace }}
+  {{- end }}
+  {{- if .projectRef.kind }}
+  kind: {{ .projectRef.kind }}
+  {{- end }}
+{{- else if eq (.format | default "projects") "id" -}}
+projectRef:
+  external: {{ .projectName | quote }}
+{{- else -}}
+projectRef:
+  external: {{ printf "projects/%s" .projectName | quote }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+folderRef or organizationRef, or a projectRef when neither is set.
+name is not project-prefixed: Folder, Organization, and Project Kubernetes
+names are not run through cnrm-chart.resourceName.
+*/}}
+{{- define "cnrm-chart.parentRef" -}}
+{{- $parents := 0 -}}
+{{- if .projectRef }}{{ $parents = add $parents 1 }}{{ end -}}
+{{- if .folderRef }}{{ $parents = add $parents 1 }}{{ end -}}
+{{- if .organizationRef }}{{ $parents = add $parents 1 }}{{ end -}}
+{{- if gt $parents 1 -}}
+{{- fail (printf "cnrm-chart: %s accepts only one of projectRef, folderRef, or organizationRef" .label) -}}
+{{- end -}}
+{{- if .folderRef -}}
+{{- if not (or .folderRef.external .folderRef.name) -}}
+{{- fail (printf "cnrm-chart: %s folderRef requires external or name" .label) -}}
+{{- end -}}
+folderRef:
+  {{- if .folderRef.external }}
+  external: {{ .folderRef.external | quote }}
+  {{- else }}
+  name: {{ .folderRef.name }}
+  {{- end }}
+  {{- if .folderRef.namespace }}
+  namespace: {{ .folderRef.namespace }}
+  {{- end }}
+{{- else if .organizationRef -}}
+{{- if not (or .organizationRef.external .organizationRef.name) -}}
+{{- fail (printf "cnrm-chart: %s organizationRef requires external or name" .label) -}}
+{{- end -}}
+organizationRef:
+  {{- if .organizationRef.external }}
+  external: {{ .organizationRef.external | quote }}
+  {{- else }}
+  name: {{ .organizationRef.name }}
+  {{- end }}
+  {{- if .organizationRef.namespace }}
+  namespace: {{ .organizationRef.namespace }}
+  {{- end }}
+{{- else -}}
+{{- include "cnrm-chart.projectRef" (dict "projectName" .projectName "projectRef" .projectRef "format" .format) -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+IAMPolicyMember.
+Legacy project bindings (member + external) stay on the Project resource.
+resourceRef targets another kind. memberFrom binds an identity that Config
+Connector has to read from a referenced resource (log sink writer, service
+identity, service account, SQL instance, or BigQuery connection).
+defaultResourceRef is used when the member sets neither resourceRef nor external.
+requireResourceRef fails instead of falling back to the project.
+*/}}
+{{- define "cnrm-chart.iamPolicyMember" -}}
+{{- $projectName := .projectName -}}
+{{- $m := .member -}}
+{{- if not $m.name -}}
+{{- fail "cnrm-chart: IAMPolicyMember requires name" -}}
+{{- end -}}
+{{- if not $m.role -}}
+{{- fail (printf "cnrm-chart: IAMPolicyMember %s requires role" $m.name) -}}
+{{- end -}}
+{{- if and $m.member $m.memberFrom -}}
+{{- fail (printf "cnrm-chart: IAMPolicyMember %s accepts member or memberFrom, not both" $m.name) -}}
+{{- end -}}
+{{- if and (not $m.member) (not $m.memberFrom) -}}
+{{- fail (printf "cnrm-chart: IAMPolicyMember %s requires member or memberFrom" $m.name) -}}
+{{- end -}}
+{{- if and $m.resourceRef $m.external -}}
+{{- fail (printf "cnrm-chart: IAMPolicyMember %s accepts resourceRef or external, not both" $m.name) -}}
+{{- end -}}
+{{- $deletion := .allowResourceDeletion -}}
+{{- if hasKey $m "allowResourceDeletion" -}}
+{{- $deletion = $m.allowResourceDeletion -}}
+{{- end -}}
+{{- $ref := $m.resourceRef -}}
+{{- if and (not $ref) (not $m.external) .defaultResourceRef -}}
+{{- $ref = .defaultResourceRef -}}
+{{- end -}}
+{{- if and .requireResourceRef (not $ref) (not $m.external) -}}
+{{- fail (printf "cnrm-chart: IAMPolicyMember %s requires resourceRef" $m.name) -}}
+{{- end -}}
+{{- $api := "" -}}
+{{- if $ref -}}
+{{- if not $ref.kind }}{{ fail (printf "cnrm-chart: IAMPolicyMember %s resourceRef.kind is required" $m.name) }}{{ end -}}
+{{- if not (or $ref.external $ref.name) }}{{ fail (printf "cnrm-chart: IAMPolicyMember %s resourceRef requires external or name" $m.name) }}{{ end -}}
+{{- $api = $ref.apiVersion -}}
+{{- if not $api -}}
+{{- if eq $ref.kind "Project" }}{{ $api = "resourcemanager.cnrm.cloud.google.com/v1beta1" }}
+{{- else if eq $ref.kind "IAMServiceAccount" }}{{ $api = "iam.cnrm.cloud.google.com/v1beta1" }}
+{{- else if eq $ref.kind "PubSubTopic" }}{{ $api = "pubsub.cnrm.cloud.google.com/v1beta1" }}
+{{- else if eq $ref.kind "PubSubSubscription" }}{{ $api = "pubsub.cnrm.cloud.google.com/v1beta1" }}
+{{- else if eq $ref.kind "StorageBucket" }}{{ $api = "storage.cnrm.cloud.google.com/v1beta1" }}
+{{- else if eq $ref.kind "SQLInstance" }}{{ $api = "sql.cnrm.cloud.google.com/v1beta1" }}
+{{- else if eq $ref.kind "LoggingLogBucket" }}{{ $api = "logging.cnrm.cloud.google.com/v1beta1" }}
+{{- else if eq $ref.kind "BigQueryDataset" }}{{ $api = "bigquery.cnrm.cloud.google.com/v1beta1" }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMPolicyMember
+metadata:
+  annotations:
+    {{- include "cnrm-chart.deletionPolicy" (dict "allowResourceDeletion" $deletion) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" $m.name) }}
+spec:
+  {{- if $m.member }}
+  member: {{ $m.member }}
+  {{- else }}
+  memberFrom:
+    {{- $mf := $m.memberFrom -}}
+    {{- $found := 0 -}}
+    {{- range $key := list "logSinkRef" "serviceAccountRef" "serviceIdentityRef" "sqlInstanceRef" "bigQueryConnectionConnectionRef" -}}
+    {{- if hasKey $mf $key }}{{ $found = add $found 1 }}{{ end -}}
+    {{- end -}}
+    {{- if ne $found 1 -}}
+    {{- fail (printf "cnrm-chart: IAMPolicyMember %s memberFrom requires exactly one of logSinkRef, serviceAccountRef, serviceIdentityRef, sqlInstanceRef, bigQueryConnectionConnectionRef" $m.name) -}}
+    {{- end -}}
+    {{- if $mf.logSinkRef }}
+    {{- if not $mf.logSinkRef.name }}{{ fail (printf "cnrm-chart: IAMPolicyMember %s logSinkRef.name is required" $m.name) }}{{ end }}
+    logSinkRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" $mf.logSinkRef.name) }}
+      {{- if $mf.logSinkRef.namespace }}
+      namespace: {{ $mf.logSinkRef.namespace }}
+      {{- end }}
+    {{- else if $mf.serviceAccountRef }}
+    {{- if not $mf.serviceAccountRef.name }}{{ fail (printf "cnrm-chart: IAMPolicyMember %s serviceAccountRef.name is required" $m.name) }}{{ end }}
+    serviceAccountRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" $mf.serviceAccountRef.name) }}
+      {{- if $mf.serviceAccountRef.namespace }}
+      namespace: {{ $mf.serviceAccountRef.namespace }}
+      {{- end }}
+    {{- else if $mf.serviceIdentityRef }}
+    {{- if not $mf.serviceIdentityRef.name }}{{ fail (printf "cnrm-chart: IAMPolicyMember %s serviceIdentityRef.name is required" $m.name) }}{{ end }}
+    serviceIdentityRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" $mf.serviceIdentityRef.name) }}
+      {{- if $mf.serviceIdentityRef.namespace }}
+      namespace: {{ $mf.serviceIdentityRef.namespace }}
+      {{- end }}
+    {{- else if $mf.sqlInstanceRef }}
+    {{- if not $mf.sqlInstanceRef.name }}{{ fail (printf "cnrm-chart: IAMPolicyMember %s sqlInstanceRef.name is required" $m.name) }}{{ end }}
+    sqlInstanceRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" $mf.sqlInstanceRef.name) }}
+      {{- if $mf.sqlInstanceRef.namespace }}
+      namespace: {{ $mf.sqlInstanceRef.namespace }}
+      {{- end }}
+    {{- else if $mf.bigQueryConnectionConnectionRef }}
+    {{- if not $mf.bigQueryConnectionConnectionRef.name }}{{ fail (printf "cnrm-chart: IAMPolicyMember %s bigQueryConnectionConnectionRef.name is required" $m.name) }}{{ end }}
+    {{- if not $mf.bigQueryConnectionConnectionRef.type }}{{ fail (printf "cnrm-chart: IAMPolicyMember %s bigQueryConnectionConnectionRef.type is required" $m.name) }}{{ end }}
+    bigQueryConnectionConnectionRef:
+      name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" $mf.bigQueryConnectionConnectionRef.name) }}
+      type: {{ $mf.bigQueryConnectionConnectionRef.type | quote }}
+      {{- if $mf.bigQueryConnectionConnectionRef.namespace }}
+      namespace: {{ $mf.bigQueryConnectionConnectionRef.namespace }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  role: {{ $m.role }}
+  {{- if $ref }}
+  resourceRef:
+    {{- if $api }}
+    apiVersion: {{ $api }}
+    {{- end }}
+    kind: {{ $ref.kind }}
+    {{- if $ref.external }}
+    external: {{ $ref.external | quote }}
+    {{- else if or (eq $ref.kind "Project") (eq $ref.kind "Folder") (eq $ref.kind "Organization") }}
+    name: {{ $ref.name }}
+    {{- else if eq $ref.kind "LoggingLogBucket" }}
+    name: {{ $projectName }}-{{ $ref.name }}
+    {{- else }}
+    name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" $ref.name) }}
+    {{- end }}
+    {{- if $ref.namespace }}
+    namespace: {{ $ref.namespace }}
+    {{- end }}
+  {{- else }}
+  resourceRef:
+    apiVersion: resourcemanager.cnrm.cloud.google.com/v1beta1
+    kind: Project
+    external: {{ default (printf "projects/%s" $projectName) $m.external | quote }}
+  {{- end }}
+  {{- with $m.condition }}
+  condition:
+    title: {{ .title | quote }}
+    {{- if .description }}
+    description: {{ .description | quote }}
+    {{- end }}
+    expression: {{ .expression | quote }}
+  {{- end }}
+{{- end -}}

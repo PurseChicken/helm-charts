@@ -1,0 +1,43 @@
+{{- if .Values.iamCustomRole }}
+{{- $allowResourceDeletion := .Values.allowResourceDeletion }}
+{{- $projectName := include "cnrm-chart.projectID" . }}
+{{- range .Values.iamCustomRole }}
+{{- if not .name }}
+{{- fail "cnrm-chart: iamCustomRole requires name" }}
+{{- end }}
+{{- if not .title }}
+{{- fail (printf "cnrm-chart: iamCustomRole %s requires title" .name) }}
+{{- end }}
+{{- if not .permissions }}
+{{- fail (printf "cnrm-chart: iamCustomRole %s requires permissions" .name) }}
+{{- end }}
+{{- $deletion := $allowResourceDeletion }}
+{{- if hasKey . "allowResourceDeletion" }}
+{{- $deletion = .allowResourceDeletion }}
+{{- end }}
+---
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMCustomRole
+metadata:
+  annotations:
+    {{- include "cnrm-chart.deletionPolicy" (dict "allowResourceDeletion" $deletion) | nindent 4 }}
+    {{- if .organizationId }}
+    cnrm.cloud.google.com/organization-id: {{ .organizationId | quote }}
+    {{- else }}
+    cnrm.cloud.google.com/project-id: {{ $projectName }}
+    {{- end }}
+    {{- include "cnrm-chart.customAnnotations" (dict "annotations" .customAnnotations) | nindent 4 }}
+  name: {{ include "cnrm-chart.resourceName" (dict "projectName" $projectName "name" .name) }}
+spec:
+  resourceID: {{ .resourceID | default .name | quote }}
+  title: {{ .title | quote }}
+  {{- if .description }}
+  description: {{ .description | quote }}
+  {{- end }}
+  {{- if .stage }}
+  stage: {{ .stage }}
+  {{- end }}
+  permissions:
+    {{- toYaml .permissions | nindent 4 }}
+{{- end }}
+{{- end }}
