@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v1.9.0] - 2026-11-20
+
 ### Added
 
 - `iamCustomRole`: project and organization [`IAMCustomRole`](https://cloud.google.com/config-connector/docs/reference/resource-docs/iam/iamcustomrole). `resourceID` keeps the GCP role id, including underscores, while the Kubernetes name is sanitized.
