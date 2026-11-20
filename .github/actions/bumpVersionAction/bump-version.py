@@ -86,7 +86,7 @@ def check_unreleased_section(chart_name):
             content = f.read()
             if "## [Unreleased]" not in content:
                 print(f"⚠️  WARNING: CHANGELOG.md doesn't have '## [Unreleased]' section")
-                print("   bump2version may fail to update CHANGELOG properly")
+                print("   The version bump may fail to update CHANGELOG properly")
                 return False
     except FileNotFoundError:
         print(f"⚠️  WARNING: CHANGELOG.md not found at {changelog_path}")
@@ -171,9 +171,11 @@ if __name__ == "__main__":
                 current_version = line.split('=', 1)[1].strip()
                 break
     
-    # Execute bump2version
+    # Execute bump-my-version (maintained successor to bump2version).
+    # It still reads .bumpversion.cfg. commit=true there commits Chart.yaml
+    # and the config; this script commits the CHANGELOG update afterwards.
     bumpver_process = subprocess.run(
-        f"bump2version {upgrade_type.value}",
+        f"bump-my-version bump {upgrade_type.value}",
         shell=True,
         cwd=f"./charts/{chart_name}",
         capture_output=True
@@ -188,7 +190,7 @@ if __name__ == "__main__":
                 new_version = line.split(':', 1)[1].strip()
                 break
     
-    # Update CHANGELOG manually (bump2version has issues with multi-line replacements)
+    # Update CHANGELOG manually (version bumpers corrupt multi-line replacements)
     update_changelog(chart_name, new_version)
     
     # Commit both Chart.yaml and CHANGELOG.md changes

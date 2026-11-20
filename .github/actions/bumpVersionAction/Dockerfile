@@ -1,9 +1,13 @@
-# Container image that runs your code
-FROM python:alpine
+# Container image that runs your code.
+# Pin the Python minor so Dependabot proposes the next upgrade. The floating
+# python:alpine tag moves on its own. bump-my-version supports 3.15;
+# The package pin lives in requirements.txt so Dependabot can update it.
+FROM python:3.15-alpine
 
 WORKDIR /github/workspace
 
-RUN pip install bump2version && apk add git
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt && apk add git
 
 COPY bump-version.py /bump-version.py
 

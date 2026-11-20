@@ -7,8 +7,15 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 5
 
-  # Docker dependencies (for custom actions)
+  # Docker base image for the version-bump action (FROM python:3.15-alpine)
   - package-ecosystem: "docker"
+    directory: "/.github/actions/bumpVersionAction"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 2
+
+  # Python packages for the version-bump action (requirements.txt)
+  - package-ecosystem: "pip"
     directory: "/.github/actions/bumpVersionAction"
     schedule:
       interval: "weekly"

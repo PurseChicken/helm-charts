@@ -1,11 +1,11 @@
 # Helm chart version bumper
 
-Automatically bumps Helm chart versions using Python's bump2version based on conventional commit keywords in the last commit message.
+Automatically bumps Helm chart versions using [bump-my-version](https://github.com/callowayproject/bump-my-version) based on conventional commit keywords in the last commit message.
 
 ## How It Works
 
 1. **Detects version bump type** from commit message keywords (feat, fix, breaking, etc.)
-2. **Runs bump2version** to update Chart.yaml and .bumpversion.cfg
+2. **Runs bump-my-version** to update Chart.yaml and .bumpversion.cfg
 3. **Updates CHANGELOG.md** automatically (converts `## [Unreleased]` to versioned section)
 4. **Commits all changes** in a single atomic commit
 
@@ -31,7 +31,8 @@ message = Bump mychart version: {current_version} → {new_version}
 
 **Important Notes:**
 - Set `commit = false` (the script handles commits to include CHANGELOG updates)
-- Do NOT add `[bumpversion:file:CHANGELOG.md]` section (the script handles CHANGELOG updates to avoid bump2version corruption issues)
+- Do NOT add a `[bumpversion:file:CHANGELOG.md]` section (the script handles CHANGELOG updates to avoid multi-line replacement issues)
+- `.bumpversion.cfg` still works. bump-my-version warns that the cfg format is deprecated; keep this file until the action is moved to `.bumpversion.toml`
 
 ## CHANGELOG Structure
 

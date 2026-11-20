@@ -1,5 +1,5 @@
 name: 'Helm chart version bumper'
-description: 'Bumps the version of a helm chart with pythons bump2version. Based on the last commit messages inside the helm chart directory'
+description: 'Bumps the version of a helm chart with bump-my-version. Based on the last commit messages inside the helm chart directory'
 inputs:
   chart:
     description: 'The chart to update. Must reside inside the charts subdirectory.'
