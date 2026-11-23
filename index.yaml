@@ -1178,6 +1178,34 @@ entries:
   snipeit:
   - apiVersion: v2
     appVersion: v8.0.4
+    created: "2026-11-23T04:08:46.695004623Z"
+    dependencies:
+    - condition: mysql.enabled
+      name: mysql
+      repository: https://storage.googleapis.com/t3n-helm-charts
+      version: ^1.0.0
+    - condition: mysql-backup.enabled
+      name: mysql-backup
+      repository: https://storage.googleapis.com/t3n-helm-charts
+      version: ~1.0.1
+    description: A free open source IT asset/license management system
+    digest: dff1e3b5ebe31198601017ee4af1c4367743ad31472068a6fc052f9392d8356f
+    home: https://snipeitapp.com
+    icon: https://snipeitapp.com/img/logos/snipe-it-logo-xs.png
+    keywords:
+    - snipeit
+    - inventory
+    - asset management
+    name: snipeit
+    sources:
+    - https://github.com/PurseChicken/helm-charts
+    - https://github.com/grokability/snipe-it
+    type: application
+    urls:
+    - https://github.com/PurseChicken/helm-charts/releases/download/snipeit-4.1.0/snipeit-4.1.0.tgz
+    version: 4.1.0
+  - apiVersion: v2
+    appVersion: v8.0.4
     created: "2025-04-23T07:48:23.85509465Z"
     dependencies:
     - condition: mysql.enabled
@@ -1284,4 +1312,4 @@ entries:
     urls:
     - https://github.com/PurseChicken/helm-charts/releases/download/snipeit-3.4.1/snipeit-3.4.1.tgz
     version: 3.4.1
-generated: "2026-11-20T20:39:23.492820897Z"
+generated: "2026-11-23T04:08:46.695087086Z"
