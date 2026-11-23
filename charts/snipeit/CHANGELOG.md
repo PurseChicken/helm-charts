@@ -8,6 +8,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Configurable `startupProbe`, `livenessProbe` and `readinessProbe` values. Setting `exec`, `tcpSocket` or `grpc` on a
+  probe replaces its default `httpGet`.
+- Default startup probe that gives the first boot (database migrations) up to 10 minutes before liveness applies.
+- httpGet probes send the host of `config.snipeit.url` as their Host header unless they set one. Snipe-IT 8.8.4+
+  returns 400 to any other Host.
+- `podDisruptionBudget.enabled` / `podDisruptionBudget.maxUnavailable` (off by default).
+- `configData.enabled` to skip the config-data init container on storage that rejects chown (e.g. AWS EFS).
+- `configData.owner` for the owner the sessions directory is chowned to (`apache:root` for `-alpine` image tags).
+- `kubectl.kubernetes.io/default-container` pod annotation so `kubectl logs`/`exec` target Snipe-IT rather than an
+  extra container.
+- Support for Snipe-IT 8.8.4 (set `image.tag`; the default image stays v8.0.4 until chart 5.0.0).
+- README section on running Snipe-IT 8.8+ behind an ingress or load balancer.
+- NOTES mention the 8.8.4 Host check and the 8.8.0 trusted-proxy default, warn when `replicaCount` > 1 on a
+  ReadWriteOnce volume, and show a deprecation notice when the bundled MySQL is enabled.
+
+### Changed
+
+- Liveness probe checks `/robots.txt` (a static file served by Apache) instead of `/health`. `/health` queries the
+  database, so liveness used to restart Snipe-IT during database outages or a restore. Readiness keeps `/health`.
+- Probes use the named `http` port.
+- config-data init container uses the Snipe-IT image by default instead of `busybox` (latest from Docker Hub), so pods
+  pull one image.
+- README defaults and Helm 3 commands corrected.
+
+### Fixed
+
+- PodDisruptionBudget: only rendered when `replicaCount` was 0, used the removed `policy/v1beta1` API and a selector
+  that matched no pods.
+- External database port was written to the Secret with literal quotes (`"3306"`).
+- NOTES reported a missing Application Key when `config.externalSecrets` was set.
+
+### Deprecated
+
+- Bundled `mysql` (t3n 1.0.0, MySQL 5.7, end of life) and `mysql-backup` (t3n 1.0.1) dependencies. They are removed in
+  5.0.0; see "Bundled MySQL (deprecated)" in the README for moving the data to an external database.
+
 ## [v4.0.2] - 2025-04-23
 
 ### Added

@@ -5,7 +5,12 @@ deploymentStrategy:
 
 ## PodDisruptionBudget
 ## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/#specifying-a-poddisruptionbudget
-# maxUnavailable: 1
+## Only useful with replicaCount > 1 on storage every replica can mount (ReadWriteMany). With a
+## ReadWriteOnce volume an evicted pod can't start on another node while the other replica still
+## holds the volume, so a PDB can block node drains indefinitely.
+podDisruptionBudget:
+  enabled: false
+  maxUnavailable: 1
 
 imagePullSecrets: []
 
@@ -15,7 +20,14 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
+## Init container that hands the sessions directory on the volume to the user Apache runs as.
 configData:
+  # Set to false on storage that rejects chown (e.g. AWS EFS, some NFS servers)
+  enabled: true
+  # Owner Apache runs as, passed to chown. 10000:0 is the Ubuntu image's docker:root. For -alpine image
+  # tags use apache:root (names resolve because the init container runs the Snipe-IT image by default).
+  owner: "10000:0"
+  # Defaults to the Snipe-IT image, which the node pulls for the main container anyway
   image: ""
   securityContext: {}
 
@@ -32,8 +44,9 @@ service:
   annotations: {}
 
 config:
+  ## Connection to your MySQL or MariaDB database. Used when config.externalSecrets is empty and
+  ## mysql.enabled is false.
   mysql:
-  ## All of these values are only used when mysql.enabled is set to false
     externalDatabase:
       user: "snipeit"
       pass: ""
@@ -57,8 +70,11 @@ config:
   ##   --from-literal=MYSQL_PORT_3306_TCP_ADDR=<your_mysql_host> \
   ##   --from-literal=MYSQL_PORT_3306_TCP_PORT=<your_mysql_port> \
   ##   --from-literal=APP_KEY=<your_app_key>
- 
+
   externalSecrets: ""
+
+## DEPRECATED, removed in chart 5.0.0: bundled MySQL 5.7 (end of life) from the t3n mysql chart 1.0.0.
+## Move to an external database; see "Bundled MySQL (deprecated)" in the chart README.
 mysql:
   ## Whether to deploy a mysql server to satisfy the applications database requirements. To use an external database set this to false and configure the externalDatabase parameters
   enabled: false
@@ -118,6 +134,7 @@ ingress:
   #    hosts:
   #      - example.local
 
+## DEPRECATED, removed in chart 5.0.0: bundled mysql-backup (t3n chart 1.0.1) for the bundled MySQL.
 mysql-backup:
   enabled: false
 
@@ -132,6 +149,45 @@ resources: {}
   # requests:
   #   cpu: 100m
   #   memory: 128Mi
+
+## Probes for the Snipe-IT container.
+## Snipe-IT 8.8.4+ returns 400 to requests whose Host header doesn't match APP_URL, and kubelet sends
+## the pod IP and port as Host. So any httpGet probe here that has no Host header of its own gets one
+## with the host from config.snipeit.url.
+## Your values merge with these defaults. Setting exec, tcpSocket or grpc on a probe replaces its default
+## httpGet. To disable a probe, set it to null with -f or --set; a null in a parent chart's own values.yaml
+## does not remove a subchart default.
+
+## The container runs database migrations before Apache starts. The startup probe gives that up to
+## 10 minutes (120 x 5s) before the liveness probe takes over. MySQL schema changes aren't transactional,
+## so a migration killed halfway can leave the schema half-changed: raise failureThreshold for large
+## databases or upgrades that skip many versions.
+startupProbe:
+  httpGet:
+    path: /health
+    port: http
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 120
+
+## /health queries the database, so a liveness probe on it restarts Snipe-IT whenever the database
+## is slow or unreachable, which a restart can't fix. Liveness instead fetches a static file that
+## Apache serves without PHP or the database, so it only fails when Apache itself is stuck.
+## Readiness keeps /health to take a pod out of rotation while it can't serve, and the startup probe
+## keeps it so liveness only begins once Snipe-IT works.
+livenessProbe:
+  httpGet:
+    path: /robots.txt
+    port: http
+  periodSeconds: 15
+  timeoutSeconds: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  periodSeconds: 15
+  timeoutSeconds: 3
 
 nodeSelector: {}
 
