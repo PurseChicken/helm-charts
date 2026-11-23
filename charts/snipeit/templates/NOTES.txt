@@ -34,9 +34,9 @@ WARNING: replicaCount is {{ .Values.replicaCount }} on a ReadWriteOnce volume. E
 the node the volume is attached to; a replica or rolling update scheduled on another node fails with a
 Multi-Attach error.
 {{- end }}
-{{- if or (.Values.mysql | default dict).enabled (index .Values "mysql-backup" | default dict).enabled }}
+{{- $customIngress := or .Values.ingress.tls (and .Values.ingress.hosts (ne (toJson .Values.ingress.hosts) (toJson (list "example.local")))) }}
+{{- if and (not .Values.ingress.enabled) $customIngress }}
 
-DEPRECATED: the bundled MySQL (mysql.enabled, mysql-backup.enabled) runs MySQL 5.7, which is end of life, and
-is removed in chart 5.0.0, which refuses to render while either is enabled. Move the data to an external
-database before upgrading to 5.0.0; see "Bundled MySQL (deprecated)" in the chart README.
+WARNING: ingress.hosts or ingress.tls is set, but ingress.enabled is false, so no Ingress is created. Chart 5.0.0
+turned the Ingress off by default; set ingress.enabled: true to keep it.
 {{- end }}

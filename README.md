@@ -40,7 +40,7 @@ Deploy [Snipe-IT](https://snipeitapp.com), a free open source IT asset/license m
 
 **Key Features:**
 - Full Snipe-IT deployment
-- Optional MySQL database
+- Uses your external MySQL or MariaDB database
 - Persistent storage
 - Ingress support
 - External secrets integration
