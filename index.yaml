@@ -1177,6 +1177,25 @@ entries:
     version: 0.0.0
   snipeit:
   - apiVersion: v2
+    appVersion: v8.8.4
+    created: "2026-11-23T04:44:38.734742203Z"
+    description: A free open source IT asset/license management system
+    digest: eeb006451ca92b842ba661341a2957ce42110fe3762f77f4595983cd1fb76c5d
+    home: https://snipeitapp.com
+    icon: https://snipeitapp.com/img/logos/snipe-it-logo-xs.png
+    keywords:
+    - snipeit
+    - inventory
+    - asset management
+    name: snipeit
+    sources:
+    - https://github.com/PurseChicken/helm-charts
+    - https://github.com/grokability/snipe-it
+    type: application
+    urls:
+    - https://github.com/PurseChicken/helm-charts/releases/download/snipeit-5.0.0/snipeit-5.0.0.tgz
+    version: 5.0.0
+  - apiVersion: v2
     appVersion: v8.0.4
     created: "2026-11-23T04:08:46.695004623Z"
     dependencies:
@@ -1312,4 +1331,4 @@ entries:
     urls:
     - https://github.com/PurseChicken/helm-charts/releases/download/snipeit-3.4.1/snipeit-3.4.1.tgz
     version: 3.4.1
-generated: "2026-11-23T04:08:46.695087086Z"
+generated: "2026-11-23T04:44:38.734877225Z"
