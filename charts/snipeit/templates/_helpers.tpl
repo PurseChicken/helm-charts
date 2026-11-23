@@ -67,3 +67,38 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Snipe-IT image reference. Also the default image of the config-data init container.
+*/}}
+{{- define "snipeit.image" -}}
+{{- printf "%s:%s" .Values.image.repository (.Values.image.tag | default .Chart.AppVersion | toString) -}}
+{{- end -}}
+
+{{/*
+Render a container probe. An exec, tcpSocket or grpc handler replaces the default httpGet, so a
+probe can switch handlers from any values file. An httpGet probe without its own Host header gets
+one with the host from config.snipeit.url: Snipe-IT 8.8.4+ returns 400 to requests whose Host
+doesn't match APP_URL, and kubelet sends the pod IP and port as Host otherwise.
+Usage: include "snipeit.probe" (dict "probe" .Values.livenessProbe "context" $)
+*/}}
+{{- define "snipeit.probe" -}}
+{{- $probe := deepCopy .probe -}}
+{{- if or $probe.exec $probe.tcpSocket $probe.grpc -}}
+{{- $_ := unset $probe "httpGet" -}}
+{{- end -}}
+{{- $host := (urlParse (.context.Values.config.snipeit.url | default "" | toString | trim)).host -}}
+{{- if and $probe.httpGet $host -}}
+{{- $headers := $probe.httpGet.httpHeaders | default list -}}
+{{- $hasHost := false -}}
+{{- range $headers -}}
+{{- if eq (lower .name) "host" -}}
+{{- $hasHost = true -}}
+{{- end -}}
+{{- end -}}
+{{- if not $hasHost -}}
+{{- $_ := set $probe.httpGet "httpHeaders" (append $headers (dict "name" "Host" "value" $host)) -}}
+{{- end -}}
+{{- end -}}
+{{- toYaml $probe -}}
+{{- end -}}

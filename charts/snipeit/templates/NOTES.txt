@@ -1,18 +1,42 @@
-{{- if eq (printf "%s" .Values.config.snipeit.key) "" }}
+{{- if and (not .Values.config.externalSecrets) (not .Values.config.snipeit.key) }}
 ##############################################################################
-####   ERROR: You did not provide an Application Key  ####
+####   ERROR: You did not provide an Application Key                      ####
 ##############################################################################
 
-This deployment will be incomplete until you provide an Application Key like this:
+This deployment will be incomplete until you provide an Application Key.
+Generate one with:
 
-helm upgrade {{ .Release.Name }} \
-    --set config.snipeit.key="base64:D5oGA+zhFSVA3VwuoZoQ21RAcwBtJv/RGiqOcZ7BUvI=" stable/snipeit
+  docker run --rm snipe/snipe-it php artisan key:generate --show
 
-You can find a unique key by copying it from the container logs.
-{{- else -}}
+then set it on the release:
+
+  helm upgrade {{ .Release.Name }} pursechicken/snipeit --version {{ .Chart.Version }} \
+    --reset-then-reuse-values --set config.snipeit.key="base64:..."
+
+or provide APP_KEY in the secret named by config.externalSecrets.
+{{- else }}
+Snipe-IT will be served at {{ .Values.config.snipeit.url }}
 {{- if .Values.ingress.enabled }}
 {{- range .Values.ingress.hosts }}
-You can now access SnipeIT through: http{{ if $.Values.ingress.tls }}s{{ end }}://{{ . }}{{ $.Values.ingress.path }}
+Ingress: http{{ if $.Values.ingress.tls }}s{{ end }}://{{ . }}{{ $.Values.ingress.path }}
 {{- end }}
 {{- end }}
+
+Snipe-IT 8.8.4+ only answers requests whose Host header is the host of APP_URL (or a subdomain of it).
+Health checks run by your ingress or load balancer must send that Host.
+
+Snipe-IT 8.8.0+ trusts no reverse proxy by default. If TLS terminates at an ingress or load balancer,
+set APP_TRUSTED_PROXIES in config.snipeit.envConfig. See the chart README.
+{{- end }}
+{{- if and .Values.persistence.enabled (not .Values.persistence.existingClaim) (eq .Values.persistence.accessMode "ReadWriteOnce") (gt (int .Values.replicaCount) 1) }}
+
+WARNING: replicaCount is {{ .Values.replicaCount }} on a ReadWriteOnce volume. Every replica has to run on
+the node the volume is attached to; a replica or rolling update scheduled on another node fails with a
+Multi-Attach error.
+{{- end }}
+{{- if or (.Values.mysql | default dict).enabled (index .Values "mysql-backup" | default dict).enabled }}
+
+DEPRECATED: the bundled MySQL (mysql.enabled, mysql-backup.enabled) runs MySQL 5.7, which is end of life, and
+is removed in chart 5.0.0, which refuses to render while either is enabled. Move the data to an external
+database before upgrading to 5.0.0; see "Bundled MySQL (deprecated)" in the chart README.
 {{- end }}
