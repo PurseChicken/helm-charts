@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v4.1.0] - 2026-11-23
+
 ### Added
 
 - Configurable `startupProbe`, `livenessProbe` and `readinessProbe` values. Setting `exec`, `tcpSocket` or `grpc` on a
