@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [v5.0.0] - 2026-11-23
+
 ### Added
 
 - `extraInitContainers`. An init container with `restartPolicy: Always` runs as a native sidecar that starts before
