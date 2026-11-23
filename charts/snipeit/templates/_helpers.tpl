@@ -32,11 +32,17 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 {{/*
-Create a default fully qualified app name for the mysql requirement.
+Refuse values for the bundled MySQL that 5.0.0 removed. Rendering without the subchart would make
+Helm (or Argo CD with pruning) delete the MySQL Deployment and its PersistentVolumeClaim, and with
+the default reclaim policy the disk and its data.
 */}}
-{{- define "snipeit.mysqlFullname" -}}
-{{- $mysqlContext := dict "Values" .Values.mysql "Release" .Release "Chart" (dict "Name" "mysql") -}}
-{{ template "mysql.fullname" $mysqlContext }}
+{{- define "snipeit.validateValues" -}}
+{{- if (.Values.mysql | default dict).enabled -}}
+{{- fail "mysql.enabled is true, but snipeit chart 5.0.0 removed the bundled MySQL. Upgrading would delete the MySQL Deployment and its volume. Move the data to an external database first (see 'Upgrading to 5.0.0' in the chart README), point config.mysql.externalDatabase or config.externalSecrets at it, and remove mysql.enabled." -}}
+{{- end -}}
+{{- if (index .Values "mysql-backup" | default dict).enabled -}}
+{{- fail "mysql-backup.enabled is true, but snipeit chart 5.0.0 removed the bundled mysql-backup. Remove mysql-backup.enabled and back up the database another way (see 'Upgrading to 5.0.0' in the chart README)." -}}
+{{- end -}}
 {{- end -}}
 
 {{/*

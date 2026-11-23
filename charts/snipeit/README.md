@@ -26,7 +26,7 @@ Or use the chart as a dependency of your own chart:
 ```yaml
 dependencies:
 - name: snipeit
-  version: "4.1.0"
+  version: "5.0.0"
   repository: "https://pursechicken.github.io/helm-charts"
 ```
 
@@ -36,12 +36,9 @@ This chart bootstraps a [Snipe-IT](https://github.com/grokability/snipe-it)
 deployment on a [Kubernetes](https://kubernetes.io) cluster using the
 [Helm](https://helm.sh) package manager.
 
-Snipe-IT needs a MySQL or MariaDB database. Run one separately (a managed database, an operator, or another chart)
-and point `config.mysql.externalDatabase` or `config.externalSecrets` at it. The bundled MySQL (`mysql.enabled`) is
-deprecated and is removed in chart 5.0.0; see [Bundled MySQL (deprecated)](#bundled-mysql-deprecated).
-
-The default image is Snipe-IT v8.0.4. To run Snipe-IT 8.8.4, set `image.tag: v8.8.4` and read
-[Running behind an ingress or load balancer](#running-behind-an-ingress-or-load-balancer-snipe-it-88).
+Snipe-IT needs a MySQL or MariaDB database, which this chart does not deploy. Run one separately (a managed
+database, an operator, or another chart) and point `config.mysql.externalDatabase` or `config.externalSecrets` at it.
+See [Running the database in the cluster](#running-the-database-in-the-cluster) for a quick in-cluster setup.
 
 ## Installing the Chart
 
@@ -105,22 +102,13 @@ and their default values.
 | `image.tag`                          | Image Tag                                                     | Chart `appVersion`             |
 | `image.pullPolicy`                   | Image Pull Policy                                             | `IfNotPresent`                 |
 | `imagePullSecrets`                   | Image Pull Secrets                                            | `[]`                           |
-| `ingress.enabled`                    | Whether or not to enable Ingress                              | `true`                         |
+| `ingress.enabled`                    | Create a `networking.k8s.io/v1` Ingress (Kubernetes 1.19+)    | `false`                        |
 | `ingress.className`                  | Ingress Class Name                                            | `""`                           |
 | `ingress.annotations`                | Custom Ingress Annotations                                    | `{}`                           |
 | `ingress.path`                       | Root Path for the Ingress Resource                            | `/`                            |
 | `ingress.pathType`                   | Path type for the Ingress Resource                            | `ImplementationSpecific`       |
 | `ingress.hosts`                      | URL where Snipe-IT will be accessed                           | `example.local`                |
 | `ingress.tls`                        | Configuration for SecretName and TLS-Hosts                    | `[]`                           |
-| `mysql.enabled`                      | Deploy the bundled MySQL (deprecated, removed in 5.0.0)       | `false`                        |
-| `mysql.mysqlUser`                    | MySQL User to create                                          | `snipeit`                      |
-| `mysql.mysqlPassword`                | MySQL Password for the User                                   | `snipeit`                      |
-| `mysql.mysqlDatabase`                | Name of MySQL Database to create                              | `db-snipeit`                   |
-| `mysql.persistence.enabled`          | Whether or not to enable Persistence                          | `true`                         |
-| `mysql.persistence.storageClass`     | StorageClass for MySQL Deployment persistence                 | `""`                           |
-| `mysql.persistence.accessMode`       | Access Mode of PV                                             | `ReadWriteOnce`                |
-| `mysql.persistence.size`             | Size of the PV                                                | `8Gi`                          |
-| `mysql-backup.enabled`               | Deploy the bundled mysql-backup (deprecated, removed in 5.0.0) | `false`                       |
 | `persistence.enabled`                | Whether or not Snipe-IT Data should be persisted              | `true`                         |
 | `persistence.annotations`            | Annotations for the PVC                                       | `{}`                           |
 | `persistence.accessMode`             | Access Mode of the PVC                                        | `ReadWriteOnce`                |
@@ -150,10 +138,13 @@ and their default values.
 | `startupProbe`                       | Startup probe for the Snipe-IT container                      | `httpGet /health`, up to 10 min |
 | `livenessProbe`                      | Liveness probe for the Snipe-IT container                     | `httpGet /robots.txt` every 15s |
 | `readinessProbe`                     | Readiness probe for the Snipe-IT container                    | `httpGet /health` every 15s    |
+| `lifecycle`                          | Lifecycle hooks for the Snipe-IT container, e.g. a `preStop` delay | `{}`                      |
+| `terminationGracePeriodSeconds`      | Seconds Kubernetes waits for the pod to stop                  | Kubernetes default (30)        |
 | `nodeSelector`                       | Node labels for pod assignment                                | `{}`                           |
 | `tolerations`                        | Toleration labels for pod assignment                          | `[]`                           |
 | `affinity`                           | Affinity settings for pod assignment                          | `{}`                           |
-| `extraContainers`                    | Add additional containers to deploy                           | `[]`                           |
+| `extraInitContainers`                | Additional init containers; `restartPolicy: Always` makes a native sidecar | `[]`              |
+| `extraContainers`                    | Additional containers next to the Snipe-IT container          | `[]`                           |
 | `extraAnnotations`                   | Extra Annotations added to the SnipeIT Pod(s)                 | `{}`                           |
 | `extraManifests`                     | Add additional manifests to deploy                            | `[]`                           |
 | `extraVolumeMounts`                  | Additional volumeMounts to the container                      | `[]`                           |
@@ -236,6 +227,33 @@ kubectl create secret generic my-db-secret \
   --from-literal=APP_KEY=<your_app_key>
 ```
 
+## Running the database in the cluster
+
+For production, use a managed database (Cloud SQL, RDS, Azure Database for MySQL) or an operator such as
+[mariadb-operator](https://github.com/mariadb-operator/mariadb-operator). For a small install or an evaluation, run
+MariaDB as its own Helm release next to Snipe-IT, for example with the
+[CloudPirates MariaDB chart](https://github.com/CloudPirates-io/helm-charts), which runs the official MariaDB 13 image
+(the version Snipe-IT's own Docker setup uses). As a separate release, the database is untouched when you upgrade or
+uninstall Snipe-IT.
+
+```bash
+helm install snipeit-mariadb oci://registry-1.docker.io/cloudpirates/mariadb --version 0.17.1 \
+  --set auth.rootPassword=<root-password> \
+  --set auth.database=snipeit \
+  --set auth.username=snipeit \
+  --set auth.password=<password>
+
+helm install snipeit pursechicken/snipeit \
+  --set config.snipeit.url=https://snipeit.example.com \
+  --set config.snipeit.key="base64:....." \
+  --set config.mysql.externalDatabase.host=snipeit-mariadb \
+  --set config.mysql.externalDatabase.name=snipeit \
+  --set config.mysql.externalDatabase.user=snipeit \
+  --set config.mysql.externalDatabase.pass=<password>
+```
+
+Back the database up with your own tooling or Snipe-IT's built-in backups.
+
 ## Running behind an ingress or load balancer (Snipe-IT 8.8+)
 
 Two Snipe-IT changes matter when it runs behind a reverse proxy:
@@ -269,30 +287,43 @@ has no effect: Laravel's own proxy middleware still runs after Snipe-IT's and tr
 (`X-Forwarded-For`, `-Host`, `-Port`, `-Proto`, `-Prefix`) from any address in `APP_TRUSTED_PROXIES`. Keep
 `APP_TRUSTED_PROXIES` as narrow as you can.
 
-## Bundled MySQL (deprecated)
+## Upgrading to 5.0.0
 
-The `mysql` and `mysql-backup` dependencies come from the t3n chart repository and are pinned to old versions:
-`mysql` 1.0.0 (2021) deploys MySQL 5.7, which is end of life, and `mysql-backup` 1.0.1 dates from 2019. Chart 5.0.0
-removes both, and refuses to render while `mysql.enabled` or `mysql-backup.enabled` is true: upgrading without them
-would delete the MySQL Deployment and its PersistentVolumeClaim, and with the default reclaim policy the disk with
-your data.
+5.0.0 has breaking changes. Back up the database before upgrading.
 
-To move off the bundled MySQL while on this chart version:
+### Bundled MySQL removed
 
-1. Dump the database from the running MySQL. Its Deployment is `<release>-mysql`, or just `<release>` if the release
-   name already contains `mysql`:
+The chart no longer ships the t3n `mysql` (1.0.0, MySQL 5.7, which is end of life) and `mysql-backup` (1.0.1)
+dependencies. If your values still set `mysql.enabled: true` or `mysql-backup.enabled: true`, rendering fails on
+purpose. Upgrading without them would delete the MySQL Deployment and its PersistentVolumeClaim, and with the default
+reclaim policy the disk with your data.
+
+To move off the bundled MySQL:
+
+1. While still on chart 4.x, dump the database from the running MySQL. Its Deployment is `<release>-mysql`, or just
+   `<release>` if the release name already contains `mysql`:
    ```bash
    kubectl exec deploy/<release>-mysql -- sh -c \
      'mysqldump --single-transaction --no-tablespaces --default-character-set=utf8mb4 \
        -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"' > snipeit.sql
    ```
 2. Restore `snipeit.sql` into a MySQL 8 or MariaDB server that you run separately (a managed database, an operator,
-   or another chart).
-3. Point `config.mysql.externalDatabase` (or the secret named by `config.externalSecrets`) at that server, set
-   `mysql.enabled: false` (and `mysql-backup.enabled: false` if you use it), and upgrade. The upgrade deletes the old
-   MySQL Deployment and its volume, so keep the dump until Snipe-IT runs on the new database.
+   or another chart; see [Running the database in the cluster](#running-the-database-in-the-cluster)).
+3. Point `config.mysql.externalDatabase` (or the secret named by `config.externalSecrets`) at that server, remove the
+   `mysql` and `mysql-backup` keys from your values, and upgrade. The upgrade deletes the old MySQL Deployment and its
+   volume, so keep the dump until Snipe-IT runs on the new database.
 
 Back up the new database with its own tooling, or with Snipe-IT's built-in backups.
+
+### Other changes
+
+- **Ingress is off by default.** If you relied on the old default of `ingress.enabled: true`, set it explicitly, or the
+  upgrade deletes your Ingress. The chart now only renders `networking.k8s.io/v1` Ingresses (Kubernetes 1.19+).
+- **Snipe-IT 8.8.4 is the default image.** It brings the Host header check and the trusted-proxy change described in
+  [Running behind an ingress or load balancer](#running-behind-an-ingress-or-load-balancer-snipe-it-88). Load balancer
+  and ingress health checks have to send the `APP_URL` host. The upgrade runs database migrations.
+
+Coming from 4.0.x? Also read [Upgrading to 4.1.0](#upgrading-to-410).
 
 ## Upgrading to 4.1.0
 
@@ -318,35 +349,39 @@ extraManifests:
         name: "gcp-cloud-armor-policy-test"
 ```
 
-## Extra Containers
-It is possible to add additional containers into a deployment, to extend the chart. One of the reasons is to deploy a sidecar container like CloudSQLProxy.
-Extra containers are listed before the Snipe-IT container, so a sidecar with a `postStart` hook (like `cloud-sql-proxy wait` below) is ready before Snipe-IT starts.
-The pod's `kubectl.kubernetes.io/default-container` annotation points `kubectl logs`/`exec` at the Snipe-IT container.
+## Extra Containers and Sidecars
+
+`extraContainers` adds containers next to Snipe-IT. They start and stop together with it, so they suit helpers that
+don't depend on start or stop order. The pod's `kubectl.kubernetes.io/default-container` annotation points
+`kubectl logs`/`exec` at the Snipe-IT container.
+
+For a database proxy such as the Cloud SQL Auth Proxy, use `extraInitContainers` with `restartPolicy: Always`
+instead, which makes it a native sidecar (Kubernetes 1.29+). Kubernetes starts the proxy before Snipe-IT, waiting for
+its startup probe, and stops it only after Snipe-IT has exited, so Snipe-IT never runs without its database
+connection. Pair it with a short `preStop` delay, so Snipe-IT keeps serving while the load balancer stops sending
+requests to a pod that is shutting down. The `sleep` action needs Kubernetes 1.30+; on older clusters use
+`exec: {command: ["sleep", "10"]}`.
 
 ```yaml
-extraContainers:
+extraInitContainers:
   - name: cloud-sql-proxy
-    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.15.3
-    command:
-      - /cloud-sql-proxy
+    image: gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.28.0
+    restartPolicy: Always
     args:
       - my-project:my-region:my-instance
       - --port=3306
       - --health-check
-      - "--http-address=0.0.0.0"
-    ports:
-      - containerPort: 3306
+      - --http-address=0.0.0.0
     startupProbe:
       httpGet:
-          path: /startup
-          port: 9090
+        path: /startup
+        port: 9090
       periodSeconds: 1
-      timeoutSeconds: 5
+      failureThreshold: 30
     livenessProbe:
       httpGet:
-          path: /liveness
-          port: 9090
-      initialDelaySeconds: 0
+        path: /liveness
+        port: 9090
       periodSeconds: 60
       timeoutSeconds: 30
       failureThreshold: 5
@@ -354,10 +389,11 @@ extraContainers:
       runAsNonRoot: true
       readOnlyRootFilesystem: true
       allowPrivilegeEscalation: false
-    lifecycle:
-      postStart:
-        exec:
-          command: ["/cloud-sql-proxy", "wait"]
+
+lifecycle:
+  preStop:
+    sleep:
+      seconds: 10
 ```
 
 ## Original Chart Credit

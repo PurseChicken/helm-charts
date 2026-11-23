@@ -8,6 +8,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `extraInitContainers`. An init container with `restartPolicy: Always` runs as a native sidecar that starts before
+  Snipe-IT and stops after it; the README shows the Cloud SQL Auth Proxy set up this way.
+- `lifecycle` for the Snipe-IT container (e.g. a `preStop` delay behind a load balancer) and
+  `terminationGracePeriodSeconds`.
+- README section on running MariaDB as its own Helm release in the cluster (CloudPirates MariaDB chart).
+- NOTES warn when `ingress.hosts` or `ingress.tls` is set but `ingress.enabled` is false.
+
+### Changed
+
+- **Breaking:** `ingress.enabled` defaults to `false`. Set it to `true` explicitly to keep an Ingress.
+- **Breaking:** default image is now Snipe-IT `v8.8.4` (appVersion). Its Host header check means load balancer and
+  ingress health checks must send the `APP_URL` host. Upgrading runs database migrations; back up the database first.
+
+### Removed
+
+- **Breaking:** bundled `mysql` (t3n 1.0.0, MySQL 5.7) and `mysql-backup` (t3n 1.0.1) dependencies, and the `mysql.*`
+  and `mysql-backup.*` values. Rendering fails while `mysql.enabled` or `mysql-backup.enabled` is true, so an upgrade
+  can't delete the MySQL volume. See "Upgrading to 5.0.0" in the README for moving the data to an external database.
+- **Breaking:** `networking.k8s.io/v1beta1` and `extensions/v1beta1` Ingress templates (Kubernetes before 1.19).
+
 ## [v4.1.0] - 2026-11-23
 
 ### Added

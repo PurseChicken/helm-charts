@@ -44,8 +44,8 @@ service:
   annotations: {}
 
 config:
-  ## Connection to your MySQL or MariaDB database. Used when config.externalSecrets is empty and
-  ## mysql.enabled is false.
+  ## Connection to your MySQL or MariaDB database. Used when config.externalSecrets is empty.
+  ## The chart does not deploy a database.
   mysql:
     externalDatabase:
       user: "snipeit"
@@ -73,30 +73,6 @@ config:
 
   externalSecrets: ""
 
-## DEPRECATED, removed in chart 5.0.0: bundled MySQL 5.7 (end of life) from the t3n mysql chart 1.0.0.
-## Move to an external database; see "Bundled MySQL (deprecated)" in the chart README.
-mysql:
-  ## Whether to deploy a mysql server to satisfy the applications database requirements. To use an external database set this to false and configure the externalDatabase parameters
-  enabled: false
-  ## Create a database and a database user
-  ##
-  mysqlUser: snipeit
-  mysqlPassword: "snipeit"
-  mysqlDatabase: db-snipeit
-
-  persistence:
-    enabled: true
-      ## mysql data Persistent Volume Storage Class
-      ## If defined, storageClassName: <storageClass>
-      ## If set to "-", storageClassName: "", which disables dynamic provisioning
-      ## If undefined (the default) or set to null, no storageClassName spec is
-      ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
-      ##   GKE, AWS & OpenStack)
-      ##
-      # storageClass: "-"
-    accessMode: ReadWriteOnce
-    size: 8Gi
-
 persistence:
   enabled: true
   annotations: {}
@@ -119,8 +95,9 @@ persistence:
     mountPath: /var/www/html/storage/framework/sessions
     subPath: sessions
 
+## networking.k8s.io/v1 Ingress (Kubernetes 1.19+)
 ingress:
-  enabled: true
+  enabled: false
   className: ""
   annotations: {}
     # kubernetes.io/ingress.class: nginx
@@ -133,10 +110,6 @@ ingress:
   #  - secretName: example-local
   #    hosts:
   #      - example.local
-
-## DEPRECATED, removed in chart 5.0.0: bundled mysql-backup (t3n chart 1.0.1) for the bundled MySQL.
-mysql-backup:
-  enabled: false
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -198,8 +171,24 @@ securityContext: {}
 
 affinity: {}
 
+## Lifecycle hooks for the Snipe-IT container. Behind a load balancer, a short preStop delay keeps Snipe-IT
+## serving while the load balancer stops sending requests to a pod that is shutting down:
+#   preStop:
+#     sleep:
+#       seconds: 10
+lifecycle: {}
+
+## Seconds Kubernetes waits for the pod to stop before killing it (Kubernetes default: 30). It has to cover
+## the preStop delay plus Snipe-IT's shutdown.
+terminationGracePeriodSeconds: null
+
+## Init containers added after the chart's config-data container. One with restartPolicy: Always runs as a
+## native sidecar (Kubernetes 1.29+): it starts before Snipe-IT and stops after it, which is how to run a
+## database proxy such as cloud-sql-proxy (see "Extra Containers and Sidecars" in the README).
+extraInitContainers: []
+
+## Containers added next to Snipe-IT, started and stopped together with it.
 extraContainers: []
-  # Add your extra containers here. E.G. A sidecar container like CloudSQLProxy
 
 extraAnnotations: {}
   # Extra Annotations that will be added to the SnipeIT Pod(s)

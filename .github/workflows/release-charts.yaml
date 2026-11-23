@@ -153,11 +153,6 @@ jobs:
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Add Helm repo(s)
-        run: |
-          helm repo add t3n-helm-charts https://storage.googleapis.com/t3n-helm-charts
-          helm repo update
-
       - name: Lint Chart
         run: |
           helm lint charts/${{ matrix.chart }}
@@ -234,10 +229,6 @@ jobs:
         uses: azure/setup-helm@v5.1.0
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-
-      - name: Add Helm repo(s)
-        run: |
-          helm repo add t3n-helm-charts https://storage.googleapis.com/t3n-helm-charts
 
       - name: Extract version-specific release notes
         run: |

@@ -47,11 +47,6 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Add Helm repo(s)
-        run: |
-          helm repo add t3n-helm-charts https://storage.googleapis.com/t3n-helm-charts
-          helm repo update
-
       - name: Lint Chart
         run: |
           helm lint charts/${{ matrix.chart }}

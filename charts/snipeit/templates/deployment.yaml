@@ -1,3 +1,4 @@
+{{- include "snipeit.validateValues" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,12 +31,17 @@ spec:
     {{- end }}
     spec:
       serviceAccountName: {{ include "snipeit.serviceAccountName" . }}
+      {{- with .Values.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ . }}
+      {{- end }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if ne (toString .Values.configData.enabled) "false" }}
+      {{- $configData := ne (toString .Values.configData.enabled) "false" }}
+      {{- if or $configData .Values.extraInitContainers }}
       initContainers:
+        {{- if $configData }}
         - name: config-data
           image: "{{ .Values.configData.image | default (include "snipeit.image" .) }}"
           {{- if not .Values.configData.image }}
@@ -50,6 +56,10 @@ spec:
             - name: data
               mountPath: {{ .Values.persistence.sessions.mountPath }}
               subPath: {{ .Values.persistence.sessions.subPath }}
+        {{- end }}
+        {{- with .Values.extraInitContainers }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       {{- end }}
       containers:
       {{- if .Values.extraContainers }}
@@ -80,6 +90,10 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
+        {{- with .Values.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+        {{- end }}
         {{- with .Values.startupProbe }}
           startupProbe:
             {{- include "snipeit.probe" (dict "probe" . "context" $) | nindent 12 }}
